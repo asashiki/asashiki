@@ -58,7 +58,7 @@ export const navBarConfig: NavBarConfig = {
 export const profileConfig: ProfileConfig = {
   avatar: 'assets/images/莉赛特01.jpg',  // Relative to the /src directory. Relative to the /public directory if it starts with '/'
   name: '浅仪式',
-  bio: 'あ、海はどこまでも続いてね。           ——恋狱月狂病',
+  bio: '意気地無し、それでも男?           ——草莓棉花糖',
   links: [
     {
       name: 'Twitter',
