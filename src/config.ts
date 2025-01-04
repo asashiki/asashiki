@@ -49,7 +49,7 @@ export const navBarConfig: NavBarConfig = {
     LinkPreset.About,
     {
       name: '时间胶囊',
-      url: 'https://timeline.asashiki.dynv6.net/',     // Internal links should not include the base path, as it is automatically added
+      url: 'https://broadcastchannel-6h5.pages.dev/',     // Internal links should not include the base path, as it is automatically added
       external: true,                               // Show an external link icon and will open in a new tab
     },
   ],
@@ -58,7 +58,7 @@ export const navBarConfig: NavBarConfig = {
 export const profileConfig: ProfileConfig = {
   avatar: 'assets/images/莉赛特01.jpg',  // Relative to the /src directory. Relative to the /public directory if it starts with '/'
   name: '浅仪式',
-  bio: '意気地無し、それでも男?              ——草莓棉花糖」',
+  bio: '意気地無し、それでも男?              ——「草莓棉花糖」',
   links: [
     {
       name: 'Twitter',
@@ -73,9 +73,9 @@ export const profileConfig: ProfileConfig = {
       url: 'https://t.me/asashiki_timeline',
     },
     {
-      name: 'RSS',
-      icon: 'mingcute:rss-2-fill',
-      url: 'https://timeline.asashiki.dynv6.net/rss.xml',
+      name: 'Bangumi',
+      icon: 'material-symbols:list-alt-rounded',
+      url: 'https://bangumi.tv/user/asashiki',
     },
   ],
 }

@@ -1,4 +1,20 @@
-# About
+## About me 
+ 
+Asashiki/浅仪式，这个名字可能取自「空之境界」里的两仪式(りょうぎ しきRyougi Shiki)，或者「近月少女」里的小仓朝日(あさひAsahi)，或者我特别喜欢的同人声优浅木式(あさぎしきAsagishiki)。
+
+2004年是学生,喜欢anime、game(特别是エロゲー)还有美少女,你可以从[时间胶囊](https://broadcastchannel-6h5.pages.dev/)或是[Bangumi](https://bangumi.tv/user/asashiki)找到我最近的娱乐活动。
+
+我已经一个人生活了3年并且在线下几乎没有朋友,欢迎线上来和我交朋友(日本の友達もオッケーです)。
+
+
+## What I'm doing
+
+- **编程学习：** java基础语言->MVC学习，为以后去日本工作做准备,现在正在学习JSP(javaweb)相关知识。
+- **日语练习：** 我在2023年取得了jlptN1证书，但是口语依然不行，目前正在高强度刷日推、看生肉。
+- **在玩游戏：** pjskj、街霸6，以及其他[单机游戏](https://bangumi.tv/game/list/asashiki/do)。
+
+## others
+
 This is the demo site for [Fuwari](https://github.com/saicaca/fuwari).
 
 ::github{repo="saicaca/fuwari"}
@@ -6,3 +22,5 @@ This is the demo site for [Fuwari](https://github.com/saicaca/fuwari).
 > ### Sources of images used in this site
 > - [Unsplash](https://unsplash.com/)
 > - [リセット・カラー](https://www.pixiv.net/artworks/97956613) by [Stella](https://www.pixiv.net/users/31845779)
+
+

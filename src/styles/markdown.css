@@ -84,6 +84,19 @@
         p:before, p:after {
             @apply content-none;
         }
+    }
 
+    img {
+        display: inline-block;
+        vertical-align: middle;
+    }
+
+    .inline-text {
+        display: inline-block;
+        vertical-align: top;
+    }
+
+    p {
+        display: block;
     }
 }
