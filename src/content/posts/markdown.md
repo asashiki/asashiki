@@ -146,7 +146,6 @@ tomatoes
 
 Again, text is indented 4 spaces. (Put a blank line between each
 term/definition pair to spread things out more.)
-![alt text](1.jpg)
 Here's a "line block":
 
 | Line one
