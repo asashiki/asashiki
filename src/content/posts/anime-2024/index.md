@@ -5,7 +5,7 @@ description: '动画之外+年度最佳+动画总结'
 image: './蓦然回首02.jpg'
 tags: [anime,2024年,年度总结,Bangumi]
 category: '娱乐'
-draft: true 
+draft: false 
 lang: ''
 ---
 
