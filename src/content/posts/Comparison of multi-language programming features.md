@@ -1,6 +1,6 @@
 ---
 title: 多语言编程特性对比
-published: 2025-02-8
+published: 2025-02-08
 description: 'go、swift、javascript、python、ruby五门编程语言一起学'
 image: ''
 tags: [go,swift,javascript,python,ruby]
