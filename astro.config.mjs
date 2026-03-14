@@ -115,7 +115,6 @@ export default defineConfig({
 			parseDirectiveNode,
 		],
 		rehypePlugins: [
-			rehypeMermaid,
 			rehypeKatex,
 			[
 				rehypeExternalLinks,
