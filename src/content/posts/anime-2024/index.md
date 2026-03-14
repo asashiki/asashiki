@@ -1,7 +1,7 @@
 ---
-title: 2024年看番报告
+title: 2024动画年终总结
 published: 2025-01-04
-description: '追了十年新番,也是终于写上新番总结了'
+description: '追了十年新番,开始写新番总结了'
 image: './蓦然回首02.jpg'
 tags: [anime,2024年,年度总结,Bangumi]
 category: '娱乐'
