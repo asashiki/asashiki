@@ -55,7 +55,7 @@ export const navBarConfig: NavBarConfig = {
 		},
 		{
 			name: "时间胶囊",
-			url: "https://aa84e476.broadcastchannel-6h5.pages.dev", // Internal links should not include the base path, as it is automatically added
+			url: "https://timeline.asashiki.com", // Internal links should not include the base path, as it is automatically added
 			external: true, // Show an external link icon and will open in a new tab
 		},
 	],
