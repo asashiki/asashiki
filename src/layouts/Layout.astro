@@ -3,7 +3,9 @@ import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 
+import AiVisualInteractions from "@components/AiVisualInteractions.astro";
 import ConfigCarrier from "@components/ConfigCarrier.astro";
+import GlobalAudioPlayer from "@components/GlobalAudioPlayer.astro";
 import { profileConfig, siteConfig } from "@/config";
 import {
 	AUTO_MODE,
@@ -153,6 +155,8 @@ const bannerOffset =
 	>
 		<ConfigCarrier></ConfigCarrier>
 		<slot />
+		<GlobalAudioPlayer></GlobalAudioPlayer>
+		<AiVisualInteractions></AiVisualInteractions>
 
 		<!-- increase the page height during page transition to prevent the scrolling animation from jumping -->
 		<div id="page-height-extend" class="hidden h-[300vh]"></div>

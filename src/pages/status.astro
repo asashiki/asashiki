@@ -1,0 +1,1901 @@
+---
+import MainGridLayout from "@layouts/MainGridLayout.astro";
+import { Icon } from "astro-icon/components";
+---
+
+<MainGridLayout title="状态" description="Asashiki 的实时状态">
+    <div class="flex w-full max-w-[100vw] rounded-[var(--radius-large)] overflow-hidden relative mb-4">
+        <article class="card-base status-console relative w-full max-w-[100vw]" data-status-page>
+            <header class="status-top onload-animation">
+                <div class="status-title-block">
+                    <div class="status-kicker">
+                        <span class="status-dot" data-api-pulse></span>
+                        <span data-api-state>连接 Core API</span>
+                    </div>
+                    <h1>状态</h1>
+                    <p data-now-sentence>正在读取 Asashiki 的当前状态。</p>
+                </div>
+
+                <div class="status-top-actions">
+                    <button class="status-refresh" type="button" data-status-refresh>
+                        <Icon name="material-symbols:refresh-rounded" class="text-lg"></Icon>
+                        <span>刷新</span>
+                    </button>
+                    <time data-updated-at>--:--</time>
+                </div>
+            </header>
+
+            <section class="status-live onload-animation" style="animation-delay: calc(var(--content-delay) + 60ms);">
+                <div class="status-live-main">
+                    <div class="status-live-copy">
+                        <span data-selected-device-label>Now</span>
+                        <strong data-live-desc>等设备上报中。</strong>
+                        <div class="status-live-chips" data-live-detail>
+                            <span>等待设备</span>
+                        </div>
+                    </div>
+                    <dl class="status-live-facts">
+                        <div>
+                            <dt>在线</dt>
+                            <dd data-online-count>读取中</dd>
+                        </div>
+                        <div>
+                            <dt>应用</dt>
+                            <dd data-current-app>读取中</dd>
+                        </div>
+                        <div>
+                            <dt>天气</dt>
+                            <dd data-weather-inline>读取中</dd>
+                        </div>
+                        <div>
+                            <dt>心率</dt>
+                            <dd data-health-heart-live>读取中</dd>
+                        </div>
+                    </dl>
+                </div>
+
+                <nav class="status-device-strip" aria-label="设备筛选" data-device-tabs>
+                    <button class="is-active" type="button">总览</button>
+                </nav>
+            </section>
+
+            <section class="status-period-bar onload-animation" style="animation-delay: calc(var(--content-delay) + 100ms);">
+                <div class="status-period-copy">
+                    <span>Daily Lens</span>
+                    <strong data-selected-date-label>今天</strong>
+                    <small data-selected-date-meta>上海日界</small>
+                </div>
+                <div class="status-day-tabs" data-status-days></div>
+            </section>
+
+            <section class="status-workbench onload-animation" style="animation-delay: calc(var(--content-delay) + 120ms);">
+                <section class="status-timeline-panel" data-panel="timeline">
+                    <div class="status-section-head">
+                        <div>
+                            <span>Trace</span>
+                            <h2>时间线</h2>
+                        </div>
+                        <span class="status-count-pill" data-timeline-count>--</span>
+                    </div>
+                    <div class="status-timeline-scroll" data-timeline-scroll>
+                        <ol class="status-timeline-list" data-timeline-list></ol>
+                        <p class="status-panel-message" data-panel-message>读取中。</p>
+                    </div>
+                </section>
+
+                <aside class="status-side">
+                    <section class="status-ai" data-panel="ai-summary">
+                        <div class="status-section-head">
+                            <div>
+                                <span>AI Summary</span>
+                                <h2>状态小结</h2>
+                            </div>
+                            <Icon name="material-symbols:bolt-rounded" class="text-[var(--primary)] text-xl"></Icon>
+                        </div>
+                        <p data-ai-summary>先放一段占位总结。之后这里会接你的 AI API，把设备、时间线、天气、日记库和娱乐状态压成一句更像“现在的浅仪式”的短评。</p>
+                        <div class="status-ai-tabs" data-ai-modes>
+                            <button class="is-active" type="button" data-ai-tone="soft">温柔</button>
+                            <button type="button" data-ai-tone="brief">短句</button>
+                            <button type="button" data-ai-tone="system">系统</button>
+                        </div>
+                    </section>
+
+                    <section class="status-drawer" data-panel="body">
+                        <div class="status-drawer-header">
+                            <span>身体</span>
+                            <strong data-body-heading>读取中</strong>
+                        </div>
+                        <div class="status-mini-grid">
+                            <div><span>步数</span><strong data-health-steps>--</strong></div>
+                            <div><span>睡眠</span><strong data-health-sleep>--</strong></div>
+                        </div>
+                        <p class="status-panel-message" data-panel-message>读取中。</p>
+                    </section>
+
+                    <section class="status-drawer" data-panel="service">
+                        <div class="status-drawer-header">
+                            <span>服务与档案</span>
+                            <strong data-service-heading>读取中</strong>
+                        </div>
+                        <div class="status-service-list">
+                            <div><span>Core API</span><strong data-core-state>--</strong></div>
+                            <div><span>Archive</span><strong data-archive-state>--</strong></div>
+                            <div><span>数据源</span><strong data-connectors-state>--</strong></div>
+                        </div>
+                        <p class="status-panel-message" data-panel-message>读取中。</p>
+                    </section>
+
+                    <section class="status-drawer" data-panel="steam">
+                        <div class="status-drawer-header">
+                            <span>Steam</span>
+                            <strong data-steam-heading>读取中</strong>
+                        </div>
+                        <div class="status-steam">
+                            <img data-steam-avatar alt="" />
+                            <div>
+                                <strong data-steam-name>Steam</strong>
+                                <p data-steam-state>等待 Steam 状态。</p>
+                            </div>
+                        </div>
+                        <p class="status-panel-message" data-panel-message>读取中。</p>
+                    </section>
+
+                    <section class="status-drawer status-activity-drawer" data-panel="activity">
+                        <div class="status-drawer-header">
+                            <span>应用统计</span>
+                            <strong data-activity-total>读取中</strong>
+                        </div>
+                        <div class="status-app-scroll" data-app-scroll>
+                            <div class="status-app-list" data-app-list></div>
+                            <p class="status-panel-message" data-panel-message>读取中。</p>
+                        </div>
+                    </section>
+                </aside>
+            </section>
+        </article>
+    </div>
+</MainGridLayout>
+
+<style is:global>
+    .status-console {
+        --status-text: rgb(24 24 27);
+        --status-muted: rgb(82 82 91);
+        --status-faint: rgb(113 113 122);
+        overflow: hidden;
+        font-size: 14px;
+        line-height: 1.5;
+        padding: 1.1rem;
+        color: var(--status-text);
+        background: var(--card-bg);
+    }
+
+    .status-console::before {
+        display: none;
+    }
+
+    :root.dark .status-console {
+        --status-text: rgb(245 245 245);
+        --status-muted: rgb(214 214 220);
+        --status-faint: rgb(170 170 178);
+    }
+
+    .status-top,
+    .status-live,
+    .status-period-bar,
+    .status-workbench {
+        position: relative;
+        z-index: 1;
+    }
+
+    .status-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.35rem 0.2rem 0.95rem;
+    }
+
+    .status-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--primary);
+        font-size: 0.78rem;
+        font-weight: 750;
+    }
+
+    .status-dot {
+        width: 0.52rem;
+        height: 0.52rem;
+        border-radius: 999px;
+        background: oklch(0.72 0.14 150);
+        box-shadow: 0 0 0 0.3rem color-mix(in oklch, oklch(0.72 0.14 150) 18%, transparent);
+    }
+
+    .status-dot.is-error {
+        background: oklch(0.62 0.16 28);
+        box-shadow: 0 0 0 0.3rem color-mix(in oklch, oklch(0.62 0.16 28) 16%, transparent);
+    }
+
+    .status-title-block h1 {
+        margin: 0.25rem 0 0;
+        color: var(--status-text);
+        font-size: clamp(1.1rem, 1.55vw, 1.42rem);
+        font-weight: 760;
+        letter-spacing: 0;
+        line-height: 1.15;
+    }
+
+    .status-title-block p {
+        max-width: 42rem;
+        margin: 0.45rem 0 0;
+        color: var(--status-muted);
+        font-size: 0.95rem;
+        line-height: 1.7rem;
+    }
+
+    .status-top-actions {
+        display: grid;
+        gap: 0.45rem;
+        justify-items: end;
+    }
+
+    .status-refresh,
+    .status-small-action,
+    .status-device-strip button,
+    .status-day-tabs button,
+    .status-ai-tabs button {
+        border-radius: 999px;
+        border: 1px solid transparent;
+        background: var(--btn-regular-bg);
+        color: var(--status-muted);
+        font-weight: 750;
+        transition:
+            transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
+            background-color 180ms ease,
+            border-color 180ms ease,
+            color 180ms ease;
+    }
+
+    .status-refresh {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        min-height: 2.35rem;
+        padding: 0 0.9rem;
+        color: var(--primary);
+    }
+
+    .status-refresh.is-loading svg {
+        animation: status-spin 900ms linear infinite;
+    }
+
+    .status-top-actions time {
+        color: var(--status-faint);
+        font-size: 0.78rem;
+        font-weight: 750;
+    }
+
+    .status-live {
+        display: grid;
+        gap: 0.9rem;
+        border-radius: 1.25rem;
+        padding: 1rem;
+        background: color-mix(in oklch, var(--primary) 8%, var(--card-bg));
+        border: 1px solid color-mix(in oklch, var(--primary) 22%, var(--line-divider));
+        box-shadow: none;
+    }
+
+    :root.dark .status-live {
+        background: color-mix(in oklch, var(--primary) 10%, var(--card-bg));
+        box-shadow: none;
+    }
+
+    .status-device-strip {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        border-top: 1px dashed color-mix(in oklch, var(--primary) 22%, var(--line-divider));
+        padding-top: 0.85rem;
+    }
+
+    .status-device-strip button,
+    .status-day-tabs button,
+    .status-ai-tabs button {
+        min-height: 2.15rem;
+        padding: 0.35rem 0.7rem;
+        text-align: left;
+        font-size: 0.82rem;
+    }
+
+    .status-device-strip button {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: 0.48rem;
+        align-items: center;
+        min-width: min(13rem, 100%);
+        background: color-mix(in oklch, var(--primary) 5%, var(--card-bg));
+        border-color: color-mix(in oklch, var(--primary) 10%, var(--line-divider));
+    }
+
+    .status-device-dot {
+        width: 0.52rem;
+        height: 0.52rem;
+        border-radius: 999px;
+        background: var(--status-faint);
+    }
+
+    .status-device-strip button.is-online .status-device-dot {
+        background: var(--primary);
+        box-shadow: 0 0 0 0.24rem color-mix(in oklch, var(--primary) 16%, var(--card-bg));
+    }
+
+    .status-device-text {
+        display: grid;
+        min-width: 0;
+        gap: 0.05rem;
+    }
+
+    .status-device-label,
+    .status-device-meta {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .status-device-label {
+        color: var(--status-text);
+        font-weight: 750;
+    }
+
+    .status-device-meta {
+        color: var(--status-faint);
+        font-size: 0.72rem;
+        font-weight: 500;
+    }
+
+    .status-device-strip button.is-offline {
+        color: var(--status-faint);
+    }
+
+    .status-device-strip button.is-offline .status-device-label {
+        color: var(--status-muted);
+    }
+
+    .status-device-strip button.is-offline .status-device-dot {
+        background: var(--status-faint);
+        box-shadow: none;
+    }
+
+    .status-device-strip button.is-active,
+    .status-day-tabs button.is-active,
+    .status-ai-tabs button.is-active {
+        color: var(--primary);
+        background: color-mix(in oklch, var(--primary) 12%, var(--card-bg));
+        border-color: color-mix(in oklch, var(--primary) 28%, transparent);
+    }
+
+    .status-period-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.8rem;
+        margin-top: 0.9rem;
+        border-radius: 1.1rem;
+        padding: 0.78rem 0.88rem;
+        background: color-mix(in oklch, var(--primary) 5%, var(--card-bg));
+        border: 1px solid color-mix(in oklch, var(--primary) 12%, var(--line-divider));
+    }
+
+    .status-period-copy {
+        display: grid;
+        flex: 0 0 auto;
+        gap: 0.05rem;
+    }
+
+    .status-period-copy span {
+        color: var(--primary);
+        font-size: 0.7rem;
+        font-weight: 750;
+        letter-spacing: 0;
+        text-transform: uppercase;
+    }
+
+    .status-period-copy strong {
+        color: var(--status-text);
+        font-size: 0.92rem;
+        font-weight: 760;
+    }
+
+    .status-period-copy small {
+        color: var(--status-faint);
+        font-size: 0.72rem;
+        font-weight: 560;
+    }
+
+    .status-live-main {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(12rem, 18rem);
+        gap: 1rem;
+        align-items: stretch;
+    }
+
+    .status-live-copy {
+        display: grid;
+        align-content: center;
+        min-width: 0;
+        padding: 0.45rem;
+    }
+
+    .status-live-copy > span,
+    .status-section-head span {
+        color: var(--primary);
+        font-size: 0.74rem;
+        font-weight: 750;
+        letter-spacing: 0;
+        text-transform: uppercase;
+    }
+
+    .status-live-copy strong {
+        display: block;
+        margin-top: 0.45rem;
+        color: var(--status-text);
+        font-size: clamp(1.05rem, 1.72vw, 1.34rem);
+        font-weight: 680;
+        letter-spacing: 0;
+        line-height: 1.28;
+    }
+
+    .status-live-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.42rem;
+        margin-top: 0.82rem;
+    }
+
+    .status-live-chips span {
+        border-radius: 999px;
+        padding: 0.28rem 0.62rem;
+        color: var(--status-muted);
+        background: color-mix(in oklch, var(--primary) 6%, var(--card-bg));
+        border: 1px solid color-mix(in oklch, var(--primary) 12%, transparent);
+        font-size: 0.8rem;
+        font-weight: 620;
+        line-height: 1.25;
+    }
+
+    .status-live-facts {
+        display: grid;
+        align-content: center;
+        gap: 0.55rem;
+        margin: 0;
+        border-left: 1px dashed color-mix(in oklch, var(--line-divider) 72%, transparent);
+        padding-left: 1rem;
+    }
+
+    .status-live-facts div {
+        display: grid;
+        gap: 0.1rem;
+    }
+
+    .status-live-facts dt {
+        color: var(--status-faint);
+        font-size: 0.74rem;
+        font-weight: 650;
+    }
+
+    .status-live-facts dd {
+        margin: 0;
+        color: var(--status-text);
+        font-size: 0.96rem;
+        font-weight: 650;
+        line-height: 1.42rem;
+    }
+
+    .status-workbench {
+        display: grid;
+        grid-template-columns: minmax(0, 1.22fr) minmax(18rem, 0.78fr);
+        gap: 0.95rem;
+        align-items: start;
+        margin-top: 0.95rem;
+    }
+
+    .status-timeline-panel,
+    .status-ai,
+    .status-drawer {
+        overflow: hidden;
+        border-radius: 1.2rem;
+        background: var(--card-bg);
+        border: 1px solid color-mix(in oklch, var(--line-divider) 84%, transparent);
+    }
+
+    .status-timeline-panel {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        height: var(--status-timeline-height, clamp(42rem, 70vh, 66rem));
+        min-height: 0;
+        padding: 1rem;
+    }
+
+    .status-section-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 0.85rem;
+    }
+
+    .status-section-head h2 {
+        margin: 0.08rem 0 0;
+        color: var(--status-text);
+        font-size: 1.2rem;
+        font-weight: 760;
+        line-height: 1.45rem;
+    }
+
+    .status-count-pill {
+        border-radius: 999px;
+        padding: 0.3rem 0.62rem;
+        color: var(--primary);
+        background: var(--btn-regular-bg);
+        font-size: 0.76rem;
+        font-weight: 750;
+    }
+
+    .status-small-action {
+        min-height: 2.05rem;
+        padding: 0 0.75rem;
+        color: var(--primary);
+        font-size: 0.78rem;
+    }
+
+    .status-day-tabs,
+    .status-ai-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+    }
+
+    .status-day-tabs {
+        justify-content: flex-end;
+    }
+
+    .status-timeline-list {
+        display: grid;
+        gap: 0;
+        margin: 0;
+        padding: 0;
+    }
+
+    .status-timeline-scroll {
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        padding-right: 0.35rem;
+        scrollbar-color: color-mix(in oklch, var(--primary) 45%, transparent) transparent;
+        scrollbar-width: thin;
+        mask-image: linear-gradient(to bottom, transparent 0, black 1rem, black calc(100% - 1.6rem), transparent 100%);
+    }
+
+    .status-timeline-scroll::-webkit-scrollbar {
+        width: 0.45rem;
+    }
+
+    .status-timeline-scroll::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .status-timeline-scroll::-webkit-scrollbar-thumb {
+        border-radius: 999px;
+        background: color-mix(in oklch, var(--primary) 32%, transparent);
+    }
+
+    .status-timeline-scroll:hover::-webkit-scrollbar-thumb {
+        background: color-mix(in oklch, var(--primary) 55%, transparent);
+    }
+
+    .status-timeline-item {
+        display: grid;
+        grid-template-columns: 4.1rem minmax(0, 1fr) auto;
+        gap: 0.85rem;
+        align-items: start;
+        min-height: 3.15rem;
+        border-top: 1px solid color-mix(in oklch, var(--line-divider) 72%, transparent);
+        padding: 0.72rem 0;
+        transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), background-color 180ms ease;
+    }
+
+    .status-timeline-item:first-child {
+        border-top: 0;
+    }
+
+    .status-timeline-time {
+        color: var(--primary);
+        font-size: 0.78rem;
+        font-weight: 760;
+        line-height: 1.35rem;
+    }
+
+    .status-timeline-main {
+        min-width: 0;
+    }
+
+    .status-timeline-main strong {
+        display: block;
+        overflow: hidden;
+        color: var(--status-text);
+        font-size: 0.94rem;
+        font-weight: 680;
+        line-height: 1.45rem;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .status-timeline-main span {
+        display: block;
+        overflow: hidden;
+        color: var(--status-faint);
+        font-size: 0.78rem;
+        line-height: 1.25rem;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .status-timeline-app {
+        justify-self: end;
+        border-radius: 999px;
+        padding: 0.22rem 0.55rem;
+        color: var(--primary);
+        background: var(--btn-regular-bg);
+        font-size: 0.72rem;
+        font-weight: 760;
+    }
+
+    .status-side {
+        display: grid;
+        align-content: start;
+        gap: 0.75rem;
+        min-height: 0;
+    }
+
+    .status-ai {
+        padding: 1rem;
+        background: var(--card-bg);
+    }
+
+    .status-ai p {
+        margin: 0;
+        color: var(--status-muted);
+        font-size: 0.93rem;
+        line-height: 1.7rem;
+    }
+
+    .status-ai-tabs {
+        margin-top: 0.85rem;
+    }
+
+    .status-drawer-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.9rem 1rem;
+        border-bottom: 1px dashed color-mix(in oklch, var(--line-divider) 76%, transparent);
+    }
+
+    .status-drawer-header span {
+        color: var(--status-text);
+        font-weight: 720;
+    }
+
+    .status-drawer-header strong {
+        color: var(--primary);
+        font-size: 0.86rem;
+        font-weight: 760;
+        text-align: right;
+    }
+
+    .status-app-scroll,
+    .status-mini-grid,
+    .status-service-list,
+    .status-steam {
+        padding: 0.9rem 1rem 1rem;
+    }
+
+    .status-app-scroll {
+        max-height: 23rem;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        scrollbar-color: color-mix(in oklch, var(--primary) 45%, transparent) transparent;
+        scrollbar-width: thin;
+        mask-image: linear-gradient(to bottom, transparent 0, black 0.8rem, black calc(100% - 1.2rem), transparent 100%);
+    }
+
+    .status-app-scroll::-webkit-scrollbar {
+        width: 0.42rem;
+    }
+
+    .status-app-scroll::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .status-app-scroll::-webkit-scrollbar-thumb {
+        border-radius: 999px;
+        background: color-mix(in oklch, var(--primary) 32%, transparent);
+    }
+
+    .status-app-scroll:hover::-webkit-scrollbar-thumb {
+        background: color-mix(in oklch, var(--primary) 55%, transparent);
+    }
+
+    .status-app-list {
+        display: grid;
+        gap: 0.7rem;
+    }
+
+    .status-app-row {
+        display: grid;
+        gap: 0.32rem;
+    }
+
+    .status-app-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.75rem;
+    }
+
+    .status-app-name {
+        overflow: hidden;
+        color: var(--status-text);
+        font-size: 0.88rem;
+        font-weight: 680;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .status-app-top > div {
+        min-width: 0;
+    }
+
+    .status-app-time {
+        flex: 0 0 auto;
+        color: var(--primary);
+        font-size: 0.78rem;
+        font-weight: 760;
+    }
+
+    .status-app-detail {
+        color: var(--status-faint);
+        font-size: 0.74rem;
+    }
+
+    .status-app-track {
+        overflow: hidden;
+        height: 0.42rem;
+        border-radius: 999px;
+        background: var(--btn-regular-bg);
+    }
+
+    .status-app-track span {
+        display: block;
+        width: var(--ratio);
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--primary), color-mix(in oklch, var(--primary) 45%, white));
+    }
+
+    .status-mini-grid,
+    .status-service-list {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.5rem;
+    }
+
+    .status-mini-grid div,
+    .status-service-list div {
+        border-radius: 0.85rem;
+        padding: 0.65rem;
+        background: var(--btn-regular-bg);
+    }
+
+    .status-mini-grid span,
+    .status-service-list span {
+        display: block;
+        color: var(--status-faint);
+        font-size: 0.73rem;
+        font-weight: 800;
+    }
+
+    .status-mini-grid strong,
+    .status-service-list strong {
+        display: block;
+        overflow: hidden;
+        margin-top: 0.2rem;
+        color: var(--status-text);
+        font-size: 0.92rem;
+        font-weight: 730;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .status-steam {
+        display: grid;
+        grid-template-columns: 3.2rem minmax(0, 1fr);
+        gap: 0.75rem;
+        align-items: center;
+    }
+
+    .status-steam img {
+        width: 3.2rem;
+        height: 3.2rem;
+        border-radius: 0.95rem;
+        object-fit: cover;
+        background: var(--btn-regular-bg);
+    }
+
+    .status-steam strong {
+        display: block;
+        overflow: hidden;
+        color: var(--status-text);
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .status-steam p {
+        margin: 0.18rem 0 0;
+        color: var(--status-muted);
+        font-size: 0.82rem;
+        line-height: 1.45rem;
+    }
+
+    .status-panel-message {
+        display: none;
+        margin: 0;
+        padding: 0 1rem 1rem;
+        color: var(--status-muted);
+        font-size: 0.84rem;
+        line-height: 1.55rem;
+    }
+
+    .status-timeline-panel > .status-panel-message {
+        padding: 0.6rem 0 0;
+    }
+
+    .is-empty .status-panel-message,
+    .is-error .status-panel-message,
+    .is-loading .status-panel-message {
+        display: block;
+    }
+
+    .status-empty-note {
+        border-top: 1px solid color-mix(in oklch, var(--line-divider) 72%, transparent);
+        padding: 0.8rem 0;
+        color: var(--status-muted);
+        font-size: 0.9rem;
+        line-height: 1.65rem;
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+        .status-refresh:hover,
+        .status-small-action:hover,
+        .status-device-strip button:hover,
+        .status-day-tabs button:hover,
+        .status-ai-tabs button:hover {
+            transform: translateY(-2px);
+            color: var(--primary);
+            background: var(--btn-regular-bg-hover);
+        }
+
+        .status-timeline-item:hover {
+            transform: translateX(3px);
+            background: var(--btn-plain-bg-hover);
+        }
+    }
+
+    @media (max-width: 1024px) {
+        .status-workbench,
+        .status-live,
+        .status-live-main {
+            grid-template-columns: 1fr;
+        }
+
+        .status-period-bar {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .status-day-tabs {
+            justify-content: flex-start;
+        }
+
+        .status-workbench {
+            height: auto;
+            min-height: 0;
+        }
+
+        .status-timeline-panel {
+            height: min(36rem, calc(100vh - 6rem));
+            min-height: 0;
+        }
+
+        .status-device-strip {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .status-live-facts {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            border-left: 0;
+            border-top: 1px dashed color-mix(in oklch, var(--line-divider) 72%, transparent);
+            padding: 0.85rem 0 0;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .status-console {
+            padding: 0.85rem;
+        }
+
+        .status-top {
+            display: grid;
+        }
+
+        .status-top-actions {
+            justify-items: start;
+        }
+
+        .status-live-facts,
+        .status-mini-grid,
+        .status-service-list {
+            grid-template-columns: 1fr;
+        }
+
+        .status-timeline-item {
+            grid-template-columns: 3.5rem minmax(0, 1fr);
+        }
+
+        .status-timeline-panel {
+            height: min(34rem, calc(100vh - 5rem));
+            min-height: 0;
+        }
+
+        .status-timeline-app {
+            grid-column: 2;
+            justify-self: start;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .status-refresh,
+        .status-small-action,
+        .status-device-strip button,
+        .status-day-tabs button,
+        .status-ai-tabs button,
+        .status-timeline-item {
+            transition: none;
+        }
+
+        .status-refresh.is-loading svg {
+            animation: none;
+        }
+    }
+
+    @keyframes status-spin {
+        from {
+            transform: rotate(0deg);
+        }
+        to {
+            transform: rotate(360deg);
+        }
+    }
+</style>
+
+<script>
+import { appName, liveDescription, truncate } from "@utils/asashiki-app-labels";
+
+type ApiResult<T> = {
+	data: T | null;
+	error?: string;
+	ok: boolean;
+	status?: number;
+};
+
+type HealthResponse = {
+	status?: string;
+	uptimeSeconds?: number;
+};
+
+type DeviceItem = {
+	appId?: string;
+	deviceId?: string;
+	deviceName?: string;
+	extra?: {
+		battery_charging?: boolean;
+		battery_percent?: number;
+		music?: { title?: string };
+		network_type?: string;
+	};
+	isOnline?: boolean;
+	lastSeenAt?: string;
+	platform?: string;
+	windowTitle?: string;
+};
+
+type DevicesResponse = {
+	devices?: DeviceItem[];
+	fetchedAt?: string;
+};
+
+type ActivityItem = {
+	appId?: string;
+	count?: number;
+	totalSeconds?: number;
+	windowTitle?: string;
+};
+
+type ActivityResponse = {
+	date?: string;
+	perApp?: ActivityItem[];
+	totalSeconds?: number;
+};
+
+type TimelineItem = {
+	appId?: string;
+	deviceId?: string;
+	durationSeconds?: number;
+	startedAt?: string;
+	windowTitle?: string;
+};
+
+type TimelineResponse = {
+	activities?: TimelineItem[];
+	date?: string;
+};
+
+type WeatherResponse = {
+	current?: {
+		description?: string;
+		feelsLikeC?: number;
+		humidity?: number;
+		temperatureC?: number;
+		windSpeedKmh?: number;
+	};
+	latitude?: number;
+	location?: string;
+	longitude?: number;
+};
+
+type ConnectorsSummary = {
+	degraded?: number;
+	offline?: number;
+	online?: number;
+	total?: number;
+};
+
+type ArchiveStatus = {
+	fileCount?: number;
+	latestDiaryDate?: string;
+	status?: string;
+};
+
+type SteamProfile = {
+	avatarUrl?: string;
+	currentGame?: string | null;
+	displayName?: string;
+	lastLogoffAt?: string;
+	status?: string;
+};
+
+type HealthRecord = {
+	recordedAt?: string;
+	type?: string;
+	unit?: string;
+	value?: number;
+	valueJson?: unknown;
+};
+
+type HealthRecordsResponse = {
+	records?: HealthRecord[];
+};
+
+type RecentApiResult<T> = {
+	activeDate: string;
+	result: ApiResult<T>;
+	results: Array<{ date: string; result: ApiResult<T> }>;
+};
+
+type StatusStore = {
+	activity: RecentApiResult<ActivityResponse> | null;
+	devices: DeviceItem[];
+	heartRecords: ApiResult<HealthRecordsResponse> | null;
+	selectedDevice: string;
+	sleepRecords: ApiResult<HealthRecordsResponse> | null;
+	stepsRecords: ApiResult<HealthRecordsResponse> | null;
+	timeline: RecentApiResult<TimelineResponse> | null;
+	timelineDate: string;
+	timelineVisible: number;
+	weather: WeatherResponse | null;
+};
+
+const API_BASE = "https://api.asashiki.com";
+const API_TIMEOUT = 10_000;
+const LOOKBACK_DAYS = 4;
+const REFRESH_INTERVAL = 60_000;
+const TIMELINE_PAGE_SIZE_DESKTOP = 120;
+const TIMELINE_PAGE_SIZE_MOBILE = 18;
+const TIMELINE_PAGE_STEP_DESKTOP = 80;
+const TIMELINE_PAGE_STEP_MOBILE = 12;
+const QUIET_TIMELINE_APP_IDS = new Set(["windows.afk", "windows.idle"]);
+const statusStore = new WeakMap<HTMLElement, StatusStore>();
+
+const aiCopy = {
+	brief: "占位：正在把当前设备、时间线、天气和日记库压成一句状态。之后这里接 AI API。",
+	soft: "先放一段占位总结。之后这里会接你的 AI API，把设备、时间线、天气、日记库和娱乐状态压成一句更像“现在的浅仪式”的短评。",
+	system: "占位：Core API、设备、时间线、天气、Archive、Steam、健康数据分模块读取；失败时独立回退，不阻塞整页。",
+};
+
+function getStore(root: HTMLElement) {
+	let store = statusStore.get(root);
+	if (!store) {
+		store = {
+			activity: null,
+			devices: [],
+			heartRecords: null,
+			selectedDevice: "all",
+			sleepRecords: null,
+			stepsRecords: null,
+			timeline: null,
+			timelineDate: todayShanghai(),
+			timelineVisible: timelinePageSize(),
+			weather: null,
+		};
+		statusStore.set(root, store);
+	}
+	return store;
+}
+
+function isDesktopTimeline() {
+	return window.matchMedia("(min-width: 1025px)").matches;
+}
+
+function timelinePageSize() {
+	return isDesktopTimeline() ? TIMELINE_PAGE_SIZE_DESKTOP : TIMELINE_PAGE_SIZE_MOBILE;
+}
+
+function timelinePageStep() {
+	return isDesktopTimeline() ? TIMELINE_PAGE_STEP_DESKTOP : TIMELINE_PAGE_STEP_MOBILE;
+}
+
+function todayShanghai() {
+	return new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Shanghai" }).format(new Date());
+}
+
+function dateOffsetShanghai(baseDate: string, offsetDays: number) {
+	const date = new Date(`${baseDate}T00:00:00+08:00`);
+	date.setUTCDate(date.getUTCDate() + offsetDays);
+	return new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Shanghai" }).format(date);
+}
+
+function recentDates() {
+	const today = todayShanghai();
+	return Array.from({ length: LOOKBACK_DAYS }, (_, index) => dateOffsetShanghai(today, -index));
+}
+
+function relativeDateLabel(date: string) {
+	const dates = recentDates();
+	if (date === dates[0]) return "今天";
+	if (date === dates[1]) return "昨天";
+	if (date === dates[2]) return "前天";
+	if (date === dates[3]) return "大前天";
+	return new Intl.DateTimeFormat("zh-CN", {
+		day: "2-digit",
+		month: "2-digit",
+		timeZone: "Asia/Shanghai",
+	}).format(new Date(`${date}T00:00:00+08:00`));
+}
+
+function dateMetaLabel(date: string) {
+	return `${date.slice(5)} · 00:00-24:00`;
+}
+
+function formatClock(value?: string) {
+	if (!value) return "--:--";
+	return new Intl.DateTimeFormat("zh-CN", {
+		hour: "2-digit",
+		minute: "2-digit",
+		timeZone: "Asia/Shanghai",
+	}).format(new Date(value));
+}
+
+function formatDuration(seconds = 0) {
+	if (!seconds) return "进行中";
+	if (seconds < 60) return `${Math.max(1, Math.round(seconds))}秒`;
+	const minutes = Math.round(seconds / 60);
+	if (minutes < 60) return `${minutes}分钟`;
+	const hours = Math.floor(minutes / 60);
+	const rest = minutes % 60;
+	return rest ? `${hours}h${rest}m` : `${hours}h`;
+}
+
+function formatMinutes(minutes = 0) {
+	if (!minutes) return "暂无";
+	if (minutes < 60) return `${Math.round(minutes)}分钟`;
+	const hours = Math.floor(minutes / 60);
+	const rest = Math.round(minutes % 60);
+	return rest ? `${hours}h${rest}m` : `${hours}h`;
+}
+
+function dateKeyShanghai(value?: string) {
+	if (!value) return "";
+	const date = new Date(value);
+	if (!Number.isFinite(date.getTime())) return "";
+	return new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Shanghai" }).format(date);
+}
+
+function timeAgo(value?: string) {
+	if (!value) return "未知时间";
+	const diff = Date.now() - new Date(value).getTime();
+	if (!Number.isFinite(diff)) return "未知时间";
+	if (diff < 60_000) return "刚刚";
+	const minutes = Math.floor(diff / 60_000);
+	if (minutes < 60) return `${minutes}分钟前`;
+	const hours = Math.floor(minutes / 60);
+	if (hours < 24) return `${hours}小时前`;
+	return `${Math.floor(hours / 24)}天前`;
+}
+
+function setText(root: ParentNode, selector: string, value: string) {
+	const element = root.querySelector(selector);
+	if (element) element.textContent = value;
+}
+
+function clear(element: Element | null) {
+	if (element) element.replaceChildren();
+}
+
+function renderChips(root: ParentNode, selector: string, labels: string[]) {
+	const container = root.querySelector(selector);
+	if (!container) return;
+	container.replaceChildren(
+		...labels.map((label) => {
+			const chip = document.createElement("span");
+			chip.textContent = label;
+			return chip;
+		}),
+	);
+}
+
+function timestamp(value?: string) {
+	const time = value ? new Date(value).getTime() : 0;
+	return Number.isFinite(time) ? time : 0;
+}
+
+async function getJson<T>(path: string): Promise<ApiResult<T>> {
+	const controller = new AbortController();
+	const timer = window.setTimeout(() => controller.abort(), API_TIMEOUT);
+	try {
+		const response = await fetch(`${API_BASE}${path}`, {
+			headers: { accept: "application/json" },
+			signal: controller.signal,
+		});
+		if (!response.ok) return { data: null, ok: false, status: response.status };
+		return { data: (await response.json()) as T, ok: true, status: response.status };
+	} catch (error) {
+		return { data: null, error: error instanceof Error ? error.message : String(error), ok: false };
+	} finally {
+		window.clearTimeout(timer);
+	}
+}
+
+async function getRecentBundle<T>(
+	dates: string[],
+	pathForDate: (date: string) => string,
+	hasData: (data: T | null) => boolean,
+): Promise<RecentApiResult<T>> {
+	const results = await Promise.all(
+		dates.map(async (date) => ({
+			date,
+			result: await getJson<T>(pathForDate(date)),
+		})),
+	);
+	const active = results.find((item) => item.result.ok && hasData(item.result.data)) || results.find((item) => item.result.ok) || results[0];
+	return { activeDate: active?.date || dates[0], result: active?.result || { data: null, ok: false }, results };
+}
+
+function setPanelState(root: HTMLElement, name: string, state: "empty" | "error" | "loading" | "ready", message = "") {
+	const panel = root.querySelector<HTMLElement>(`[data-panel="${name}"]`);
+	if (!panel) return;
+	panel.classList.toggle("is-loading", state === "loading");
+	panel.classList.toggle("is-error", state === "error");
+	panel.classList.toggle("is-empty", state === "empty");
+	panel.classList.toggle("is-ready", state === "ready");
+	setText(panel, "[data-panel-message]", message);
+}
+
+function primaryDevice(devices: DeviceItem[], selectedDevice: string) {
+	if (selectedDevice !== "all") return devices.find((item) => item.deviceId === selectedDevice) || null;
+	const online = devices.filter((item) => item.isOnline).sort((a, b) => timestamp(b.lastSeenAt) - timestamp(a.lastSeenAt));
+	if (online.length) return online[0];
+	return [...devices].sort((a, b) => timestamp(b.lastSeenAt) - timestamp(a.lastSeenAt))[0] || null;
+}
+
+function isUsefulLocationName(value?: string) {
+	if (!value) return false;
+	return !["当前位置", "当前地点", "未知位置", "unknown"].includes(value.trim().toLowerCase());
+}
+
+function formatCoordinate(value?: number) {
+	if (typeof value !== "number" || !Number.isFinite(value)) return "";
+	return value.toFixed(3);
+}
+
+function locationLabel(weather: WeatherResponse | null) {
+	if (!weather) return "暂无";
+	const lat = formatCoordinate(weather.latitude);
+	const lon = formatCoordinate(weather.longitude);
+	const coord = lat && lon ? `${lat}, ${lon}` : "";
+	if (isUsefulLocationName(weather.location)) return coord ? `${weather.location} · ${coord}` : weather.location || "暂无";
+	if (coord) return `嘉兴附近 · ${coord}`;
+	return "位置未上报";
+}
+
+function shortLocationLabel(weather: WeatherResponse | null) {
+	if (!weather) return "暂无";
+	if (isUsefulLocationName(weather.location)) return weather.location || "暂无";
+	if (formatCoordinate(weather.latitude) && formatCoordinate(weather.longitude)) return "嘉兴附近";
+	return "位置未上报";
+}
+
+function weatherIcon(description?: string) {
+	const text = description || "";
+	if (/雨|阵雨|雷/.test(text)) return "🌧️";
+	if (/雪/.test(text)) return "❄️";
+	if (/晴/.test(text)) return "☀️";
+	if (/云|阴/.test(text)) return "☁️";
+	if (/雾|霾/.test(text)) return "🌫️";
+	return "🌤️";
+}
+
+function weatherInline(weather: WeatherResponse | null) {
+	if (!weather?.current) return "暂无";
+	return `${weatherIcon(weather.current.description)} ${weather.current.description || "天气"} · ${shortLocationLabel(weather)}`;
+}
+
+function deviceStatusMeta(device: DeviceItem) {
+	const app = appName(device.appId);
+	const lastSeen = timeAgo(device.lastSeenAt);
+	if (device.isOnline) return `${lastSeen} · ${app}`;
+	return `离线 ${lastSeen} · ${app}`;
+}
+
+function offlineDescription(device: DeviceItem | null) {
+	if (!device) return "Asashiki 暂时离线。";
+	const name = device.deviceName || device.deviceId || "设备";
+	const app = appName(device.appId);
+	return `${name} 已离线 ${timeAgo(device.lastSeenAt)}，上次停在 ${app}。`;
+}
+
+function renderDeviceTabs(root: HTMLElement) {
+	const store = getStore(root);
+	const tabs = root.querySelector("[data-device-tabs]");
+	clear(tabs);
+	const online = store.devices.filter((device) => device.isOnline).length;
+	const devicesByRecent = [...store.devices].sort((a, b) => timestamp(b.lastSeenAt) - timestamp(a.lastSeenAt));
+	const entries = [
+		{ id: "all", label: "总览", meta: `${online}/${store.devices.length} 在线`, online: online > 0 },
+		...devicesByRecent.map((device) => ({
+			id: device.deviceId || "unknown",
+			label: device.deviceName || device.deviceId || "未知设备",
+			meta: deviceStatusMeta(device),
+			online: Boolean(device.isOnline),
+		})),
+	];
+	for (const entry of entries) {
+		const button = document.createElement("button");
+		button.type = "button";
+		button.className = [
+			entry.id === store.selectedDevice ? "is-active" : "",
+			entry.online ? "is-online" : "is-offline",
+		]
+			.filter(Boolean)
+			.join(" ");
+		button.title = entry.meta;
+		const dot = document.createElement("span");
+		dot.className = "status-device-dot";
+		const text = document.createElement("span");
+		text.className = "status-device-text";
+		const label = document.createElement("span");
+		label.className = "status-device-label";
+		label.textContent = entry.label;
+		const meta = document.createElement("span");
+		meta.className = "status-device-meta";
+		meta.textContent = entry.meta;
+		text.append(label, meta);
+		button.append(dot, text);
+		button.addEventListener("click", () => {
+			store.selectedDevice = entry.id;
+			store.timelineVisible = timelinePageSize();
+			renderNow(root);
+			renderTimeline(root);
+			renderAi(root);
+			syncTimelineHeight(root);
+		});
+		tabs?.append(button);
+	}
+}
+
+function latestHeartLabel(store: StatusStore) {
+	const latest = (store.heartRecords?.ok ? store.heartRecords.data?.records || [] : [])
+		.filter((item) => item.type === "heart_rate" && typeof item.value === "number")
+		.sort((a, b) => timestamp(b.recordedAt) - timestamp(a.recordedAt))[0];
+	return latest ? `💗 ${Math.round(latest.value || 0)} bpm` : "暂无";
+}
+
+function renderNow(root: HTMLElement) {
+	const store = getStore(root);
+	const devices = store.devices;
+	renderDeviceTabs(root);
+
+	if (!devices.length) {
+		setText(root, "[data-now-sentence]", "Core API 在线时，这里会显示当前设备正在做什么。");
+		setText(root, "[data-live-desc]", "还没有设备上报。");
+		renderChips(root, "[data-live-detail]", ["设备未上报", "时间线继续读取", "模块独立回退"]);
+		setText(root, "[data-selected-device-label]", "Now");
+		setText(root, "[data-online-count]", "⚪ 0/0");
+		setText(root, "[data-current-app]", "📱 暂无");
+		setText(root, "[data-weather-inline]", weatherInline(store.weather));
+		setText(root, "[data-health-heart-live]", latestHeartLabel(store));
+		return;
+	}
+
+	const online = devices.filter((item) => item.isOnline);
+	const selected = primaryDevice(devices, store.selectedDevice);
+	const activeDeviceLabel = store.selectedDevice === "all" ? "总览" : selected?.deviceName || selected?.deviceId || "设备";
+	const live = selected
+		? selected.isOnline
+			? liveDescription({ appId: selected.appId, windowTitle: selected.windowTitle })
+			: offlineDescription(selected)
+		: "Asashiki 暂时离线。";
+	const app = selected ? appName(selected.appId) : "暂无";
+	const chips = selected
+		? [
+				selected.isOnline ? "🟢 在线" : "⚪ 离线",
+				timeAgo(selected.lastSeenAt),
+				`📱 ${app}`,
+				typeof selected.extra?.battery_percent === "number"
+					? `${selected.extra.battery_charging ? "⚡" : "🔋"} ${selected.extra.battery_percent}%`
+					: "",
+				selected.extra?.network_type ? `📶 ${selected.extra.network_type}` : "",
+			].filter((label): label is string => Boolean(label))
+		: [`🟢 ${online.length} 台设备在线`];
+
+	setText(root, "[data-now-sentence]", live);
+	setText(root, "[data-live-desc]", live);
+	renderChips(root, "[data-live-detail]", chips);
+	setText(root, "[data-selected-device-label]", activeDeviceLabel);
+	setText(root, "[data-online-count]", `${online.length ? "🟢" : "⚪"} ${online.length}/${devices.length}`);
+	setText(root, "[data-current-app]", `📱 ${app}`);
+	setText(root, "[data-weather-inline]", weatherInline(store.weather));
+	setText(root, "[data-health-heart-live]", latestHeartLabel(store));
+}
+
+function renderWeather(root: HTMLElement, result: ApiResult<WeatherResponse>) {
+	const store = getStore(root);
+	if (!result.ok || !result.data?.current) {
+		store.weather = null;
+		renderNow(root);
+		return;
+	}
+	store.weather = result.data;
+	renderNow(root);
+}
+
+function healthMetricsForDate(store: StatusStore, date: string) {
+	const stepsRecords = store.stepsRecords?.ok ? store.stepsRecords.data?.records || [] : [];
+	const sleepRecords = store.sleepRecords?.ok ? store.sleepRecords.data?.records || [] : [];
+	const dayStepsRecords = stepsRecords.filter((item) => dateKeyShanghai(item.recordedAt) === date);
+	const daySleepRecords = sleepRecords.filter((item) => dateKeyShanghai(item.recordedAt) === date);
+	const stepValues = dayStepsRecords
+		.filter((item) => item.type === "steps" && typeof item.value === "number")
+		.map((item) => item.value as number);
+	const steps = stepValues.length ? stepValues.reduce((sum, value) => sum + value, 0) : null;
+	const sleep = daySleepRecords
+		.filter((item) => item.type === "sleep" && typeof item.value === "number")
+		.sort((a, b) => timestamp(b.recordedAt) - timestamp(a.recordedAt))[0];
+	return { sleep, steps };
+}
+
+function activityForSelectedDate(store: StatusStore) {
+	return store.activity?.results.find((item) => item.date === store.timelineDate) || null;
+}
+
+function renderHealth(root: HTMLElement) {
+	const store = getStore(root);
+	const metrics = healthMetricsForDate(store, store.timelineDate);
+	const stepsUnavailable = !store.stepsRecords?.ok;
+	const sleepUnavailable = !store.sleepRecords?.ok;
+
+	if (stepsUnavailable && sleepUnavailable) {
+		setText(root, "[data-health-steps]", "暂无");
+		setText(root, "[data-health-sleep]", "暂无");
+		setText(root, "[data-body-heading]", "不可用");
+		setPanelState(root, "body", "error", "健康记录暂时没有回应。");
+		return;
+	}
+	const hasRecord = Boolean(metrics.steps || metrics.sleep);
+	const dayLabel = relativeDateLabel(store.timelineDate);
+	setText(root, "[data-health-steps]", metrics.steps ? String(Math.round(metrics.steps)) : "暂无");
+	setText(root, "[data-health-sleep]", metrics.sleep ? formatMinutes(metrics.sleep.value || 0) : "暂无");
+	setText(root, "[data-body-heading]", hasRecord ? `${dayLabel}记录` : `${dayLabel}暂无`);
+	setPanelState(root, "body", hasRecord ? "ready" : "empty", hasRecord ? "" : `${dayLabel}暂时没有健康记录。`);
+}
+
+function renderActivity(root: HTMLElement, bundle?: RecentApiResult<ActivityResponse>) {
+	const store = getStore(root);
+	if (bundle) store.activity = bundle;
+	const list = root.querySelector("[data-app-list]");
+	clear(list);
+	const active = activityForSelectedDate(store);
+	const result = active?.result;
+	const apps = (result?.data?.perApp || [])
+		.filter((item) => !QUIET_TIMELINE_APP_IDS.has(item.appId || ""))
+		.filter((item) => (item.totalSeconds || 0) > 0)
+		.sort((a, b) => (b.totalSeconds || 0) - (a.totalSeconds || 0));
+
+	if (!result?.ok) {
+		setText(root, "[data-activity-total]", "不可用");
+		setPanelState(root, "activity", "error", "应用统计暂时没有回应。");
+		return;
+	}
+
+	if (!apps.length) {
+		setText(root, "[data-activity-total]", "暂无");
+		setPanelState(root, "activity", "empty", "最近几天没有可展示的应用统计。");
+		return;
+	}
+
+	const total = apps.reduce((sum, item) => sum + (item.totalSeconds || 0), 0);
+	const max = Math.max(...apps.map((item) => item.totalSeconds || 0), 1);
+	setText(root, "[data-activity-total]", `${relativeDateLabel(store.timelineDate)} · ${formatDuration(total)}`);
+
+	for (const item of apps) {
+		const row = document.createElement("div");
+		row.className = "status-app-row";
+		row.title = item.appId || "";
+		const top = document.createElement("div");
+		top.className = "status-app-top";
+		const name = document.createElement("strong");
+		name.className = "status-app-name";
+		name.textContent = appName(item.appId);
+		const time = document.createElement("span");
+		time.className = "status-app-time";
+		time.textContent = formatDuration(item.totalSeconds || 0);
+		top.append(name, time);
+		const detail = document.createElement("span");
+		detail.className = "status-app-detail";
+		detail.textContent = `${item.count || 0} 次记录`;
+		const track = document.createElement("div");
+		track.className = "status-app-track";
+		const fill = document.createElement("span");
+		fill.style.setProperty("--ratio", `${Math.max(5, ((item.totalSeconds || 0) / max) * 100)}%`);
+		track.append(fill);
+		row.append(top, detail, track);
+		list?.append(row);
+	}
+	setPanelState(root, "activity", "ready");
+}
+
+function timelineRowsForDate(store: StatusStore, date: string) {
+	const dated = store.timeline?.results.find((item) => item.date === store.timelineDate);
+	const target = store.timeline?.results.find((item) => item.date === date) || dated;
+	const activities = target?.result.data?.activities || [];
+	const scoped = store.selectedDevice === "all" ? activities : activities.filter((item) => item.deviceId === store.selectedDevice);
+	const readable = scoped.filter((item) => !QUIET_TIMELINE_APP_IDS.has(item.appId || "") && item.durationSeconds !== 0);
+	return readable.sort((a, b) => new Date(b.startedAt || 0).getTime() - new Date(a.startedAt || 0).getTime());
+}
+
+function timelineRowsForStore(store: StatusStore) {
+	return timelineRowsForDate(store, store.timelineDate);
+}
+
+function appendTimeline(root: HTMLElement, preserveScroll = true) {
+	const store = getStore(root);
+	const rows = timelineRowsForStore(store);
+	if (store.timelineVisible >= rows.length) return;
+	const scroll = root.querySelector<HTMLElement>("[data-timeline-scroll]");
+	const scrollTop = scroll?.scrollTop ?? 0;
+	store.timelineVisible = Math.min(rows.length, store.timelineVisible + timelinePageStep());
+	renderTimeline(root);
+	if (preserveScroll) {
+		window.requestAnimationFrame(() => {
+			const nextScroll = root.querySelector<HTMLElement>("[data-timeline-scroll]");
+			if (nextScroll) nextScroll.scrollTop = scrollTop;
+		});
+	}
+}
+
+function ensureTimelineScrollable(root: HTMLElement) {
+	window.requestAnimationFrame(() => {
+		const store = getStore(root);
+		const rows = timelineRowsForStore(store);
+		const scroll = root.querySelector<HTMLElement>("[data-timeline-scroll]");
+		if (!scroll || store.timelineVisible >= rows.length) return;
+		if (scroll.scrollHeight <= scroll.clientHeight * 1.4) {
+			store.timelineVisible = Math.min(rows.length, store.timelineVisible + timelinePageStep());
+			renderTimeline(root);
+		}
+	});
+}
+
+function syncTimelineHeight(root: HTMLElement) {
+	window.requestAnimationFrame(() => {
+		const panel = root.querySelector<HTMLElement>('[data-panel="timeline"]');
+		const side = root.querySelector<HTMLElement>(".status-side");
+		if (!panel || !side) return;
+
+		if (!isDesktopTimeline()) {
+			panel.style.removeProperty("--status-timeline-height");
+			return;
+		}
+
+		const sideHeight = Math.ceil(side.getBoundingClientRect().height);
+		if (sideHeight > 0) {
+			panel.style.setProperty("--status-timeline-height", `${sideHeight}px`);
+			ensureTimelineScrollable(root);
+		}
+	});
+}
+
+function setSelectedDate(root: HTMLElement, date: string) {
+	const store = getStore(root);
+	store.timelineDate = date;
+	store.timelineVisible = timelinePageSize();
+	const timelineScroll = root.querySelector<HTMLElement>("[data-timeline-scroll]");
+	const appScroll = root.querySelector<HTMLElement>("[data-app-scroll]");
+	if (timelineScroll) timelineScroll.scrollTop = 0;
+	if (appScroll) appScroll.scrollTop = 0;
+	renderTimeline(root);
+	renderActivity(root);
+	renderHealth(root);
+	renderAi(root);
+	syncTimelineHeight(root);
+}
+
+function renderDateTabs(root: HTMLElement) {
+	const store = getStore(root);
+	const dayTabs = root.querySelector("[data-status-days]");
+	clear(dayTabs);
+	const entries = store.timeline?.results.length ? store.timeline.results : recentDates().map((date) => ({ date, result: { data: null, ok: false } }));
+	setText(root, "[data-selected-date-label]", relativeDateLabel(store.timelineDate));
+	setText(root, "[data-selected-date-meta]", dateMetaLabel(store.timelineDate));
+
+	for (const entry of entries) {
+		const selectedTotal = timelineRowsForDate(store, entry.date).length;
+		const button = document.createElement("button");
+		button.type = "button";
+		button.className = entry.date === store.timelineDate ? "is-active" : "";
+		button.textContent = `${relativeDateLabel(entry.date)} · ${selectedTotal}`;
+		button.title = `${entry.date} · Asia/Shanghai`;
+		button.addEventListener("click", () => setSelectedDate(root, entry.date));
+		dayTabs?.append(button);
+	}
+}
+
+function renderTimeline(root: HTMLElement) {
+	const store = getStore(root);
+	const list = root.querySelector("[data-timeline-list]");
+	clear(list);
+
+	if (!store.timeline) {
+		renderDateTabs(root);
+		setPanelState(root, "timeline", "loading", "正在读取时间线。");
+		return;
+	}
+
+	renderDateTabs(root);
+
+	const rows = timelineRowsForStore(store);
+	store.timelineVisible = Math.max(store.timelineVisible, Math.min(rows.length, timelinePageSize()));
+	const limit = Math.min(store.timelineVisible, rows.length);
+	setText(root, "[data-timeline-count]", `${relativeDateLabel(store.timelineDate)} · ${rows.length} 条`);
+
+	if (!rows.length) {
+		setPanelState(root, "timeline", "empty", "当前日期和设备筛选下没有记录。");
+		const note = document.createElement("li");
+		note.className = "status-empty-note";
+		note.textContent = "可以切换上方日期或左侧设备；如果 Core API 当天没有记录，这里会保持安静而不是堆占位符。";
+		list?.append(note);
+		return;
+	}
+
+	for (const activity of rows.slice(0, limit)) {
+		const item = document.createElement("li");
+		item.className = "status-timeline-item";
+		const time = document.createElement("time");
+		time.className = "status-timeline-time";
+		time.textContent = formatClock(activity.startedAt);
+		const main = document.createElement("div");
+		main.className = "status-timeline-main";
+		const title = document.createElement("strong");
+		title.textContent = liveDescription({ appId: activity.appId, who: "", windowTitle: activity.windowTitle }).trim();
+		const detail = document.createElement("span");
+		const device = store.devices.find((candidate) => candidate.deviceId === activity.deviceId);
+		detail.textContent = `${device?.deviceName || activity.deviceId || "device"} · ${formatDuration(activity.durationSeconds || 0)}`;
+		main.append(title, detail);
+		const app = document.createElement("span");
+		app.className = "status-timeline-app";
+		app.textContent = truncate(appName(activity.appId), 12);
+		item.append(time, main, app);
+		list?.append(item);
+	}
+
+	setPanelState(root, "timeline", "ready");
+	ensureTimelineScrollable(root);
+}
+
+function renderService(root: HTMLElement, health: ApiResult<HealthResponse>, connectors: ApiResult<ConnectorsSummary>, archive: ApiResult<ArchiveStatus>) {
+	const coreOnline = health.ok && health.data?.status === "ok";
+	setText(root, "[data-core-state]", coreOnline ? "online" : "不可用");
+	setText(root, "[data-archive-state]", archive.ok && archive.data ? `${archive.data.status || "unknown"} · ${archive.data.fileCount ?? "--"}篇` : "不可用");
+	setText(
+		root,
+		"[data-connectors-state]",
+		connectors.ok && connectors.data ? `${connectors.data.online ?? 0}/${connectors.data.total ?? 0} online` : "不可用",
+	);
+	setText(root, "[data-service-heading]", coreOnline ? "online" : "异常");
+	setPanelState(root, "service", coreOnline ? "ready" : "error", coreOnline ? "" : "Core API 健康检查没有返回 ok。");
+}
+
+function renderSteam(root: HTMLElement, result: ApiResult<SteamProfile>) {
+	if (!result.ok || !result.data) {
+		setText(root, "[data-steam-heading]", "不可用");
+		setPanelState(root, "steam", "error", "Steam 状态暂时不可用。");
+		return;
+	}
+	const avatar = root.querySelector<HTMLImageElement>("[data-steam-avatar]");
+	if (avatar && result.data.avatarUrl) avatar.src = result.data.avatarUrl;
+	setText(root, "[data-steam-name]", result.data.displayName || "Steam");
+	const state = result.data.currentGame
+		? `正在玩 ${result.data.currentGame}`
+		: result.data.status === "online"
+			? "Steam 在线"
+			: `离线 · ${timeAgo(result.data.lastLogoffAt)}`;
+	setText(root, "[data-steam-heading]", result.data.status || "Steam");
+	setText(root, "[data-steam-state]", state);
+	setPanelState(root, "steam", "ready");
+}
+
+function renderAi(root: HTMLElement) {
+	const store = getStore(root);
+	const dayLabel = relativeDateLabel(store.timelineDate);
+	const rows = timelineRowsForStore(store);
+	const active = activityForSelectedDate(store);
+	const apps = (active?.result.data?.perApp || [])
+		.filter((item) => !QUIET_TIMELINE_APP_IDS.has(item.appId || ""))
+		.filter((item) => (item.totalSeconds || 0) > 0)
+		.sort((a, b) => (b.totalSeconds || 0) - (a.totalSeconds || 0));
+	const topApp = apps[0];
+	const metrics = healthMetricsForDate(store, store.timelineDate);
+	const healthParts = [
+		metrics.steps ? `步数 ${Math.round(metrics.steps)}` : "",
+		metrics.sleep ? `睡眠 ${formatMinutes(metrics.sleep.value || 0)}` : "",
+	].filter(Boolean);
+	const activityText = topApp ? `应用重心是 ${appName(topApp.appId)} ${formatDuration(topApp.totalSeconds || 0)}` : "应用统计暂时安静";
+	const healthText = healthParts.length ? healthParts.join("，") : "身体记录暂时不多";
+	const summary = `占位总结：${dayLabel}有 ${rows.length} 条时间线，${activityText}，${healthText}。之后这里接 AI API，让它把这一天的时间线、日记库和娱乐状态合成更自然的一句话。`;
+	setText(root, "[data-ai-summary]", summary);
+}
+
+async function loadStatus(root: HTMLElement) {
+	const store = getStore(root);
+	const refresh = root.querySelector("[data-status-refresh]");
+	refresh?.classList.add("is-loading");
+	for (const name of ["timeline", "activity", "body", "service", "steam"]) {
+		setPanelState(root, name, "loading", "读取中。");
+	}
+
+	const dates = recentDates();
+	const [health, devices, timeline, activity, weather, connectors, archive, steam, stepsRecords, heartRecords, sleepRecords] = await Promise.all([
+		getJson<HealthResponse>("/health"),
+		getJson<DevicesResponse>("/api/devices/current"),
+		getRecentBundle<TimelineResponse>(dates, (date) => `/api/devices/timeline-query?date=${date}&limit=120`, (data) => Boolean(data?.activities?.length)),
+		getRecentBundle<ActivityResponse>(dates, (date) => `/api/devices/activity-summary?date=${date}`, (data) => Boolean(data?.perApp?.some((item) => (item.totalSeconds || 0) > 0))),
+		getJson<WeatherResponse>("/api/weather"),
+		getJson<ConnectorsSummary>("/api/connectors/summary"),
+		getJson<ArchiveStatus>("/api/archive/status"),
+		getJson<SteamProfile>("/api/steam/profile"),
+		getJson<HealthRecordsResponse>("/api/devices/health-records?type=steps&limit=160"),
+		getJson<HealthRecordsResponse>("/api/devices/health-records?type=heart_rate&limit=40"),
+		getJson<HealthRecordsResponse>("/api/devices/health-records?type=sleep&limit=30"),
+	]);
+
+	const apiOnline = health.ok && health.data?.status === "ok";
+	setText(root, "[data-api-state]", apiOnline ? "Core API 在线" : "Core API 未响应");
+	root.querySelector("[data-api-pulse]")?.classList.toggle("is-error", !apiOnline);
+	setText(
+		root,
+		"[data-updated-at]",
+		new Intl.DateTimeFormat("zh-CN", {
+			hour: "2-digit",
+			minute: "2-digit",
+			second: "2-digit",
+			timeZone: "Asia/Shanghai",
+		}).format(new Date()),
+	);
+
+	store.devices = devices.ok ? devices.data?.devices || [] : [];
+	if (store.selectedDevice !== "all" && !store.devices.some((item) => item.deviceId === store.selectedDevice)) {
+		store.selectedDevice = "all";
+		store.timelineVisible = timelinePageSize();
+	}
+	const previousTimelineDate = store.timelineDate;
+	store.timeline = timeline;
+	store.timelineDate = timeline.results.some((item) => item.date === previousTimelineDate) ? previousTimelineDate : timeline.activeDate;
+	if (store.timelineDate !== previousTimelineDate) store.timelineVisible = timelinePageSize();
+	store.stepsRecords = stepsRecords;
+	store.heartRecords = heartRecords;
+	store.sleepRecords = sleepRecords;
+
+	renderWeather(root, weather);
+	renderHealth(root);
+	renderNow(root);
+	renderActivity(root, activity);
+	renderTimeline(root);
+	renderService(root, health, connectors, archive);
+	renderSteam(root, steam);
+	renderAi(root);
+	syncTimelineHeight(root);
+	refresh?.classList.remove("is-loading");
+}
+
+function initAi(root: HTMLElement) {
+	if (root.dataset.aiBound) return;
+	root.dataset.aiBound = "true";
+	const summary = root.querySelector("[data-ai-summary]");
+	const buttons = root.querySelectorAll<HTMLButtonElement>("[data-ai-tone]");
+	buttons.forEach((button) => {
+		button.addEventListener("click", () => {
+			buttons.forEach((item) => item.classList.toggle("is-active", item === button));
+			if (summary) summary.textContent = aiCopy[button.dataset.aiTone as keyof typeof aiCopy] || aiCopy.soft;
+		});
+	});
+}
+
+function initStatusPage() {
+	document.querySelectorAll<HTMLElement>("[data-status-page]").forEach((root) => {
+		if (root.dataset.statusBound) return;
+		root.dataset.statusBound = "true";
+		initAi(root);
+		root.querySelector("[data-status-refresh]")?.addEventListener("click", () => loadStatus(root));
+		root.querySelector("[data-timeline-scroll]")?.addEventListener("scroll", (event) => {
+			const scroll = event.currentTarget as HTMLElement;
+			if (scroll.scrollTop + scroll.clientHeight >= scroll.scrollHeight - 96) appendTimeline(root);
+		});
+		const resizeHandler = () => syncTimelineHeight(root);
+		window.addEventListener("resize", resizeHandler);
+		loadStatus(root);
+		const timer = window.setInterval(() => {
+			if (!document.body.contains(root)) {
+				delete root.dataset.statusBound;
+				window.removeEventListener("resize", resizeHandler);
+				window.clearInterval(timer);
+				return;
+			}
+			loadStatus(root);
+		}, REFRESH_INTERVAL);
+	});
+}
+
+initStatusPage();
+
+const setupStatusSwup = () => {
+	window.swup?.hooks?.on("page:view", initStatusPage);
+	window.swup?.hooks?.on("content:replace", initStatusPage);
+};
+
+if (window.swup?.hooks) {
+	setupStatusSwup();
+} else {
+	document.addEventListener("swup:enable", setupStatusSwup);
+}
+</script>

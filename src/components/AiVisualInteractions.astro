@@ -1,0 +1,291 @@
+---
+---
+
+<script>
+type AwardsRoot = HTMLElement & {
+	dataset: DOMStringMap & { activeAwardIndex?: string; activeAwardPage?: string };
+};
+
+type FeatureRoot = HTMLElement & {
+	dataset: DOMStringMap & { activeFeatureTab?: string };
+};
+
+function getAwardPages(root: AwardsRoot) {
+	return Array.from(root.querySelectorAll<HTMLElement>("[data-award-page]"));
+}
+
+function getAwardDots(root: AwardsRoot) {
+	return Array.from(root.querySelectorAll<HTMLElement>("[data-award-dot]"));
+}
+
+function getAwardCards(root: AwardsRoot) {
+	return Array.from(root.querySelectorAll<HTMLElement>("[data-award-card]"));
+}
+
+function setAwardFocus(root: AwardsRoot, card: HTMLElement | null) {
+	if (!card) return;
+
+	const cards = getAwardCards(root);
+	const index = Number(card.dataset.awardIndex || 0);
+	root.dataset.activeAwardIndex = String(index);
+
+	for (const item of cards) {
+		const isSelected = item === card;
+		item.classList.toggle("is-selected", isSelected);
+		item.setAttribute("aria-pressed", String(isSelected));
+	}
+
+	const focus = root.querySelector<HTMLElement>("[data-award-focus]");
+	if (!focus) return;
+
+	const focusIndex = focus.querySelector("[data-award-focus-index]");
+	const focusTitle = focus.querySelector("[data-award-focus-title]");
+	const focusWork = focus.querySelector("[data-award-focus-work]");
+	const focusDescription = focus.querySelector<HTMLElement>(
+		"[data-award-focus-description]",
+	);
+	const description = card.dataset.awardDescription || "";
+
+	if (focusIndex) focusIndex.textContent = String(index + 1).padStart(2, "0");
+	if (focusTitle) focusTitle.textContent = card.dataset.awardTitle || "";
+	if (focusWork) focusWork.textContent = card.dataset.awardWork || "";
+	if (focusDescription) {
+		focusDescription.textContent = description;
+		focusDescription.hidden = !description;
+	}
+
+	focus.classList.remove("is-refreshing");
+	void focus.offsetWidth;
+	focus.classList.add("is-refreshing");
+}
+
+function setAwardPage(root: AwardsRoot, nextPage: number) {
+	const pages = getAwardPages(root);
+	if (!pages.length) return;
+
+	const page = ((nextPage % pages.length) + pages.length) % pages.length;
+	root.dataset.activeAwardPage = String(page);
+
+	for (const item of pages) {
+		const isActive = Number(item.dataset.awardPage) === page;
+		item.classList.toggle("is-active", isActive);
+		item.setAttribute("aria-hidden", String(!isActive));
+	}
+
+	for (const dot of getAwardDots(root)) {
+		dot.classList.toggle("is-active", Number(dot.dataset.awardDot) === page);
+	}
+
+	const status = root.querySelector("[data-award-status]");
+	if (status) status.textContent = `${page + 1} / ${pages.length}`;
+
+	setAwardFocus(root, pages[page].querySelector<HTMLElement>("[data-award-card]"));
+}
+
+function initAwards() {
+	document.querySelectorAll<AwardsRoot>("[data-ai-awards]").forEach((root) => {
+		if (!root.dataset.activeAwardPage) setAwardPage(root, 0);
+		const activeCard =
+			root.querySelector<HTMLElement>("[data-award-card].is-selected") ||
+			root.querySelector<HTMLElement>("[data-award-card]");
+		setAwardFocus(root, activeCard);
+	});
+}
+
+function setFeatureTab(root: FeatureRoot, nextTab: number) {
+	const panels = Array.from(
+		root.querySelectorAll<HTMLElement>("[data-feature-panel]"),
+	);
+	const tabs = Array.from(root.querySelectorAll<HTMLElement>("[data-feature-tab]"));
+	if (!panels.length) return;
+
+	const tab = ((nextTab % panels.length) + panels.length) % panels.length;
+	root.dataset.activeFeatureTab = String(tab);
+
+	for (const panel of panels) {
+		const isActive = Number(panel.dataset.featurePanel) === tab;
+		panel.classList.toggle("is-active", isActive);
+		panel.setAttribute("aria-hidden", String(!isActive));
+	}
+
+	for (const item of tabs) {
+		const isActive = Number(item.dataset.featureTab) === tab;
+		item.classList.toggle("is-active", isActive);
+		item.setAttribute("aria-selected", String(isActive));
+	}
+}
+
+function initFeatureTabs() {
+	document
+		.querySelectorAll<FeatureRoot>("[data-ai-feature-tabs]")
+		.forEach((root) => {
+			if (!root.dataset.activeFeatureTab) setFeatureTab(root, 0);
+		});
+}
+
+function initStatBars() {
+	document.querySelectorAll("[data-ai-statboard]").forEach((root) => {
+		const bars = Array.from(root.querySelectorAll<HTMLElement>("[data-stat-bar]"));
+		if (bars.some((bar) => bar.classList.contains("is-active"))) return;
+		bars[0]?.classList.add("is-active");
+	});
+}
+
+let revealObserver: IntersectionObserver | null = null;
+
+function initReveal() {
+	const items = Array.from(document.querySelectorAll<HTMLElement>(".ai-reveal"));
+	if (!items.length) return;
+
+	if (!("IntersectionObserver" in window)) {
+		for (const item of items) item.classList.add("is-visible");
+		return;
+	}
+
+	revealObserver?.disconnect();
+	revealObserver = new IntersectionObserver(
+		(entries) => {
+			for (const entry of entries) {
+				if (!entry.isIntersecting) continue;
+				entry.target.classList.add("is-visible");
+				revealObserver?.unobserve(entry.target);
+			}
+		},
+		{ rootMargin: "0px 0px -12% 0px", threshold: 0.08 },
+	);
+
+	for (const item of items) revealObserver.observe(item);
+}
+
+function initDetails() {
+	document.querySelectorAll<HTMLElement>(".ai-detail-panels").forEach((root) => {
+		if (root.dataset.detailsBound) return;
+		root.dataset.detailsBound = "true";
+
+		root.addEventListener("toggle", (event) => {
+			const detail = event.target;
+			if (!(detail instanceof HTMLDetailsElement) || !detail.open) return;
+
+			for (const item of root.querySelectorAll("details")) {
+				if (item !== detail) item.open = false;
+			}
+		}, true);
+	});
+}
+
+function initAll() {
+	initAwards();
+	initFeatureTabs();
+	initStatBars();
+	initReveal();
+	initDetails();
+	document.dispatchEvent(new CustomEvent("ai-visual-audio:sync"));
+}
+
+document.addEventListener("click", (event) => {
+	const target = event.target;
+	if (!(target instanceof Element)) return;
+
+	const root = target.closest<AwardsRoot>("[data-ai-awards]");
+	if (root) {
+		const current = Number(root.dataset.activeAwardPage || 0);
+		if (target.closest(".ai-award-prev")) {
+			event.preventDefault();
+			setAwardPage(root, current - 1);
+			return;
+		}
+
+		if (target.closest(".ai-award-next")) {
+			event.preventDefault();
+			setAwardPage(root, current + 1);
+			return;
+		}
+
+		const dot = target.closest<HTMLElement>("[data-award-dot]");
+		if (dot) {
+			event.preventDefault();
+			setAwardPage(root, Number(dot.dataset.awardDot || 0));
+			return;
+		}
+
+		const card = target.closest<HTMLElement>("[data-award-card]");
+		if (card) {
+			event.preventDefault();
+			setAwardFocus(root, card);
+			return;
+		}
+	}
+
+	const featureTab = target.closest<HTMLElement>("[data-feature-tab]");
+	if (featureTab) {
+		const featureRoot = featureTab.closest<FeatureRoot>("[data-ai-feature-tabs]");
+		if (featureRoot) {
+			event.preventDefault();
+			setFeatureTab(featureRoot, Number(featureTab.dataset.featureTab || 0));
+			return;
+		}
+	}
+
+	const statBar = target.closest<HTMLElement>("[data-stat-bar]");
+	if (statBar) {
+		const statRoot = statBar.closest("[data-ai-statboard]");
+		if (statRoot) {
+			for (const item of statRoot.querySelectorAll("[data-stat-bar]")) {
+				item.classList.toggle("is-active", item === statBar);
+			}
+		}
+	}
+
+	const copyButton = target.closest<HTMLElement>("[data-copy-text]");
+	if (copyButton) {
+		event.preventDefault();
+		const label = copyButton.querySelector("span");
+		const original = label?.textContent || "复制";
+		if (!navigator.clipboard) {
+			label?.replaceChildren("复制失败");
+			return;
+		}
+		navigator.clipboard
+			.writeText(copyButton.dataset.copyText || "")
+			.then(() => {
+				copyButton.classList.add("is-copied");
+				label?.replaceChildren("已复制");
+				window.setTimeout(() => {
+					copyButton.classList.remove("is-copied");
+					label?.replaceChildren(original);
+				}, 1200);
+			})
+			.catch(() => {
+				label?.replaceChildren("复制失败");
+			});
+	}
+});
+
+document.addEventListener("keydown", (event) => {
+	const target = event.target;
+	if (!(target instanceof Element)) return;
+	if (event.key !== "Enter" && event.key !== " ") return;
+
+	const card = target.closest<HTMLElement>("[data-award-card]");
+	if (!card) return;
+
+	const root = card.closest<AwardsRoot>("[data-ai-awards]");
+	if (!root) return;
+
+	event.preventDefault();
+	setAwardFocus(root, card);
+});
+
+initAll();
+
+const setup = () => {
+	window.swup?.hooks?.on("page:view", initAll);
+	window.swup?.hooks?.on("content:replace", initAll);
+};
+
+if (window.swup?.hooks) {
+	setup();
+} else {
+	document.addEventListener("swup:enable", setup);
+}
+</script>

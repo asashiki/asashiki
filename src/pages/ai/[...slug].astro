@@ -1,0 +1,1596 @@
+---
+import path from "node:path";
+import ImageWrapper from "@components/misc/ImageWrapper.astro";
+import PostMetadata from "@components/PostMeta.astro";
+import MainGridLayout from "@layouts/MainGridLayout.astro";
+import {
+	type AiVisualAward,
+	type AiVisualPage,
+	getAiVisualPageUrl,
+	getAllAiVisualPages,
+} from "@utils/ai-visual-utils";
+import { getSortedPosts } from "@utils/content-utils";
+import { getDir, getPostUrlBySlug } from "@utils/url-utils";
+import { Icon } from "astro-icon/components";
+
+export async function getStaticPaths() {
+	const posts = await getSortedPosts();
+	const postMap = new Map(posts.map((post) => [post.slug, post]));
+
+	return getAllAiVisualPages().map((visualPage) => ({
+		params: { slug: visualPage.slug },
+		props: {
+			visualPage,
+			entry: postMap.get(visualPage.slug),
+		},
+	}));
+}
+
+const { visualPage, entry } = Astro.props as {
+	visualPage: AiVisualPage;
+	entry?: Awaited<ReturnType<typeof getSortedPosts>>[number];
+};
+
+const sourceTitle = entry?.data.title || visualPage.title;
+const sourceUrl = getPostUrlBySlug(visualPage.slug);
+const pageTitle = `${sourceTitle} · AI增强阅读`;
+const coverBasePath = entry?.id
+	? path.join("content/posts/", getDir(entry.id))
+	: "/";
+const audioCover = visualPage.audio?.cover || entry?.data.image || "";
+const audioMetingId =
+	visualPage.audio?.metingId ||
+	visualPage.audio?.songId ||
+	visualPage.audio?.neteaseId ||
+	"";
+const audioServer = visualPage.audio?.server || "netease";
+const audioProvider =
+	visualPage.audio?.provider ?? (audioMetingId ? "meting" : "audio");
+const hasAudioSource = !!(audioMetingId || visualPage.audio?.src);
+const audioStyle = visualPage.audio?.style || "disc";
+const collectionItemLabel = visualPage.collectionItemLabel || "箱";
+const collectionTitle = visualPage.collectionTitle || "纸箱奖展柜";
+const awardsPerPage = visualPage.collectionPerPage || 3;
+const collectionDescription =
+	visualPage.collectionDescription ||
+	`完整收录 ${visualPage.awards?.length || 0} 项，每次打开一${collectionItemLabel}。`;
+const awardGroups: { award: AiVisualAward; index: number }[][] = [];
+for (
+	let index = 0;
+	index < (visualPage.awards?.length || 0);
+	index += awardsPerPage
+) {
+	awardGroups.push(
+		(visualPage.awards?.slice(index, index + awardsPerPage) || []).map(
+			(award, groupIndex) => ({ award, index: index + groupIndex }),
+		),
+	);
+}
+const firstAward = visualPage.awards?.[0];
+const pageClass = [
+	"card-base ai-visual-page z-10 px-5 md:px-8 pt-5 pb-7 relative w-full max-w-[100vw]",
+	visualPage.variant ? `ai-variant-${visualPage.variant}` : "",
+];
+---
+
+<MainGridLayout title={pageTitle} description={visualPage.subtitle} lang={entry?.data.lang} setOGTypeArticle={true}>
+    <div class="flex w-full max-w-[100vw] rounded-[var(--radius-large)] overflow-hidden relative mb-4">
+        <article class:list={pageClass}>
+            <div class="ai-visual-wash pointer-events-none absolute inset-x-0 top-0 h-56"></div>
+
+            <div class="relative onload-animation">
+                <div class="flex flex-wrap items-center gap-2 text-sm text-50 mb-4">
+                    <a href={sourceUrl} class="btn-regular rounded-lg h-8 px-3 gap-2 active:scale-95">
+                        <Icon name="material-symbols:arrow-back-rounded" class="text-lg"></Icon>
+                        原文
+                    </a>
+                    <span class="rounded-lg h-8 px-3 inline-flex items-center bg-[var(--btn-plain-bg-hover)] text-[var(--btn-content)] font-medium">
+                        AI增强阅读模式
+                    </span>
+                    <span class="rounded-lg h-8 px-3 inline-flex items-center bg-[var(--btn-plain-bg-hover)] text-50">
+                        {visualPage.tone}
+                    </span>
+                </div>
+
+                <section class="ai-hero-stage relative mb-8 rounded-[1.6rem] px-4 py-5 md:px-7 md:py-7">
+                    <div class="ai-hero-grid">
+                        <div class="min-w-0">
+                            <div class="relative mb-5 pl-4 md:pl-5 before:absolute before:left-0 before:top-2 before:h-10 before:w-1 before:rounded-md before:bg-[var(--primary)]">
+                                <h1 class="text-3xl md:text-[2.55rem]/[3rem] font-bold text-90 mb-3">
+                                    {sourceTitle}
+                                </h1>
+                                <p class="text-75 text-base md:text-lg leading-8 max-w-3xl">
+                                    {visualPage.subtitle}
+                                </p>
+                            </div>
+
+                            {entry && <PostMetadata
+                                class="mb-5"
+                                published={entry.data.published}
+                                updated={entry.data.updated}
+                                tags={entry.data.tags}
+                                category={entry.data.category}
+                            ></PostMetadata>}
+
+                            <p class="ai-lead-line text-75 leading-8 m-0">
+                                {visualPage.lead}
+                            </p>
+                        </div>
+
+                        {visualPage.audio && <div class:list={["ai-sound-orbit ai-audio-chip", `ai-audio-style-${audioStyle}`, {"has-audio": hasAudioSource}]}>
+                            <div class="ai-sound-shell">
+                                <button
+                                    class="ai-audio-toggle ai-sound-button active:scale-95"
+                                    type="button"
+                                    aria-label={`播放 ${visualPage.audio.title}`}
+                                    data-has-audio={String(hasAudioSource)}
+                                    data-audio-provider={audioProvider}
+                                    data-audio-src={visualPage.audio.src || ""}
+                                    data-meting-id={audioMetingId}
+                                    data-meting-server={audioServer}
+                                    data-audio-title={visualPage.audio.title}
+                                    data-audio-artist={visualPage.audio.artist || ""}
+                                    data-audio-cover={audioCover}
+                                >
+                                    <span class="ai-sound-cover">
+                                        {audioCover
+                                            ? <ImageWrapper src={audioCover} basePath={coverBasePath} alt={visualPage.audio.title} class="h-full w-full"></ImageWrapper>
+                                            : <span class="h-full w-full flex items-center justify-center text-[var(--primary)]"><Icon name="material-symbols:music-note-rounded" class="text-2xl"></Icon></span>}
+                                    </span>
+                                    <span class="ai-sound-play">
+                                        <Icon class="ai-audio-play text-2xl" name="material-symbols:play-arrow-rounded"></Icon>
+                                        <Icon class="ai-audio-pause hidden text-2xl" name="material-symbols:pause-rounded"></Icon>
+                                        <Icon class="ai-audio-loading hidden text-2xl" name="material-symbols:graphic-eq-rounded"></Icon>
+                                    </span>
+                                    <span class="sr-only ai-audio-label">{hasAudioSource ? "播放" : "待配置"}</span>
+                                </button>
+                                {audioStyle !== "disc" && <div class="ai-sound-copy">
+                                    <div class="text-50 text-xs">{visualPage.audio.kicker || "BGM"}</div>
+                                    <div class="text-90 font-bold leading-6">{visualPage.audio.title}</div>
+                                    {visualPage.audio.artist && <div class="text-50 text-sm">{visualPage.audio.artist}</div>}
+                                </div>}
+                                <div class="ai-sound-bars" aria-hidden="true">
+                                    <span></span><span></span><span></span><span></span>
+                                </div>
+                            </div>
+                        </div>}
+                    </div>
+
+                    <div class="ai-metric-ribbon mt-6">
+                        {visualPage.metrics.map((metric) => (
+                            <div class="ai-metric-token">
+                                <div class="text-50 text-xs mb-1">{metric.label}</div>
+                                <div class="text-[var(--primary)] text-2xl font-bold leading-7">{metric.value}</div>
+                                {metric.detail && <div class="text-50 text-xs leading-5 mt-1">{metric.detail}</div>}
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            </div>
+
+            {visualPage.statBars && <section class="ai-section ai-statboard ai-reveal relative mb-9" data-ai-statboard style="animation-delay: calc(var(--content-delay) + 100ms);">
+                <div class="ai-section-heading">
+                    <Icon name="material-symbols:bar-chart-rounded" class="text-[var(--primary)] text-2xl"></Icon>
+                    <h2 class="text-2xl font-bold text-90">年度计量</h2>
+                </div>
+                <div class="ai-stat-grid">
+                    {visualPage.statBars.map((stat, index) => (
+                        <button
+                            class:list={["ai-stat-bar", {"is-active": index === 0}]}
+                            type="button"
+                            data-stat-bar={index}
+                            style={`--stat-ratio: ${Math.max(0, Math.min(1, stat.ratio))};`}
+                        >
+                            <span class="ai-stat-top">
+                                <span>{stat.label}</span>
+                                <strong>{stat.value}</strong>
+                            </span>
+                            <span class="ai-stat-track"><span></span></span>
+                            {stat.detail && <span class="ai-stat-detail">{stat.detail}</span>}
+                        </button>
+                    ))}
+                </div>
+            </section>}
+
+            {visualPage.featureCards && <section class="ai-section ai-feature-tabs ai-reveal relative mb-9" data-ai-feature-tabs style="animation-delay: calc(var(--content-delay) + 125ms);">
+                <div class="ai-section-heading">
+                    <Icon name="material-symbols:graphic-eq-rounded" class="text-[var(--primary)] text-2xl"></Icon>
+                    <h2 class="text-2xl font-bold text-90">{visualPage.featureTitle || "观看切面"}</h2>
+                </div>
+                <div class="ai-feature-board">
+                    <div class="ai-feature-switches" role="tablist" aria-label={visualPage.featureTitle || "观看切面"}>
+                        {visualPage.featureCards.map((card, index) => (
+                            <button
+                                class:list={["ai-feature-switch", {"is-active": index === 0}]}
+                                type="button"
+                                role="tab"
+                                aria-selected={index === 0 ? "true" : "false"}
+                                data-feature-tab={index}
+                            >
+                                <span>{String(index + 1).padStart(2, "0")}</span>
+                                <strong>{card.title}</strong>
+                            </button>
+                        ))}
+                    </div>
+                    <div class="ai-feature-river">
+                    {visualPage.featureCards.map((card, index) => (
+                        <div class:list={["ai-feature-flow", {"is-active": index === 0}]} data-feature-panel={index} aria-hidden={index === 0 ? "false" : "true"} style={`--flow-offset: ${index % 2 ? "1.4rem" : "0rem"};`}>
+                            <div class="ai-feature-index">{String(index + 1).padStart(2, "0")}</div>
+                            <div class="min-w-0">
+                                <div class="text-50 text-sm mb-1">{card.label}</div>
+                                <h3 class="text-xl font-bold text-90 mb-2">{card.title}</h3>
+                                <p class="text-75 leading-7 m-0">{card.description}</p>
+                            </div>
+                            {card.value && <div class="ai-feature-value">{card.value}</div>}
+                        </div>
+                    ))}
+                    </div>
+                </div>
+            </section>}
+
+            {visualPage.jumpLinks && <nav class="ai-link-runway ai-reveal relative mb-9" aria-label="原文跳转">
+                {visualPage.jumpLinks.map((link) => (
+                    <a href={`${sourceUrl}#${link.fragment}`} class="ai-source-link">
+                        <span>{link.label}</span>
+                        {link.description && <small>{link.description}</small>}
+                    </a>
+                ))}
+            </nav>}
+
+            <section class="ai-section ai-reveal relative mb-9" style="animation-delay: calc(var(--content-delay) + 200ms);">
+                <div class="ai-section-heading">
+                    <Icon name="material-symbols:map-outline-rounded" class="text-[var(--primary)] text-2xl"></Icon>
+                    <h2 class="text-2xl font-bold text-90">{visualPage.mapTitle || "记忆地图"}</h2>
+                </div>
+                <div class="ai-memory-map">
+                    {visualPage.memoryNodes.map((node, index) => (
+                        <div class="ai-node" style={`--node-color: ${node.accent || "var(--primary)"}; --node-index: ${index};`}>
+                            <div class="ai-node-pin"></div>
+                            <span class="ai-node-label">{node.label}</span>
+                            <h3 class="text-lg font-bold text-90 mb-2">{node.title}</h3>
+                            <p class="text-75 leading-7 m-0">{node.description}</p>
+                        </div>
+                    ))}
+                </div>
+            </section>
+
+            {visualPage.awards && <section id="ai-collection" class="ai-section ai-awards ai-reveal relative mb-9" data-ai-awards data-collection-variant={visualPage.variant || "default"} style="animation-delay: calc(var(--content-delay) + 250ms);">
+                <div class="ai-awards-header">
+                    <div class="ai-section-heading mb-0">
+                        <Icon name="material-symbols:trophy-outline-rounded" class="text-[var(--primary)] text-2xl"></Icon>
+                        <div>
+                            <h2 class="text-2xl font-bold text-90">{collectionTitle}</h2>
+                            <p class="text-50 text-sm leading-6 m-0">{collectionDescription}</p>
+                        </div>
+                    </div>
+                    <div class="ai-awards-controls">
+                        <button class="ai-award-prev" type="button" aria-label={`上一${collectionItemLabel}`}>
+                            <Icon name="material-symbols:chevron-left-rounded" class="text-2xl"></Icon>
+                        </button>
+                        <span class="ai-award-status" data-award-status>1 / {awardGroups.length}</span>
+                        <button class="ai-award-next" type="button" aria-label={`下一${collectionItemLabel}`}>
+                            <Icon name="material-symbols:chevron-right-rounded" class="text-2xl"></Icon>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="ai-awards-stage">
+                    <div class="ai-awards-pages">
+                        {awardGroups.map((group, pageIndex) => (
+                            <div class:list={["ai-award-page", {"is-active": pageIndex === 0}]} data-award-page={pageIndex} aria-hidden={pageIndex === 0 ? "false" : "true"}>
+                                {group.map(({award, index}) => (
+                                    <button
+                                        class:list={["ai-award-card", {"is-selected": index === 0}]}
+                                        type="button"
+                                        data-award-card
+                                        data-award-index={index}
+                                        data-award-title={award.title}
+                                        data-award-work={award.work}
+                                        data-award-description={award.description || ""}
+                                        aria-pressed={index === 0 ? "true" : "false"}
+                                        aria-label={`查看 ${award.work}`}
+                                        style={`--award-index: ${index % awardsPerPage};`}
+                                    >
+                                        <span class="ai-award-number">{String(index + 1).padStart(2, "0")}</span>
+                                        <span class="ai-award-card-body">
+                                            <span class="ai-award-kicker">{award.title}</span>
+                                            <strong>{award.work}</strong>
+                                            {award.description && <span class="ai-award-excerpt">{award.description}</span>}
+                                        </span>
+                                        <span class="ai-award-card-cue" aria-hidden="true">
+                                            <Icon name="material-symbols:ads-click-rounded" class="text-lg"></Icon>
+                                        </span>
+                                    </button>
+                                ))}
+                            </div>
+                        ))}
+                    </div>
+
+                    <aside class="ai-award-focus" data-award-focus>
+                        <div class="ai-award-focus-top">
+                            <span data-award-focus-index>01</span>
+                            <small>{collectionItemLabel}</small>
+                        </div>
+                        <div class="ai-award-focus-kicker" data-award-focus-title>{firstAward?.title}</div>
+                        <h3 data-award-focus-work>{firstAward?.work}</h3>
+                        <p data-award-focus-description hidden={!firstAward?.description}>
+                            {firstAward?.description || ""}
+                        </p>
+                    </aside>
+                </div>
+
+                <div class="ai-award-dots" aria-label={`${collectionTitle}分页`}>
+                    {awardGroups.map((_, index) => (
+                        <button class:list={["ai-award-dot", {"is-active": index === 0}]} type="button" data-award-dot={index} aria-label={`第 ${index + 1} ${collectionItemLabel}`}></button>
+                    ))}
+                </div>
+            </section>}
+
+            <section class="ai-section ai-reveal relative mb-9" style="animation-delay: calc(var(--content-delay) + 300ms);">
+                <div class="ai-section-heading">
+                    <Icon name="material-symbols:calendar-clock-rounded" class="text-[var(--primary)] text-2xl"></Icon>
+                    <h2 class="text-2xl font-bold text-90">{visualPage.timelineTitle || "时间线"}</h2>
+                </div>
+                <div class="ai-timeline-rail">
+                    {visualPage.timeline.map((item, index) => (
+                        <div class="ai-timeline-item" style={`--timeline-index: ${index};`}>
+                            <div class="ai-timeline-time">{item.time}</div>
+                            <div>
+                                <div class="text-90 font-bold mb-1">{item.title}</div>
+                                <p class="text-75 leading-7 m-0">{item.description}</p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </section>
+
+            {visualPage.detailPanels && <section class="ai-section ai-detail-panels ai-reveal relative mb-9" style="animation-delay: calc(var(--content-delay) + 325ms);">
+                <div class="ai-section-heading">
+                    <Icon name="material-symbols:inventory-2-outline-rounded" class="text-[var(--primary)] text-2xl"></Icon>
+                    <h2 class="text-2xl font-bold text-90">存档夹</h2>
+                </div>
+                <div class="ai-details-grid">
+                    {visualPage.detailPanels.map((panel, index) => (
+                        <details class="ai-detail-card" open={index === 0}>
+                            <summary>
+                                <span>{panel.label}</span>
+                                <strong>{panel.title}</strong>
+                                <Icon name="material-symbols:expand-more-rounded" class="text-2xl"></Icon>
+                            </summary>
+                            <p class="text-75 leading-7 m-0">{panel.description}</p>
+                            {panel.items && <ul>
+                                {panel.items.map((item) => <li>{item}</li>)}
+                            </ul>}
+                        </details>
+                    ))}
+                </div>
+            </section>}
+
+            {visualPage.copyBlock && <section class="ai-copy-panel ai-reveal relative mb-9">
+                <div class="ai-copy-head">
+                    <div>
+                        {visualPage.copyBlock.label && <div class="text-50 text-sm mb-1">{visualPage.copyBlock.label}</div>}
+                        <h2 class="text-2xl font-bold text-90 m-0">{visualPage.copyBlock.title}</h2>
+                    </div>
+                    <button class="ai-copy-button" type="button" data-copy-text={visualPage.copyBlock.content}>
+                        <Icon name="material-symbols:content-copy-outline-rounded" class="text-xl"></Icon>
+                        <span>{visualPage.copyBlock.buttonLabel || "复制"}</span>
+                    </button>
+                </div>
+                <pre><code>{visualPage.copyBlock.content}</code></pre>
+            </section>}
+
+            <section class="ai-section ai-reveal relative mb-9" style="animation-delay: calc(var(--content-delay) + 350ms);">
+                <div class="grid md:grid-cols-[minmax(0,1fr)_17rem] gap-5">
+                    <blockquote class="ai-quote px-5 py-5 md:px-6 md:py-6">
+                        <Icon name="material-symbols:format-quote-rounded" class="text-[var(--primary)] text-4xl mb-2"></Icon>
+                        <p class="text-2xl md:text-3xl leading-10 font-bold text-90 m-0">
+                            {visualPage.quote}
+                        </p>
+                    </blockquote>
+
+                    <div class="ai-signal-stack px-4 py-4">
+                        <div class="text-90 font-bold mb-3">状态便签</div>
+                        <div class="flex flex-col gap-3">
+                            {visualPage.signals.map((signal) => (
+                                <div>
+                                    <div class="text-50 text-sm mb-1">{signal.label}</div>
+                                    <div class="text-75 leading-6">{signal.value}</div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="relative onload-animation" style="animation-delay: calc(var(--content-delay) + 400ms);">
+                <div class="ai-closing px-5 py-5 md:px-6 md:py-6 flex flex-col md:flex-row md:items-center gap-4">
+                    <div class="h-11 w-11 rounded-xl bg-[var(--btn-regular-bg)] text-[var(--primary)] flex items-center justify-center shrink-0">
+                        <Icon name="material-symbols:auto-awesome-rounded" class="text-2xl"></Icon>
+                    </div>
+                    <p class="text-75 leading-8 m-0 flex-1">{visualPage.closing}</p>
+                    <a href={getAiVisualPageUrl(visualPage.slug)} aria-current="page" class="btn-regular rounded-xl h-11 px-4 gap-2 font-bold shrink-0">
+                        当前视图
+                    </a>
+                </div>
+            </section>
+        </article>
+    </div>
+</MainGridLayout>
+
+<style>
+    .ai-visual-page {
+        container-type: inline-size;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    .ai-visual-page :where(p, div, h1, h2, h3, blockquote) {
+        min-width: 0;
+    }
+
+    @media (max-width: 640px) {
+        .ai-visual-page :where(p, div, h1, h2, h3, span) {
+            line-break: anywhere;
+            word-break: break-all;
+        }
+    }
+
+    .ai-visual-wash {
+        background:
+            linear-gradient(180deg, oklch(0.96 0.035 var(--hue) / 0.72), transparent),
+            repeating-linear-gradient(90deg, color-mix(in oklch, var(--primary) 10%, transparent) 0 1px, transparent 1px 5rem);
+    }
+
+    .ai-variant-game .ai-visual-wash {
+        background:
+            radial-gradient(circle at 78% 8%, color-mix(in oklch, var(--primary) 16%, transparent), transparent 18rem),
+            linear-gradient(180deg, oklch(0.95 0.032 calc(var(--hue) + 12) / 0.7), transparent),
+            repeating-linear-gradient(135deg, color-mix(in oklch, var(--primary) 9%, transparent) 0 1px, transparent 1px 4.2rem);
+    }
+
+    :root.dark .ai-visual-wash {
+        background:
+            linear-gradient(180deg, oklch(0.28 0.04 var(--hue) / 0.45), transparent),
+            repeating-linear-gradient(90deg, color-mix(in oklch, var(--primary) 12%, transparent) 0 1px, transparent 1px 5rem);
+    }
+
+    .ai-hero-stage,
+    .ai-feature-flow,
+    .ai-awards,
+    .ai-statboard,
+    .ai-link-runway,
+    .ai-detail-card,
+    .ai-copy-panel,
+    .ai-quote,
+    .ai-signal-stack,
+    .ai-closing {
+        background: color-mix(in oklch, var(--btn-plain-bg-hover) 72%, transparent);
+    }
+
+    .ai-hero-stage,
+    .ai-awards,
+    .ai-statboard,
+    .ai-link-runway,
+    .ai-detail-card,
+    .ai-copy-panel,
+    .ai-quote,
+    .ai-signal-stack,
+    .ai-closing {
+        border: 1px solid color-mix(in oklch, var(--primary) 18%, var(--line-divider));
+    }
+
+    .ai-reveal {
+        opacity: 0;
+        transform: translateY(0.9rem);
+        transition: transform 480ms cubic-bezier(0.22, 1, 0.36, 1), opacity 360ms ease;
+    }
+
+    .ai-reveal.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .ai-hero-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(11rem, 15rem);
+        gap: 1.5rem;
+        align-items: center;
+    }
+
+    .ai-variant-game .ai-hero-grid {
+        grid-template-columns: minmax(0, 1fr) minmax(16.5rem, 18.5rem);
+    }
+
+    .ai-lead-line {
+        max-width: 48rem;
+    }
+
+    .ai-metric-ribbon {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.75rem;
+    }
+
+    .ai-metric-token {
+        position: relative;
+        overflow: hidden;
+        border-radius: 1.1rem;
+        padding: 0.95rem 1rem;
+        background: color-mix(in oklch, var(--card-bg) 54%, transparent);
+    }
+
+    .ai-metric-token::before {
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 0.22rem;
+        border-radius: inherit;
+        background: var(--primary);
+        content: "";
+    }
+
+    .ai-sound-orbit {
+        justify-self: end;
+        width: min(100%, 14rem);
+    }
+
+    .ai-sound-shell {
+        position: relative;
+        display: grid;
+        place-items: center;
+        min-height: 14rem;
+        cursor: pointer;
+        border-radius: 999px;
+        background:
+            linear-gradient(color-mix(in oklch, var(--card-bg) 78%, transparent), color-mix(in oklch, var(--btn-plain-bg-hover) 74%, transparent)) padding-box,
+            conic-gradient(from 160deg, color-mix(in oklch, var(--primary) 72%, white), transparent 36%, color-mix(in oklch, var(--primary) 42%, black), transparent 74%, color-mix(in oklch, var(--primary) 72%, white)) border-box;
+        border: 1px solid transparent;
+        box-shadow: inset 0 0 0 0.75rem color-mix(in oklch, var(--card-bg) 36%, transparent);
+    }
+
+    .ai-audio-style-disc .ai-sound-shell::before,
+    .ai-audio-style-disc .ai-sound-shell::after {
+        position: absolute;
+        border-radius: 999px;
+        border: 1px dashed color-mix(in oklch, var(--primary) 22%, transparent);
+        content: "";
+        pointer-events: none;
+    }
+
+    .ai-audio-style-disc .ai-sound-shell::before {
+        inset: 1.4rem;
+    }
+
+    .ai-audio-style-disc .ai-sound-shell::after {
+        inset: 3.25rem;
+        border-style: solid;
+        opacity: 0.45;
+    }
+
+    .ai-audio-style-save {
+        width: min(100%, 18.5rem);
+    }
+
+    .ai-audio-style-save .ai-sound-shell {
+        min-height: auto;
+        display: grid;
+        grid-template-columns: 4.75rem minmax(0, 1fr) auto;
+        gap: 0.85rem;
+        align-items: center;
+        place-items: stretch;
+        border-radius: 1.35rem;
+        padding: 0.85rem;
+        background:
+            linear-gradient(135deg, color-mix(in oklch, var(--card-bg) 68%, transparent), color-mix(in oklch, var(--btn-plain-bg-hover) 82%, transparent)) padding-box,
+            linear-gradient(135deg, color-mix(in oklch, var(--primary) 46%, white), transparent 58%) border-box;
+        box-shadow:
+            inset 0 0 0 1px color-mix(in oklch, var(--card-bg) 52%, transparent),
+            0 0.85rem 2rem color-mix(in oklch, var(--primary) 12%, transparent);
+    }
+
+    .ai-sound-button {
+        position: relative;
+        width: 6rem;
+        height: 6rem;
+        color: var(--primary);
+        border-radius: 999px;
+        background: var(--btn-regular-bg);
+        transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1), background-color 180ms ease;
+    }
+
+    .ai-sound-cover {
+        position: absolute;
+        inset: 0.38rem;
+        overflow: hidden;
+        border-radius: inherit;
+        box-shadow: inset 0 0 0 0.26rem color-mix(in oklch, var(--card-bg) 88%, transparent);
+    }
+
+    .ai-sound-play {
+        position: absolute;
+        right: -0.15rem;
+        bottom: -0.15rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: 999px;
+        background: var(--card-bg);
+        box-shadow: 0 0.45rem 1rem rgba(0, 0, 0, 0.14);
+    }
+
+    .ai-sound-copy {
+        align-self: center;
+        min-width: 0;
+        text-align: left;
+    }
+
+    .ai-sound-bars {
+        position: absolute;
+        top: 1.1rem;
+        display: flex;
+        gap: 0.18rem;
+        align-items: end;
+        height: 1rem;
+        pointer-events: none;
+    }
+
+    .ai-sound-bars span {
+        width: 0.18rem;
+        height: 0.45rem;
+        border-radius: 999px;
+        background: var(--primary);
+        opacity: 0.55;
+    }
+
+    .ai-audio-style-save .ai-sound-button {
+        width: 4.75rem;
+        height: 4.75rem;
+    }
+
+    .ai-audio-style-save .ai-sound-bars {
+        position: static;
+        align-self: center;
+        justify-self: end;
+    }
+
+    .ai-audio-style-save .ai-sound-copy > * {
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .ai-audio-style-save .ai-sound-copy > :nth-child(2) {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+
+    .ai-sound-bars span:nth-child(2) {
+        height: 0.9rem;
+    }
+
+    .ai-sound-bars span:nth-child(3) {
+        height: 0.65rem;
+    }
+
+    .ai-sound-orbit.is-playing .ai-sound-cover {
+        animation: ai-disc-spin 8s linear infinite;
+    }
+
+    .ai-sound-orbit.is-playing .ai-sound-bars span {
+        animation: ai-eq 780ms ease-in-out infinite alternate;
+    }
+
+    .ai-sound-orbit.is-playing .ai-sound-bars span:nth-child(2) {
+        animation-delay: 120ms;
+    }
+
+    .ai-sound-orbit.is-playing .ai-sound-bars span:nth-child(3) {
+        animation-delay: 240ms;
+    }
+
+    .ai-sound-orbit.is-playing .ai-sound-bars span:nth-child(4) {
+        animation-delay: 360ms;
+    }
+
+    .ai-section-heading {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .ai-statboard {
+        border-radius: 1.35rem;
+        padding: 1rem;
+    }
+
+    .ai-stat-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.8rem;
+    }
+
+    .ai-stat-bar {
+        display: grid;
+        gap: 0.65rem;
+        min-width: 0;
+        border-radius: 1.1rem;
+        padding: 0.95rem;
+        text-align: left;
+        background: color-mix(in oklch, var(--card-bg) 48%, transparent);
+        border: 1px dashed var(--line-divider);
+        transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1), background-color 180ms ease, border-color 180ms ease;
+    }
+
+    .ai-stat-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.75rem;
+        color: color-mix(in oklch, currentColor 58%, transparent);
+        font-size: 0.86rem;
+    }
+
+    .ai-stat-top strong {
+        color: var(--primary);
+        font-size: 1.15rem;
+    }
+
+    .ai-stat-track {
+        display: block;
+        height: 0.55rem;
+        overflow: hidden;
+        border-radius: 999px;
+        background: color-mix(in oklch, currentColor 10%, transparent);
+    }
+
+    .ai-stat-track span {
+        display: block;
+        width: calc(var(--stat-ratio) * 100%);
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--primary), color-mix(in oklch, var(--primary) 70%, white));
+        transform-origin: left center;
+        transform: scaleX(0.92);
+        transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .ai-stat-detail {
+        color: color-mix(in oklch, currentColor 58%, transparent);
+        font-size: 0.82rem;
+        line-height: 1.35rem;
+    }
+
+    .ai-stat-bar.is-active {
+        background: color-mix(in oklch, var(--btn-regular-bg-hover) 56%, var(--card-bg));
+        border-color: color-mix(in oklch, var(--primary) 30%, var(--line-divider));
+    }
+
+    .ai-stat-bar.is-active .ai-stat-track span {
+        transform: scaleX(1);
+    }
+
+    .ai-feature-board {
+        display: grid;
+        grid-template-columns: minmax(10rem, 15rem) minmax(0, 1fr);
+        gap: 1rem;
+        align-items: stretch;
+    }
+
+    .ai-feature-switches {
+        display: grid;
+        gap: 0.5rem;
+        align-content: start;
+    }
+
+    .ai-feature-switch {
+        display: grid;
+        grid-template-columns: 2.25rem minmax(0, 1fr);
+        gap: 0.6rem;
+        align-items: center;
+        border-radius: 1rem;
+        padding: 0.7rem 0.75rem;
+        color: color-mix(in oklch, currentColor 62%, transparent);
+        background: color-mix(in oklch, var(--card-bg) 36%, transparent);
+        text-align: left;
+        transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1), background-color 180ms ease, color 180ms ease;
+    }
+
+    .ai-feature-switch span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.2rem;
+        height: 2.2rem;
+        border-radius: 999px;
+        color: var(--primary);
+        background: var(--btn-regular-bg);
+        font-size: 0.78rem;
+        font-weight: 800;
+    }
+
+    .ai-feature-switch strong {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .ai-feature-switch.is-active {
+        color: var(--text-regular);
+        background: color-mix(in oklch, var(--btn-regular-bg-hover) 62%, var(--card-bg));
+    }
+
+    .ai-feature-river {
+        position: relative;
+        display: grid;
+        min-height: 13rem;
+    }
+
+    .ai-feature-flow {
+        display: grid;
+        grid-area: 1 / 1;
+        grid-template-columns: 3rem minmax(0, 1fr) auto;
+        gap: 1rem;
+        align-items: center;
+        border-radius: 1.25rem;
+        padding: 1.05rem 1.1rem;
+        border: 1px dashed var(--line-divider);
+        opacity: 0;
+        transform: translateY(0.4rem);
+        pointer-events: none;
+        transition: transform 240ms cubic-bezier(0.22, 1, 0.36, 1), opacity 180ms ease, background-color 180ms ease, border-color 180ms ease;
+    }
+
+    .ai-feature-flow.is-active {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+    }
+
+    .ai-feature-index,
+    .ai-feature-value {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        color: var(--primary);
+        background: var(--btn-regular-bg);
+        font-weight: 800;
+    }
+
+    .ai-feature-index {
+        width: 2.55rem;
+        height: 2.55rem;
+    }
+
+    .ai-feature-value {
+        min-width: 3.2rem;
+        height: 2.4rem;
+        padding-inline: 0.75rem;
+    }
+
+    .ai-memory-map {
+        position: relative;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1.1rem 1.5rem;
+        padding-block: 0.25rem;
+    }
+
+    .ai-memory-map::before {
+        position: absolute;
+        inset: 1.5rem 50% 1.5rem auto;
+        border-left: 1px dashed var(--line-divider);
+        content: "";
+    }
+
+    .ai-node {
+        position: relative;
+        padding: 1rem 1rem 1rem 1.2rem;
+        border-radius: 1.1rem;
+        background: color-mix(in oklch, var(--card-bg) 38%, transparent);
+        transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1), background-color 180ms ease;
+    }
+
+    .ai-node-pin {
+        position: absolute;
+        left: -0.42rem;
+        top: 1.15rem;
+        width: 0.85rem;
+        height: 0.85rem;
+        border-radius: 999px;
+        background: var(--node-color);
+        box-shadow: 0 0 0 0.28rem color-mix(in oklch, var(--card-bg) 86%, transparent);
+    }
+
+    .ai-node-label {
+        display: inline-flex;
+        margin-bottom: 0.45rem;
+        border-radius: 0.55rem;
+        padding: 0.2rem 0.5rem;
+        color: var(--primary);
+        background: var(--btn-regular-bg);
+        font-size: 0.75rem;
+        font-weight: 800;
+    }
+
+    .ai-awards {
+        padding: 1rem;
+        border-radius: 1.45rem;
+    }
+
+    .ai-awards-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .ai-awards-controls {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        border-radius: 999px;
+        padding: 0.28rem;
+        background: color-mix(in oklch, var(--card-bg) 58%, transparent);
+    }
+
+    .ai-award-prev,
+    .ai-award-next {
+        display: inline-flex;
+        width: 2.25rem;
+        height: 2.25rem;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        color: var(--primary);
+        background: var(--btn-regular-bg);
+        transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), background-color 180ms ease;
+    }
+
+    .ai-award-status {
+        min-width: 3.2rem;
+        color: color-mix(in oklch, currentColor 58%, transparent);
+        font-size: 0.82rem;
+        font-weight: 700;
+        text-align: center;
+    }
+
+    .ai-awards-stage {
+        position: relative;
+        display: grid;
+        grid-template-columns: minmax(0, 1.12fr) minmax(15rem, 0.72fr);
+        gap: 0.9rem;
+        align-items: stretch;
+    }
+
+    .ai-awards-pages {
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .ai-award-page {
+        display: none;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.85rem;
+        opacity: 0;
+        transform: translateY(0.5rem);
+    }
+
+    .ai-award-page.is-active {
+        display: grid;
+        opacity: 1;
+        transform: translateY(0);
+        animation: ai-page-in 260ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .ai-award-card {
+        position: relative;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: 0.75rem;
+        align-content: start;
+        min-height: 14.75rem;
+        overflow: hidden;
+        border-radius: 1.25rem;
+        padding: 1.1rem;
+        color: var(--text-regular);
+        font: inherit;
+        text-align: left;
+        background: color-mix(in oklch, var(--card-bg) 48%, transparent);
+        border: 1px dashed var(--line-divider);
+        cursor: pointer;
+        transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1), background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+    }
+
+    .ai-award-card::before {
+        position: absolute;
+        inset: auto 1rem 1rem auto;
+        width: 3.4rem;
+        height: 3.4rem;
+        border-radius: 999px;
+        background: radial-gradient(circle, color-mix(in oklch, var(--primary) 18%, transparent), transparent 68%);
+        opacity: 0;
+        transform: scale(0.8);
+        transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1), opacity 180ms ease;
+        content: "";
+        pointer-events: none;
+    }
+
+    .ai-award-card.is-selected {
+        background:
+            linear-gradient(135deg, color-mix(in oklch, var(--primary) 14%, transparent), transparent 58%),
+            color-mix(in oklch, var(--btn-plain-bg-hover) 76%, transparent);
+        border-color: color-mix(in oklch, var(--primary) 38%, var(--line-divider));
+        box-shadow: 0 0.8rem 1.8rem color-mix(in oklch, var(--primary) 10%, transparent);
+    }
+
+    .ai-award-card.is-selected::before {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    .ai-award-card:focus-visible {
+        outline: 2px solid var(--primary);
+        outline-offset: 3px;
+    }
+
+    .ai-award-number {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.2rem;
+        height: 2.2rem;
+        border-radius: 999px;
+        color: var(--primary);
+        background: var(--btn-regular-bg);
+        font-size: 0.78rem;
+        font-weight: 900;
+    }
+
+    .ai-award-card-body {
+        display: grid;
+        min-width: 0;
+        gap: 0.48rem;
+    }
+
+    .ai-award-kicker {
+        color: var(--primary);
+        font-size: 0.82rem;
+        font-weight: 800;
+        line-height: 1.2rem;
+    }
+
+    .ai-award-card-body strong {
+        color: var(--text-regular);
+        font-size: 1.08rem;
+        line-height: 1.65rem;
+    }
+
+    .ai-award-excerpt {
+        display: -webkit-box;
+        overflow: hidden;
+        color: color-mix(in oklch, currentColor 66%, transparent);
+        font-size: 0.88rem;
+        line-height: 1.55rem;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+    }
+
+    .ai-award-card-cue {
+        position: absolute;
+        right: 0.85rem;
+        bottom: 0.85rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 999px;
+        color: var(--primary);
+        background: var(--card-bg);
+        opacity: 0;
+        transform: translateY(0.25rem) scale(0.96);
+        transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), opacity 160ms ease;
+    }
+
+    .ai-award-card.is-selected .ai-award-card-cue {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+
+    .ai-award-focus {
+        position: relative;
+        display: grid;
+        align-content: start;
+        min-height: 14.75rem;
+        overflow: hidden;
+        border-radius: 1.25rem;
+        padding: 1.1rem;
+        background:
+            linear-gradient(145deg, color-mix(in oklch, var(--card-bg) 48%, transparent), color-mix(in oklch, var(--btn-plain-bg-hover) 64%, transparent)),
+            radial-gradient(circle at 100% 0%, color-mix(in oklch, var(--primary) 16%, transparent), transparent 44%);
+        border: 1px solid color-mix(in oklch, var(--primary) 20%, var(--line-divider));
+    }
+
+    .ai-award-focus::after {
+        position: absolute;
+        inset: auto -2rem -2.4rem auto;
+        width: 8rem;
+        height: 8rem;
+        border-radius: 999px;
+        border: 1px dashed color-mix(in oklch, var(--primary) 28%, transparent);
+        content: "";
+        pointer-events: none;
+    }
+
+    .ai-award-focus.is-refreshing {
+        animation: ai-focus-in 260ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .ai-award-focus-top {
+        display: flex;
+        align-items: baseline;
+        gap: 0.42rem;
+        margin-bottom: 1rem;
+        color: var(--primary);
+    }
+
+    .ai-award-focus-top span {
+        font-size: 2rem;
+        font-weight: 900;
+        line-height: 2rem;
+    }
+
+    .ai-award-focus-top small {
+        color: color-mix(in oklch, currentColor 58%, transparent);
+        font-weight: 800;
+    }
+
+    .ai-award-focus-kicker {
+        margin-bottom: 0.5rem;
+        color: var(--primary);
+        font-size: 0.88rem;
+        font-weight: 900;
+        line-height: 1.4rem;
+    }
+
+    .ai-award-focus h3 {
+        margin: 0;
+        color: var(--text-regular);
+        font-size: 1.35rem;
+        font-weight: 900;
+        line-height: 2rem;
+    }
+
+    .ai-award-focus p {
+        margin: 0.9rem 0 0;
+        color: color-mix(in oklch, currentColor 72%, transparent);
+        line-height: 1.75rem;
+    }
+
+    .ai-award-dots {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.4rem;
+        margin-top: 0.9rem;
+    }
+
+    .ai-award-dot {
+        width: 2.1rem;
+        height: 0.42rem;
+        border-radius: 999px;
+        background: color-mix(in oklch, currentColor 16%, transparent);
+        transform: scaleX(0.58);
+        transition: transform 180ms ease, background-color 180ms ease;
+    }
+
+    .ai-award-dot.is-active {
+        background: var(--primary);
+        transform: scaleX(1);
+    }
+
+    .ai-variant-game .ai-awards-stage {
+        grid-template-columns: minmax(0, 0.86fr) minmax(16rem, 1fr);
+    }
+
+    .ai-variant-game .ai-award-page {
+        grid-template-columns: 1fr;
+    }
+
+    .ai-variant-game .ai-award-card {
+        min-height: 6.7rem;
+        border-style: solid;
+        border-radius: 1.1rem;
+        padding: 0.95rem;
+        background: color-mix(in oklch, var(--card-bg) 42%, transparent);
+    }
+
+    .ai-variant-game .ai-award-card-body strong {
+        font-size: 1rem;
+        line-height: 1.45rem;
+    }
+
+    .ai-variant-game .ai-award-excerpt {
+        -webkit-line-clamp: 2;
+    }
+
+    .ai-variant-game .ai-award-focus {
+        min-height: 22.4rem;
+        background:
+            linear-gradient(160deg, color-mix(in oklch, var(--primary) 10%, transparent), transparent 58%),
+            color-mix(in oklch, var(--card-bg) 50%, transparent);
+    }
+
+    .ai-link-runway {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.75rem;
+        border-radius: 1.35rem;
+        padding: 0.85rem;
+    }
+
+    .ai-source-link {
+        display: grid;
+        gap: 0.25rem;
+        border-radius: 1rem;
+        padding: 0.85rem 0.95rem;
+        color: var(--text-regular);
+        background: color-mix(in oklch, var(--card-bg) 46%, transparent);
+        transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1), background-color 180ms ease;
+    }
+
+    .ai-source-link span {
+        color: var(--primary);
+        font-weight: 800;
+    }
+
+    .ai-source-link small {
+        color: color-mix(in oklch, currentColor 54%, transparent);
+        line-height: 1.25rem;
+    }
+
+    .ai-details-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.85rem;
+        align-items: start;
+    }
+
+    .ai-detail-card {
+        align-self: start;
+        border-radius: 1.25rem;
+        padding: 0.95rem 1rem;
+    }
+
+    .ai-detail-card summary {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        gap: 0.65rem;
+        align-items: center;
+        cursor: pointer;
+        list-style: none;
+    }
+
+    .ai-detail-card summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .ai-detail-card summary span {
+        border-radius: 999px;
+        padding: 0.25rem 0.55rem;
+        color: var(--primary);
+        background: var(--btn-regular-bg);
+        font-size: 0.78rem;
+        font-weight: 800;
+    }
+
+    .ai-detail-card summary strong {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .ai-detail-card summary svg {
+        transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .ai-detail-card[open] summary svg {
+        transform: rotate(180deg);
+    }
+
+    .ai-detail-card p {
+        margin-top: 0.85rem;
+    }
+
+    .ai-detail-card ul {
+        display: grid;
+        gap: 0.35rem;
+        margin: 0.75rem 0 0;
+        padding-left: 1rem;
+        color: color-mix(in oklch, currentColor 68%, transparent);
+        line-height: 1.6rem;
+    }
+
+    .ai-copy-panel {
+        border-radius: 1.35rem;
+        padding: 1rem;
+    }
+
+    .ai-copy-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: center;
+        margin-bottom: 0.85rem;
+    }
+
+    .ai-copy-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        height: 2.45rem;
+        border-radius: 999px;
+        padding-inline: 0.9rem;
+        color: var(--primary);
+        background: var(--btn-regular-bg);
+        font-weight: 800;
+        transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), background-color 180ms ease;
+    }
+
+    .ai-copy-panel pre {
+        overflow-x: auto;
+        border-radius: 1rem;
+        margin: 0;
+        padding: 1rem;
+        background: color-mix(in oklch, var(--card-bg) 52%, transparent);
+        color: color-mix(in oklch, currentColor 78%, transparent);
+        line-height: 1.75rem;
+    }
+
+    .ai-copy-panel code {
+        white-space: pre-wrap;
+    }
+
+    .ai-timeline-rail {
+        position: relative;
+        display: grid;
+        gap: 0.2rem;
+    }
+
+    .ai-timeline-rail::before {
+        position: absolute;
+        inset: 1.2rem auto 1.2rem 5.15rem;
+        border-left: 1px dashed var(--line-divider);
+        content: "";
+    }
+
+    .ai-timeline-item {
+        position: relative;
+        display: grid;
+        grid-template-columns: 8.5rem minmax(0, 1fr);
+        gap: 1rem;
+        padding: 1rem;
+        border-radius: 1.1rem;
+        background: color-mix(in oklch, var(--card-bg) 34%, transparent);
+    }
+
+    .ai-timeline-time {
+        color: var(--primary);
+        font-weight: 800;
+    }
+
+    .ai-quote,
+    .ai-signal-stack,
+    .ai-closing {
+        border-radius: 1.35rem;
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+        .ai-sound-button:hover,
+        .ai-stat-bar:hover,
+        .ai-feature-switch:hover,
+        .ai-award-prev:hover,
+        .ai-award-next:hover,
+        .ai-source-link:hover,
+        .ai-copy-button:hover {
+            transform: translateY(-2px);
+            background: var(--btn-regular-bg-hover);
+        }
+
+        .ai-feature-flow.is-active:hover,
+        .ai-node:hover,
+        .ai-award-card:hover {
+            transform: translateY(-3px);
+            background: color-mix(in oklch, var(--btn-regular-bg-hover) 58%, var(--card-bg));
+            border-color: color-mix(in oklch, var(--primary) 28%, var(--line-divider));
+        }
+
+        .ai-award-card:hover .ai-award-card-cue {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .ai-node:hover,
+        .ai-award-card:hover {
+            transform: translateY(-3px);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .ai-hero-grid,
+        .ai-metric-ribbon,
+        .ai-stat-grid,
+        .ai-feature-board,
+        .ai-link-runway,
+        .ai-memory-map,
+        .ai-details-grid,
+        .ai-award-page {
+            grid-template-columns: 1fr;
+        }
+
+        .ai-variant-game .ai-hero-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .ai-memory-map::before {
+            inset: 1.5rem auto 1.5rem 0;
+        }
+
+        .ai-sound-orbit {
+            justify-self: start;
+            width: 100%;
+        }
+
+        .ai-sound-shell {
+            min-height: auto;
+            display: grid;
+            grid-template-columns: 4.5rem minmax(0, 1fr) auto;
+            gap: 0.85rem;
+            align-items: center;
+            border-radius: 1.25rem;
+            padding: 0.75rem;
+            box-shadow: none;
+        }
+
+        .ai-audio-style-disc .ai-sound-shell {
+            grid-template-columns: 4.5rem minmax(0, 1fr);
+        }
+
+        .ai-audio-style-disc .ai-sound-shell::before,
+        .ai-audio-style-disc .ai-sound-shell::after {
+            display: none;
+        }
+
+        .ai-sound-button {
+            width: 4.5rem;
+            height: 4.5rem;
+        }
+
+        .ai-sound-copy,
+        .ai-sound-bars {
+            position: static;
+            text-align: left;
+        }
+
+        .ai-sound-bars {
+            align-self: center;
+        }
+
+        .ai-feature-flow {
+            grid-template-columns: 2.6rem minmax(0, 1fr);
+            transform: none;
+        }
+
+        .ai-feature-value {
+            grid-column: 2;
+            justify-self: start;
+        }
+
+        .ai-feature-river {
+            min-height: 18rem;
+        }
+
+        .ai-awards-header {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .ai-awards-stage {
+            grid-template-columns: 1fr;
+            min-height: 0;
+        }
+
+        .ai-award-card {
+            min-height: 0;
+        }
+
+        .ai-award-focus,
+        .ai-variant-game .ai-award-focus {
+            min-height: 0;
+        }
+
+        .ai-copy-head {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .ai-timeline-rail::before {
+            left: 0.7rem;
+        }
+
+        .ai-timeline-item {
+            grid-template-columns: 1fr;
+            padding-left: 1.65rem;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .ai-reveal,
+        .ai-sound-button,
+        .ai-stat-bar,
+        .ai-stat-track span,
+        .ai-feature-switch,
+        .ai-feature-flow,
+        .ai-node,
+        .ai-award-card,
+        .ai-award-prev,
+        .ai-award-next,
+        .ai-award-dot,
+        .ai-award-focus,
+        .ai-source-link,
+        .ai-copy-button {
+            transition: none;
+        }
+
+        .ai-sound-orbit.is-playing .ai-sound-cover,
+        .ai-sound-orbit.is-playing .ai-sound-bars span,
+        .ai-award-page.is-active,
+        .ai-award-focus.is-refreshing {
+            animation: none;
+        }
+    }
+
+    @keyframes ai-disc-spin {
+        from {
+            transform: rotate(0deg);
+        }
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    @keyframes ai-eq {
+        from {
+            transform: scaleY(0.55);
+        }
+        to {
+            transform: scaleY(1.25);
+        }
+    }
+
+    @keyframes ai-page-in {
+        from {
+            opacity: 0;
+            transform: translateY(0.5rem);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes ai-focus-in {
+        from {
+            opacity: 0.78;
+            transform: translateY(0.35rem);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>

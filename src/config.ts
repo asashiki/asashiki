@@ -48,11 +48,15 @@ export const navBarConfig: NavBarConfig = {
 	links: [
 		LinkPreset.Home,
 		LinkPreset.Archive,
-		LinkPreset.About,
 		{
-			name: "Bangumi",
+			name: "状态",
+			url: "/status/",
+		},
+		{
+			name: "追番",
 			url: "/bangumi/",
 		},
+		LinkPreset.About,
 		{
 			name: "时间胶囊",
 			url: "https://timeline.asashiki.com", // Internal links should not include the base path, as it is automatically added
