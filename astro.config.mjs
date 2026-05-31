@@ -163,6 +163,18 @@ export default defineConfig({
 		],
 	},
 	vite: {
+		server: {
+			proxy: {
+				"/__llm-proxy": {
+					changeOrigin: true,
+					headers: {
+						Origin: "https://asashiki.com",
+					},
+					rewrite: () => "",
+					target: "https://llm-proxy.leqazwsxedc.workers.dev",
+				},
+			},
+		},
 		build: {
 			rollupOptions: {
 				onwarn(warning, warn) {

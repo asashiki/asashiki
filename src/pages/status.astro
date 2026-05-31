@@ -92,12 +92,11 @@ import { Icon } from "astro-icon/components";
                             </div>
                             <Icon name="material-symbols:bolt-rounded" class="text-[var(--primary)] text-xl"></Icon>
                         </div>
-                        <p data-ai-summary>先放一段占位总结。之后这里会接你的 AI API，把设备、时间线、天气、日记库和娱乐状态压成一句更像“现在的浅仪式”的短评。</p>
-                        <div class="status-ai-tabs" data-ai-modes>
-                            <button class="is-active" type="button" data-ai-tone="soft">温柔</button>
-                            <button type="button" data-ai-tone="brief">短句</button>
-                            <button type="button" data-ai-tone="system">系统</button>
+                        <div class="status-ai-thinking" data-ai-thinking>
+                            <span></span>
+                            <span data-ai-state>等待状态数据</span>
                         </div>
+                        <p class="status-ai-summary" data-ai-summary>状态数据到齐后，会把页面打开那一刻的 app 快照交给 AI 写一小段。</p>
                     </section>
 
                     <section class="status-drawer" data-panel="body">
@@ -670,8 +669,59 @@ import { Icon } from "astro-icon/components";
         line-height: 1.7rem;
     }
 
-    .status-ai-tabs {
-        margin-top: 0.85rem;
+    .status-ai-summary {
+        min-height: 5.1rem;
+        white-space: pre-wrap;
+    }
+
+    .status-ai-summary.is-typing::after {
+        content: "";
+        display: inline-block;
+        width: 0.48rem;
+        height: 1rem;
+        margin-left: 0.14rem;
+        border-radius: 999px;
+        background: color-mix(in oklch, var(--primary) 72%, transparent);
+        transform: translateY(0.18rem);
+        animation: status-caret 900ms ease-in-out infinite;
+    }
+
+    .status-ai-thinking {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.42rem;
+        margin-bottom: 0.72rem;
+        border-radius: 999px;
+        padding: 0.28rem 0.58rem;
+        color: var(--primary);
+        background: color-mix(in oklch, var(--primary) 9%, var(--card-bg));
+        border: 1px solid color-mix(in oklch, var(--primary) 18%, transparent);
+        font-size: 0.74rem;
+        font-weight: 760;
+    }
+
+    .status-ai-thinking > span:first-child {
+        width: 0.48rem;
+        height: 0.48rem;
+        border-radius: 999px;
+        background: var(--primary);
+        box-shadow: 0 0 0 0.24rem color-mix(in oklch, var(--primary) 14%, transparent);
+        animation: status-thinking-pulse 1.2s ease-in-out infinite;
+    }
+
+    .status-ai-thinking.is-ready > span:first-child {
+        animation: none;
+    }
+
+    .status-ai-thinking.is-error {
+        color: oklch(0.62 0.16 28);
+        background: color-mix(in oklch, oklch(0.62 0.16 28) 8%, var(--card-bg));
+        border-color: color-mix(in oklch, oklch(0.62 0.16 28) 20%, transparent);
+    }
+
+    .status-ai-thinking.is-error > span:first-child {
+        background: oklch(0.62 0.16 28);
+        box-shadow: 0 0 0 0.24rem color-mix(in oklch, oklch(0.62 0.16 28) 12%, transparent);
     }
 
     .status-drawer-header {
@@ -988,6 +1038,28 @@ import { Icon } from "astro-icon/components";
             transform: rotate(360deg);
         }
     }
+
+    @keyframes status-caret {
+        0%,
+        100% {
+            opacity: 0.24;
+        }
+        50% {
+            opacity: 1;
+        }
+    }
+
+    @keyframes status-thinking-pulse {
+        0%,
+        100% {
+            transform: scale(0.92);
+            opacity: 0.72;
+        }
+        50% {
+            transform: scale(1.08);
+            opacity: 1;
+        }
+    }
 </style>
 
 <script>
@@ -1098,6 +1170,13 @@ type HealthRecordsResponse = {
 	records?: HealthRecord[];
 };
 
+type AiProxyResponse = {
+	detail?: string;
+	error?: string;
+	raw?: unknown;
+	text?: string;
+};
+
 type RecentApiResult<T> = {
 	activeDate: string;
 	result: ApiResult<T>;
@@ -1105,9 +1184,16 @@ type RecentApiResult<T> = {
 };
 
 type StatusStore = {
+	aiCacheKey: null | string;
+	aiRequested: boolean;
+	aiTypingTimer: null | number;
 	activity: RecentApiResult<ActivityResponse> | null;
 	devices: DeviceItem[];
 	heartRecords: ApiResult<HealthRecordsResponse> | null;
+	lastLoadedAt: number;
+	loadSeq: number;
+	refreshTimer: null | number;
+	resizeHandler: null | (() => void);
 	selectedDevice: string;
 	sleepRecords: ApiResult<HealthRecordsResponse> | null;
 	stepsRecords: ApiResult<HealthRecordsResponse> | null;
@@ -1119,6 +1205,9 @@ type StatusStore = {
 
 const API_BASE = "https://api.asashiki.com";
 const API_TIMEOUT = 10_000;
+const AI_PROXY_URL = import.meta.env.DEV ? "/__llm-proxy" : "https://llm-proxy.leqazwsxedc.workers.dev";
+const AI_TIMEOUT = 75_000;
+const AI_SESSION_PREFIX = "asashiki.status.ai.";
 const LOOKBACK_DAYS = 4;
 const REFRESH_INTERVAL = 60_000;
 const TIMELINE_PAGE_SIZE_DESKTOP = 120;
@@ -1128,19 +1217,20 @@ const TIMELINE_PAGE_STEP_MOBILE = 12;
 const QUIET_TIMELINE_APP_IDS = new Set(["windows.afk", "windows.idle"]);
 const statusStore = new WeakMap<HTMLElement, StatusStore>();
 
-const aiCopy = {
-	brief: "占位：正在把当前设备、时间线、天气和日记库压成一句状态。之后这里接 AI API。",
-	soft: "先放一段占位总结。之后这里会接你的 AI API，把设备、时间线、天气、日记库和娱乐状态压成一句更像“现在的浅仪式”的短评。",
-	system: "占位：Core API、设备、时间线、天气、Archive、Steam、健康数据分模块读取；失败时独立回退，不阻塞整页。",
-};
-
 function getStore(root: HTMLElement) {
 	let store = statusStore.get(root);
 	if (!store) {
 		store = {
+			aiCacheKey: null,
+			aiRequested: false,
+			aiTypingTimer: null,
 			activity: null,
 			devices: [],
 			heartRecords: null,
+			lastLoadedAt: 0,
+			loadSeq: 0,
+			refreshTimer: null,
+			resizeHandler: null,
 			selectedDevice: "all",
 			sleepRecords: null,
 			stepsRecords: null,
@@ -1270,10 +1360,23 @@ function timestamp(value?: string) {
 	return Number.isFinite(time) ? time : 0;
 }
 
+function nowShanghaiStamp() {
+	return new Intl.DateTimeFormat("zh-CN", {
+		hour: "2-digit",
+		minute: "2-digit",
+		month: "2-digit",
+		second: "2-digit",
+		timeZone: "Asia/Shanghai",
+		year: "numeric",
+		day: "2-digit",
+	}).format(new Date());
+}
+
 async function getJson<T>(path: string): Promise<ApiResult<T>> {
-	const controller = new AbortController();
-	const timer = window.setTimeout(() => controller.abort(), API_TIMEOUT);
+	let timer = 0;
 	try {
+		const controller = new AbortController();
+		timer = window.setTimeout(() => controller.abort(), API_TIMEOUT);
 		const response = await fetch(`${API_BASE}${path}`, {
 			headers: { accept: "application/json" },
 			signal: controller.signal,
@@ -1283,7 +1386,7 @@ async function getJson<T>(path: string): Promise<ApiResult<T>> {
 	} catch (error) {
 		return { data: null, error: error instanceof Error ? error.message : String(error), ok: false };
 	} finally {
-		window.clearTimeout(timer);
+		if (timer) window.clearTimeout(timer);
 	}
 }
 
@@ -1417,7 +1520,6 @@ function renderDeviceTabs(root: HTMLElement) {
 			store.timelineVisible = timelinePageSize();
 			renderNow(root);
 			renderTimeline(root);
-			renderAi(root);
 			syncTimelineHeight(root);
 		});
 		tabs?.append(button);
@@ -1657,7 +1759,6 @@ function setSelectedDate(root: HTMLElement, date: string) {
 	renderTimeline(root);
 	renderActivity(root);
 	renderHealth(root);
-	renderAi(root);
 	syncTimelineHeight(root);
 }
 
@@ -1765,7 +1866,77 @@ function renderSteam(root: HTMLElement, result: ApiResult<SteamProfile>) {
 	setPanelState(root, "steam", "ready");
 }
 
-function renderAi(root: HTMLElement) {
+function setAiState(root: HTMLElement, state: "error" | "loading" | "ready", label: string) {
+	const badge = root.querySelector<HTMLElement>("[data-ai-thinking]");
+	if (!badge) return;
+	badge.classList.toggle("is-error", state === "error");
+	badge.classList.toggle("is-ready", state === "ready");
+	setText(badge, "[data-ai-state]", label);
+}
+
+function setAiSummary(root: HTMLElement, text: string, typing = false) {
+	const summary = root.querySelector<HTMLElement>("[data-ai-summary]");
+	if (!summary) return;
+	summary.textContent = text;
+	summary.classList.toggle("is-typing", typing);
+}
+
+function cleanAiText(raw: string) {
+	return raw
+		.replace(/<think>[\s\S]*?<\/think>/gi, "")
+		.replace(/```[\s\S]*?```/g, (block) => block.replace(/```/g, ""))
+		.replace(/^\s*(final answer|最终答案)\s*[:：]/i, "")
+		.trim();
+}
+
+function aiCacheKey() {
+	return `${AI_SESSION_PREFIX}${todayShanghai()}`;
+}
+
+function readAiCache(key: string) {
+	try {
+		return window.sessionStorage.getItem(key);
+	} catch {
+		return null;
+	}
+}
+
+function writeAiCache(key: string, value: string) {
+	try {
+		window.sessionStorage.setItem(key, value);
+	} catch {
+		// Session storage can be unavailable in strict privacy modes.
+	}
+}
+
+function stopAiTyping(store: StatusStore) {
+	if (store.aiTypingTimer) {
+		window.clearInterval(store.aiTypingTimer);
+		store.aiTypingTimer = null;
+	}
+}
+
+function typeAiSummary(root: HTMLElement, text: string) {
+	const store = getStore(root);
+	stopAiTyping(store);
+	const summary = root.querySelector<HTMLElement>("[data-ai-summary]");
+	if (!summary) return;
+	summary.textContent = "";
+	summary.classList.add("is-typing");
+	let index = 0;
+	store.aiTypingTimer = window.setInterval(() => {
+		const step = text.charCodeAt(index) > 255 ? 2 : 3;
+		index = Math.min(text.length, index + step);
+		summary.textContent = text.slice(0, index);
+		if (index >= text.length) {
+			stopAiTyping(store);
+			summary.classList.remove("is-typing");
+			setAiState(root, "ready", "已生成");
+		}
+	}, 34);
+}
+
+function appSummarySnapshot(root: HTMLElement) {
 	const store = getStore(root);
 	const dayLabel = relativeDateLabel(store.timelineDate);
 	const rows = timelineRowsForStore(store);
@@ -1774,111 +1945,237 @@ function renderAi(root: HTMLElement) {
 		.filter((item) => !QUIET_TIMELINE_APP_IDS.has(item.appId || ""))
 		.filter((item) => (item.totalSeconds || 0) > 0)
 		.sort((a, b) => (b.totalSeconds || 0) - (a.totalSeconds || 0));
-	const topApp = apps[0];
-	const metrics = healthMetricsForDate(store, store.timelineDate);
-	const healthParts = [
-		metrics.steps ? `步数 ${Math.round(metrics.steps)}` : "",
-		metrics.sleep ? `睡眠 ${formatMinutes(metrics.sleep.value || 0)}` : "",
-	].filter(Boolean);
-	const activityText = topApp ? `应用重心是 ${appName(topApp.appId)} ${formatDuration(topApp.totalSeconds || 0)}` : "应用统计暂时安静";
-	const healthText = healthParts.length ? healthParts.join("，") : "身体记录暂时不多";
-	const summary = `占位总结：${dayLabel}有 ${rows.length} 条时间线，${activityText}，${healthText}。之后这里接 AI API，让它把这一天的时间线、日记库和娱乐状态合成更自然的一句话。`;
-	setText(root, "[data-ai-summary]", summary);
+	const selected = primaryDevice(store.devices, store.selectedDevice);
+	const onlineDevices = store.devices.filter((item) => item.isOnline);
+	const currentApps = store.devices
+		.filter((item) => item.appId)
+		.sort((a, b) => timestamp(b.lastSeenAt) - timestamp(a.lastSeenAt))
+		.slice(0, 6)
+		.map((item) => ({
+			app: appName(item.appId),
+			device: item.deviceName || item.deviceId || "设备",
+			isOnline: Boolean(item.isOnline),
+			lastSeen: timeAgo(item.lastSeenAt),
+			title: item.windowTitle ? truncate(item.windowTitle, 54) : "",
+		}));
+	const recentTimeline = rows.slice(0, 8).map((item) => ({
+		app: appName(item.appId),
+		device: store.devices.find((device) => device.deviceId === item.deviceId)?.deviceName || item.deviceId || "设备",
+		duration: formatDuration(item.durationSeconds || 0),
+		time: formatClock(item.startedAt),
+		title: item.windowTitle ? truncate(item.windowTitle, 54) : "",
+	}));
+	const topApps = apps.slice(0, 6).map((item) => ({
+		app: appName(item.appId),
+		count: item.count || 0,
+		time: formatDuration(item.totalSeconds || 0),
+	}));
+	return {
+		day: `${dayLabel} ${store.timelineDate}`,
+		generatedAt: nowShanghaiStamp(),
+		online: `${onlineDevices.length}/${store.devices.length}`,
+		selectedDevice: selected?.deviceName || selected?.deviceId || "总览",
+		currentApps,
+		recentTimeline,
+		timelineCount: rows.length,
+		topApps,
+	};
+}
+
+function buildAiPrompt(root: HTMLElement) {
+	const snapshot = appSummarySnapshot(root);
+	return [
+		"你在为 asashiki.com 的“状态”页面生成状态小结。",
+		"只根据下面的 app/设备使用快照写，不要编造天气、位置、健康、资产、日记原文等信息。",
+		"输出要求：中文，50-90 个汉字，1-2 句；语气轻松、可爱一点，但不要营销腔；可以在结尾自然加“喵~”。",
+		"不要输出标题、项目符号、JSON、Markdown，也不要输出 thinking 或推理过程。",
+		`页面打开时的快照：${JSON.stringify(snapshot)}`,
+	].join("\n");
+}
+
+async function postAiPrompt(prompt: string): Promise<ApiResult<AiProxyResponse>> {
+	let timer = 0;
+	try {
+		const controller = new AbortController();
+		timer = window.setTimeout(() => controller.abort(), AI_TIMEOUT);
+		const response = await fetch(AI_PROXY_URL, {
+			body: JSON.stringify({ prompt }),
+			headers: { "Content-Type": "application/json" },
+			method: "POST",
+			signal: controller.signal,
+		});
+		const data = (await response.json().catch(() => null)) as AiProxyResponse | null;
+		if (!response.ok) {
+			return {
+				data,
+				error: data?.error || data?.detail || `AI 代理返回 ${response.status}`,
+				ok: false,
+				status: response.status,
+			};
+		}
+		return { data, ok: true, status: response.status };
+	} catch (error) {
+		return { data: null, error: error instanceof Error ? error.message : String(error), ok: false };
+	} finally {
+		if (timer) window.clearTimeout(timer);
+	}
+}
+
+async function startAiSummary(root: HTMLElement) {
+	const store = getStore(root);
+	const key = aiCacheKey();
+	if (store.aiCacheKey && store.aiCacheKey !== key) {
+		store.aiRequested = false;
+	}
+	const cached = readAiCache(key);
+	store.aiCacheKey = key;
+
+	if (cached) {
+		store.aiRequested = true;
+		stopAiTyping(store);
+		setAiState(root, "ready", "会话缓存");
+		setAiSummary(root, cached);
+		return;
+	}
+
+	if (store.aiRequested) return;
+	store.aiRequested = true;
+	setAiState(root, "loading", "总结中");
+	setAiSummary(root, "正在把刚刚读到的 app 状态揉成一句轻轻的小结。", true);
+
+	let result: ApiResult<AiProxyResponse>;
+	try {
+		result = await postAiPrompt(buildAiPrompt(root));
+	} catch (error) {
+		result = { data: null, error: error instanceof Error ? error.message : String(error), ok: false };
+	}
+	if (store.aiCacheKey !== key || !document.body.contains(root)) return;
+
+	if (!result.ok || !result.data?.text) {
+		const message = result.error || result.data?.error || result.data?.detail || "AI 小结暂时没有回来。";
+		stopAiTyping(store);
+		setAiState(root, "error", "生成失败");
+		setAiSummary(root, `小结暂时生成失败：${message}`);
+		store.aiRequested = false;
+		return;
+	}
+
+	const text = cleanAiText(result.data.text);
+	const finalText = text || "今天的 app 状态有点安静，先让页面保持轻轻在线喵~";
+	writeAiCache(key, finalText);
+	typeAiSummary(root, finalText);
 }
 
 async function loadStatus(root: HTMLElement) {
 	const store = getStore(root);
-	const refresh = root.querySelector("[data-status-refresh]");
+	const seq = store.loadSeq + 1;
+	store.loadSeq = seq;
+	const refresh = root.querySelector<HTMLButtonElement>("[data-status-refresh]");
 	refresh?.classList.add("is-loading");
+	refresh?.setAttribute("aria-busy", "true");
 	for (const name of ["timeline", "activity", "body", "service", "steam"]) {
 		setPanelState(root, name, "loading", "读取中。");
 	}
 
-	const dates = recentDates();
-	const [health, devices, timeline, activity, weather, connectors, archive, steam, stepsRecords, heartRecords, sleepRecords] = await Promise.all([
-		getJson<HealthResponse>("/health"),
-		getJson<DevicesResponse>("/api/devices/current"),
-		getRecentBundle<TimelineResponse>(dates, (date) => `/api/devices/timeline-query?date=${date}&limit=120`, (data) => Boolean(data?.activities?.length)),
-		getRecentBundle<ActivityResponse>(dates, (date) => `/api/devices/activity-summary?date=${date}`, (data) => Boolean(data?.perApp?.some((item) => (item.totalSeconds || 0) > 0))),
-		getJson<WeatherResponse>("/api/weather"),
-		getJson<ConnectorsSummary>("/api/connectors/summary"),
-		getJson<ArchiveStatus>("/api/archive/status"),
-		getJson<SteamProfile>("/api/steam/profile"),
-		getJson<HealthRecordsResponse>("/api/devices/health-records?type=steps&limit=160"),
-		getJson<HealthRecordsResponse>("/api/devices/health-records?type=heart_rate&limit=40"),
-		getJson<HealthRecordsResponse>("/api/devices/health-records?type=sleep&limit=30"),
-	]);
+	try {
+		const dates = recentDates();
+		const [health, devices, timeline, activity, weather, connectors, archive, steam, stepsRecords, heartRecords, sleepRecords] = await Promise.all([
+			getJson<HealthResponse>("/health"),
+			getJson<DevicesResponse>("/api/devices/current"),
+			getRecentBundle<TimelineResponse>(dates, (date) => `/api/devices/timeline-query?date=${date}&limit=120`, (data) => Boolean(data?.activities?.length)),
+			getRecentBundle<ActivityResponse>(dates, (date) => `/api/devices/activity-summary?date=${date}`, (data) => Boolean(data?.perApp?.some((item) => (item.totalSeconds || 0) > 0))),
+			getJson<WeatherResponse>("/api/weather"),
+			getJson<ConnectorsSummary>("/api/connectors/summary"),
+			getJson<ArchiveStatus>("/api/archive/status"),
+			getJson<SteamProfile>("/api/steam/profile"),
+			getJson<HealthRecordsResponse>("/api/devices/health-records?type=steps&limit=160"),
+			getJson<HealthRecordsResponse>("/api/devices/health-records?type=heart_rate&limit=40"),
+			getJson<HealthRecordsResponse>("/api/devices/health-records?type=sleep&limit=30"),
+		]);
 
-	const apiOnline = health.ok && health.data?.status === "ok";
-	setText(root, "[data-api-state]", apiOnline ? "Core API 在线" : "Core API 未响应");
-	root.querySelector("[data-api-pulse]")?.classList.toggle("is-error", !apiOnline);
-	setText(
-		root,
-		"[data-updated-at]",
-		new Intl.DateTimeFormat("zh-CN", {
-			hour: "2-digit",
-			minute: "2-digit",
-			second: "2-digit",
-			timeZone: "Asia/Shanghai",
-		}).format(new Date()),
-	);
+		if (seq !== store.loadSeq || !document.body.contains(root)) return;
 
-	store.devices = devices.ok ? devices.data?.devices || [] : [];
-	if (store.selectedDevice !== "all" && !store.devices.some((item) => item.deviceId === store.selectedDevice)) {
-		store.selectedDevice = "all";
-		store.timelineVisible = timelinePageSize();
+		const apiOnline = health.ok && health.data?.status === "ok";
+		setText(root, "[data-api-state]", apiOnline ? "Core API 在线" : "Core API 未响应");
+		root.querySelector("[data-api-pulse]")?.classList.toggle("is-error", !apiOnline);
+		setText(
+			root,
+			"[data-updated-at]",
+			new Intl.DateTimeFormat("zh-CN", {
+				hour: "2-digit",
+				minute: "2-digit",
+				second: "2-digit",
+				timeZone: "Asia/Shanghai",
+			}).format(new Date()),
+		);
+
+		store.devices = devices.ok ? devices.data?.devices || [] : [];
+		if (store.selectedDevice !== "all" && !store.devices.some((item) => item.deviceId === store.selectedDevice)) {
+			store.selectedDevice = "all";
+			store.timelineVisible = timelinePageSize();
+		}
+		const previousTimelineDate = store.timelineDate;
+		store.timeline = timeline;
+		store.timelineDate = timeline.results.some((item) => item.date === previousTimelineDate) ? previousTimelineDate : timeline.activeDate;
+		if (store.timelineDate !== previousTimelineDate) store.timelineVisible = timelinePageSize();
+		store.stepsRecords = stepsRecords;
+		store.heartRecords = heartRecords;
+		store.sleepRecords = sleepRecords;
+		store.lastLoadedAt = Date.now();
+
+		renderWeather(root, weather);
+		renderHealth(root);
+		renderNow(root);
+		renderActivity(root, activity);
+		renderTimeline(root);
+		renderService(root, health, connectors, archive);
+		renderSteam(root, steam);
+		syncTimelineHeight(root);
+		startAiSummary(root);
+	} catch (error) {
+		if (seq !== store.loadSeq) return;
+		const message = error instanceof Error ? error.message : String(error);
+		setText(root, "[data-api-state]", "状态读取异常");
+		root.querySelector("[data-api-pulse]")?.classList.add("is-error");
+		for (const name of ["timeline", "activity", "body", "service", "steam"]) {
+			setPanelState(root, name, "error", `读取失败：${message}`);
+		}
+	} finally {
+		if (seq === store.loadSeq) {
+			refresh?.classList.remove("is-loading");
+			refresh?.removeAttribute("aria-busy");
+		}
 	}
-	const previousTimelineDate = store.timelineDate;
-	store.timeline = timeline;
-	store.timelineDate = timeline.results.some((item) => item.date === previousTimelineDate) ? previousTimelineDate : timeline.activeDate;
-	if (store.timelineDate !== previousTimelineDate) store.timelineVisible = timelinePageSize();
-	store.stepsRecords = stepsRecords;
-	store.heartRecords = heartRecords;
-	store.sleepRecords = sleepRecords;
-
-	renderWeather(root, weather);
-	renderHealth(root);
-	renderNow(root);
-	renderActivity(root, activity);
-	renderTimeline(root);
-	renderService(root, health, connectors, archive);
-	renderSteam(root, steam);
-	renderAi(root);
-	syncTimelineHeight(root);
-	refresh?.classList.remove("is-loading");
-}
-
-function initAi(root: HTMLElement) {
-	if (root.dataset.aiBound) return;
-	root.dataset.aiBound = "true";
-	const summary = root.querySelector("[data-ai-summary]");
-	const buttons = root.querySelectorAll<HTMLButtonElement>("[data-ai-tone]");
-	buttons.forEach((button) => {
-		button.addEventListener("click", () => {
-			buttons.forEach((item) => item.classList.toggle("is-active", item === button));
-			if (summary) summary.textContent = aiCopy[button.dataset.aiTone as keyof typeof aiCopy] || aiCopy.soft;
-		});
-	});
 }
 
 function initStatusPage() {
 	document.querySelectorAll<HTMLElement>("[data-status-page]").forEach((root) => {
-		if (root.dataset.statusBound) return;
+		const store = getStore(root);
+		if (root.dataset.statusBound) {
+			syncTimelineHeight(root);
+			if (!store.lastLoadedAt || Date.now() - store.lastLoadedAt > 15_000) {
+				loadStatus(root);
+			}
+			return;
+		}
 		root.dataset.statusBound = "true";
-		initAi(root);
 		root.querySelector("[data-status-refresh]")?.addEventListener("click", () => loadStatus(root));
 		root.querySelector("[data-timeline-scroll]")?.addEventListener("scroll", (event) => {
 			const scroll = event.currentTarget as HTMLElement;
 			if (scroll.scrollTop + scroll.clientHeight >= scroll.scrollHeight - 96) appendTimeline(root);
 		});
 		const resizeHandler = () => syncTimelineHeight(root);
+		store.resizeHandler = resizeHandler;
 		window.addEventListener("resize", resizeHandler);
 		loadStatus(root);
-		const timer = window.setInterval(() => {
+		store.refreshTimer = window.setInterval(() => {
 			if (!document.body.contains(root)) {
+				const latest = getStore(root);
 				delete root.dataset.statusBound;
+				stopAiTyping(latest);
 				window.removeEventListener("resize", resizeHandler);
-				window.clearInterval(timer);
+				if (latest.refreshTimer) window.clearInterval(latest.refreshTimer);
+				latest.refreshTimer = null;
 				return;
 			}
 			loadStatus(root);
@@ -1886,7 +2183,14 @@ function initStatusPage() {
 	});
 }
 
-initStatusPage();
+if (document.readyState === "loading") {
+	document.addEventListener("DOMContentLoaded", initStatusPage, { once: true });
+} else {
+	initStatusPage();
+}
+
+window.addEventListener("pageshow", initStatusPage);
+document.addEventListener("astro:page-load", initStatusPage);
 
 const setupStatusSwup = () => {
 	window.swup?.hooks?.on("page:view", initStatusPage);
