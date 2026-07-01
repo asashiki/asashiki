@@ -1,0 +1,633 @@
+---
+import MainGridLayout from "@layouts/MainGridLayout.astro";
+import { Icon } from "astro-icon/components";
+
+// 时间胶囊：构建时从 broadcast-channel worker 拉 RSS 并烘焙进页面。
+// 该 worker 未发 CORS 头，浏览器端 fetch 会被拦；站点是静态构建，故走构建期抓取
+// （每次 rebuild 刷新一次）。若想做成像状态页那样的运行时实时刷新，只需给该 worker
+// 加一个 Access-Control-Allow-Origin 响应头，再把这里改成客户端 fetch 即可。
+const RSS_URL =
+	"https://broadcast-channel-asashiki.leqazwsxedc.workers.dev/rss.xml";
+
+type CapsuleItem = {
+	category: { icon: string; key: string; label: string };
+	href: string; // 标题点击目标：优先真实来源（推特/Bangumi），回退到广播永久链接
+	iso: string;
+	links: { href: string; label: string }[]; // 额外来源，做成小药丸
+	pubDate: string;
+	title: string;
+};
+
+function decodeEntities(input: string): string {
+	return input
+		.replace(/&lt;/g, "<")
+		.replace(/&gt;/g, ">")
+		.replace(/&quot;/g, '"')
+		.replace(/&#39;/g, "'")
+		.replace(/&apos;/g, "'")
+		.replace(/&nbsp;/g, " ")
+		.replace(/&amp;/g, "&");
+}
+
+function pick(block: string, tag: string): string {
+	const match = block.match(
+		new RegExp(`<${tag}[^>]*>([\\s\\S]*?)</${tag}>`, "i"),
+	);
+	if (!match) return "";
+	let value = match[1].trim();
+	const cdata = value.match(/^<!\[CDATA\[([\s\S]*?)\]\]>$/);
+	if (cdata) value = cdata[1];
+	return decodeEntities(value).trim();
+}
+
+// 标题前缀固定（主人发推了 / 主人看过 / 主人在玩 …），据此判类别
+function categorize(title: string): CapsuleItem["category"] {
+	if (/发推|推文|发了推|发了一条/.test(title))
+		return { icon: "fa6-brands:x-twitter", key: "tweet", label: "推文" };
+	if (/在玩|想玩|玩过|游玩|通关/.test(title))
+		return { icon: "fa6-solid:gamepad", key: "game", label: "游戏" };
+	if (/看过|在看|想看|追番|看了|补番/.test(title))
+		return {
+			icon: "material-symbols:movie-outline-rounded",
+			key: "anime",
+			label: "番剧",
+		};
+	if (/在听|听过|想听|单曲/.test(title))
+		return {
+			icon: "material-symbols:music-note-rounded",
+			key: "music",
+			label: "音乐",
+		};
+	if (/读|看书|漫画/.test(title))
+		return {
+			icon: "material-symbols:book-2-outline-rounded",
+			key: "read",
+			label: "阅读",
+		};
+	return { icon: "material-symbols:bolt-rounded", key: "event", label: "事件" };
+}
+
+function hostLabel(href: string): string {
+	try {
+		const host = new URL(href).hostname.replace(/^www\./, "");
+		if (/twitter|x\.com/.test(host)) return "推文原文";
+		if (/t\.me|telegram/.test(host)) return "频道";
+		if (/bgm\.tv|bangumi/.test(host)) return "Bangumi";
+		if (/steam/.test(host)) return "Steam";
+		return host;
+	} catch {
+		return "链接";
+	}
+}
+
+function cleanTitle(raw: string): string {
+	// 去掉结尾自动追加的「2026-06-25 06:14」时间戳，保留「主人…」语气
+	return raw.replace(/\s*\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}\s*$/, "").trim();
+}
+
+let items: CapsuleItem[] = [];
+let channelDesc = "ACG 时间胶囊日志，数据由机器人自动抓取各平台。";
+let fetchedOk = false;
+
+try {
+	const response = await fetch(RSS_URL, {
+		headers: { accept: "application/rss+xml, text/xml" },
+	});
+	if (response.ok) {
+		const xml = await response.text();
+		fetchedOk = true;
+		const desc = pick(xml.split("<item>")[0], "description");
+		if (desc) channelDesc = desc;
+		const blocks = xml.match(/<item>([\s\S]*?)<\/item>/g) || [];
+		items = blocks.map((block) => {
+			const title = cleanTitle(pick(block, "title"));
+			const pubDate = pick(block, "pubDate");
+			const permalink = pick(block, "link") || pick(block, "guid");
+			const content = pick(block, "content:encoded");
+			// 从正文里抽出所有外部来源链接（排除广播频道自身的永久链接）
+			const seen = new Set<string>();
+			const sources: { href: string; label: string }[] = [];
+			for (const match of content.matchAll(/href="([^"]+)"/g)) {
+				const url = match[1];
+				if (
+					!/^https?:\/\//.test(url) ||
+					url === permalink ||
+					/broadcast-channel-asashiki/.test(url) ||
+					seen.has(url)
+				)
+					continue;
+				seen.add(url);
+				sources.push({ href: url, label: hostLabel(url) });
+			}
+			// 标题点击目标：有真实来源就直达（推特状态 / Bangumi 条目），否则回退永久链接
+			const primary = sources[0]?.href || permalink;
+			return {
+				category: categorize(title),
+				href: primary,
+				iso: pubDate ? new Date(pubDate).toISOString() : "",
+				links: sources.slice(1, 3),
+				pubDate,
+				title,
+			};
+		});
+	}
+} catch {
+	fetchedOk = false;
+}
+
+const categories = [
+	{ key: "all", label: "全部" },
+	...Array.from(
+		new Map(items.map((item) => [item.category.key, item.category])).values(),
+	).map((category) => ({
+		key: category.key,
+		label: category.label,
+	})),
+];
+const topCategory = items.length
+	? Array.from(
+			new Map(items.map((item) => [item.category.key, item.category])).values(),
+		)
+			.map((category) => ({
+				category,
+				count: items.filter((item) => item.category.key === category.key)
+					.length,
+			}))
+			.sort((a, b) => b.count - a.count)[0]
+	: null;
+const buildStamp = new Intl.DateTimeFormat("zh-CN", {
+	day: "2-digit",
+	hour: "2-digit",
+	minute: "2-digit",
+	month: "2-digit",
+	timeZone: "Asia/Shanghai",
+}).format(new Date());
+---
+
+<MainGridLayout title="时间胶囊" description="Asashiki 的 ACG 时间胶囊">
+    <div class="flex w-full max-w-[100vw] rounded-[var(--radius-large)] overflow-hidden relative mb-4">
+        <article class="card-base capsule-console relative w-full max-w-[100vw]" data-capsule>
+            <header class="capsule-top onload-animation">
+                <div class="capsule-title-block">
+                    <div class="capsule-kicker">
+                        <span class="capsule-dot"></span>
+                        <span>Time Capsule</span>
+                        {items.length > 0 && <span class="capsule-kicker-count">共 {items.length} 枚</span>}
+                    </div>
+                    <h1>时间胶囊</h1>
+                    <span class="capsule-stripe" aria-hidden="true"></span>
+                    <p>{channelDesc}</p>
+                    {topCategory && (
+                        <p class="capsule-subtle">最近多在<span> {topCategory.category.label} </span>里打转 · 机器人自各平台自动收集</p>
+                    )}
+                </div>
+                <div class="capsule-top-actions">
+                    <a class="capsule-source" href={RSS_URL} target="_blank" rel="noopener">
+                        <Icon name="fa6-solid:rss" class="text-sm"></Icon>
+                        <span>RSS</span>
+                    </a>
+                    <time>构建于 {buildStamp}</time>
+                </div>
+            </header>
+
+            <nav class="capsule-filters onload-animation" aria-label="分类筛选" data-capsule-filters
+                 style="animation-delay: calc(var(--content-delay) + 60ms);">
+                {categories.map((category, index) => (
+                    <button type="button" class={index === 0 ? "is-active" : ""} data-filter={category.key}>
+                        {category.label}
+                    </button>
+                ))}
+            </nav>
+
+            <section class="capsule-feed onload-animation" style="animation-delay: calc(var(--content-delay) + 100ms);">
+                {items.length === 0 ? (
+                    <div class="capsule-empty">
+                        <span class="capsule-empty-face">( ´･ω･`)</span>
+                        <p>{fetchedOk ? "胶囊里还空空的，等下一条事件落进来～" : "事件源这次没赶上构建，稍后重建就回来啦。"}</p>
+                    </div>
+                ) : (
+                    <ol class="capsule-list" data-capsule-list>
+                        {items.map((item) => (
+                            <li class="capsule-item" data-category={item.category.key}>
+                                <div class="capsule-rail">
+                                    <span class={`capsule-badge is-${item.category.key}`}>
+                                        <Icon name={item.category.icon} class="text-[0.95rem]"></Icon>
+                                    </span>
+                                </div>
+                                <div class="capsule-body">
+                                    <div class="capsule-meta">
+                                        <span class="capsule-chip">{item.category.label}</span>
+                                        <time datetime={item.iso} data-capsule-time data-iso={item.iso}>{item.pubDate}</time>
+                                    </div>
+                                    <a class="capsule-headline" href={item.href} target="_blank" rel="noopener">
+                                        {item.title}
+                                        <Icon name="fa6-solid:arrow-up-right-from-square" class="capsule-headline-ext text-[0.7rem]"></Icon>
+                                    </a>
+                                    {item.links.length > 0 && (
+                                        <div class="capsule-links">
+                                            {item.links.map((link) => (
+                                                <a href={link.href} target="_blank" rel="noopener">
+                                                    {link.label}
+                                                    <Icon name="fa6-solid:arrow-up-right-from-square" class="text-[0.65rem]"></Icon>
+                                                </a>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </li>
+                        ))}
+                    </ol>
+                )}
+                {items.length > 0 && (
+                    <footer class="capsule-more">
+                        <span>这里只放最近 {items.length} 枚 · 想翻更早的胶囊？</span>
+                        <a href="https://timeline.asashiki.com" target="_blank" rel="noopener">
+                            查看全站时间线
+                            <Icon name="fa6-solid:arrow-right" class="text-[0.7rem]"></Icon>
+                        </a>
+                    </footer>
+                )}
+            </section>
+        </article>
+    </div>
+</MainGridLayout>
+
+<style is:global>
+    .capsule-console {
+        --capsule-text: rgb(24 24 27);
+        --capsule-muted: rgb(82 82 91);
+        --capsule-faint: rgb(122 116 125);
+        --capsule-stripe: repeating-linear-gradient(-57deg,
+            color-mix(in oklch, var(--primary) 22%, transparent) 0 2px,
+            transparent 2px 7px);
+        position: relative;
+        padding: 1.4rem 1.4rem 1.5rem;
+        color: var(--capsule-text);
+        background: var(--card-bg);
+        font-size: 14px;
+        line-height: 1.5;
+    }
+    /* 单一同源浅樱柔光，限 1 处，作 hero 光晕 */
+    .capsule-console::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(120% 80% at 88% -10%,
+            color-mix(in oklch, var(--primary) 12%, transparent) 0%, transparent 60%);
+        pointer-events: none;
+    }
+    .capsule-console > * {
+        position: relative;
+        z-index: 1;
+    }
+    :root.dark .capsule-console {
+        --capsule-text: rgb(245 245 245);
+        --capsule-muted: rgb(214 214 220);
+        --capsule-faint: rgb(168 162 177);
+    }
+
+    .capsule-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.25rem 0.2rem 1rem;
+    }
+    .capsule-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--primary);
+        font-size: 0.74rem;
+        font-weight: 750;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+    }
+    .capsule-dot {
+        width: 0.5rem;
+        height: 0.5rem;
+        border-radius: 999px;
+        background: var(--primary);
+        box-shadow: 0 0 0 0.28rem color-mix(in oklch, var(--primary) 16%, transparent);
+    }
+    .capsule-kicker-count {
+        padding: 0.08rem 0.45rem;
+        border-radius: 999px;
+        color: var(--capsule-faint);
+        background: var(--btn-regular-bg);
+        font-size: 0.66rem;
+        letter-spacing: 0;
+    }
+    .capsule-title-block h1 {
+        margin: 0.32rem 0 0;
+        color: var(--capsule-text);
+        font-size: clamp(1.45rem, 2.4vw, 1.95rem);
+        font-weight: 600;
+        line-height: 1.12;
+    }
+    /* −12° 斜纹装饰条，只此一处、克制 */
+    .capsule-stripe {
+        display: block;
+        width: 2.6rem;
+        height: 0.62rem;
+        margin: 0.7rem 0 0;
+        border-radius: 999px;
+        background: var(--capsule-stripe);
+    }
+    .capsule-title-block p {
+        max-width: 44rem;
+        margin: 0.7rem 0 0;
+        color: var(--capsule-muted);
+        font-size: 0.92rem;
+        line-height: 1.7;
+    }
+    .capsule-subtle {
+        font-size: 0.82rem !important;
+        color: var(--capsule-faint) !important;
+        margin-top: 0.3rem !important;
+    }
+    .capsule-subtle span {
+        color: var(--primary);
+        font-weight: 700;
+    }
+    .capsule-top-actions {
+        display: grid;
+        gap: 0.45rem;
+        justify-items: end;
+        flex: 0 0 auto;
+    }
+    .capsule-source {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        min-height: 2.2rem;
+        padding: 0 0.85rem;
+        border-radius: 999px;
+        color: var(--primary);
+        background: var(--btn-regular-bg);
+        font-weight: 750;
+        transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), background-color 180ms ease;
+    }
+    .capsule-top-actions time {
+        color: var(--capsule-faint);
+        font-size: 0.74rem;
+        font-weight: 700;
+    }
+
+    .capsule-filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px dashed color-mix(in oklch, var(--line-divider) 80%, transparent);
+    }
+    .capsule-filters button {
+        min-height: 2.1rem;
+        padding: 0.35rem 0.85rem;
+        border-radius: 999px;
+        border: 1px solid color-mix(in oklch, var(--line-divider) 80%, transparent);
+        background: var(--btn-regular-bg);
+        color: var(--capsule-muted);
+        font-size: 0.82rem;
+        font-weight: 720;
+        transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), background-color 180ms ease, color 180ms ease, border-color 180ms ease;
+    }
+    .capsule-filters button.is-active {
+        color: var(--primary);
+        background: color-mix(in oklch, var(--primary) 12%, var(--card-bg));
+        border-color: color-mix(in oklch, var(--primary) 30%, transparent);
+    }
+
+    .capsule-feed {
+        padding-top: 1.1rem;
+    }
+    .capsule-more {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.6rem;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px dashed color-mix(in oklch, var(--line-divider) 80%, transparent);
+        color: var(--capsule-faint);
+        font-size: 0.82rem;
+    }
+    .capsule-more a {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.32rem 0.75rem;
+        border-radius: 999px;
+        color: var(--primary);
+        background: var(--btn-regular-bg);
+        font-weight: 720;
+        text-decoration: none;
+        transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), gap 180ms ease;
+    }
+    @media (hover: hover) and (pointer: fine) {
+        .capsule-more a:hover {
+            transform: translateY(-2px);
+            gap: 0.55rem;
+        }
+    }
+    .capsule-empty {
+        display: grid;
+        gap: 0.6rem;
+        justify-items: center;
+        margin: 0;
+        padding: 2.5rem 0;
+        color: var(--capsule-muted);
+        text-align: center;
+    }
+    .capsule-empty-face {
+        font-size: 1.4rem;
+        color: var(--primary);
+        font-family: ui-monospace, monospace;
+    }
+    .capsule-empty p {
+        margin: 0;
+    }
+    .capsule-list {
+        display: grid;
+        gap: 0;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+    .capsule-item {
+        display: grid;
+        grid-template-columns: 2.4rem minmax(0, 1fr);
+        gap: 0.85rem;
+        padding: 0.95rem 0;
+        border-top: 1px solid color-mix(in oklch, var(--line-divider) 72%, transparent);
+    }
+    .capsule-item:first-child {
+        border-top: 0;
+    }
+    .capsule-item[hidden] {
+        display: none;
+    }
+    .capsule-rail {
+        display: flex;
+        justify-content: center;
+        position: relative;
+    }
+    .capsule-rail::before {
+        content: "";
+        position: absolute;
+        top: 2.4rem;
+        bottom: -0.95rem;
+        width: 1px;
+        background: color-mix(in oklch, var(--line-divider) 70%, transparent);
+    }
+    .capsule-item:last-child .capsule-rail::before {
+        display: none;
+    }
+    .capsule-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 0.7rem;
+        color: var(--primary);
+        background: color-mix(in oklch, var(--primary) 12%, var(--card-bg));
+        border: 1px solid color-mix(in oklch, var(--primary) 22%, transparent);
+    }
+    /* 所有类别的图标都统一吃 --primary，跟随主题色调节（与 X 图标一致）。
+       靠形状区分类别即可，颜色保持一致更克制、也不会随主题割裂。 */
+    .capsule-body {
+        min-width: 0;
+        display: grid;
+        gap: 0.4rem;
+    }
+    .capsule-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+    }
+    .capsule-chip {
+        border-radius: 999px;
+        padding: 0.16rem 0.5rem;
+        color: var(--primary);
+        background: var(--btn-regular-bg);
+        font-size: 0.7rem;
+        font-weight: 760;
+    }
+    .capsule-meta time {
+        color: var(--capsule-faint);
+        font-size: 0.74rem;
+        font-weight: 650;
+    }
+    .capsule-headline {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 0.35rem;
+        color: var(--capsule-text);
+        font-size: 0.98rem;
+        font-weight: 640;
+        line-height: 1.5;
+        text-decoration: none;
+        transition: color 160ms ease;
+    }
+    .capsule-headline:hover {
+        color: var(--primary);
+    }
+    .capsule-headline-ext {
+        flex: 0 0 auto;
+        opacity: 0;
+        color: var(--primary);
+        transform: translateY(1px);
+        transition: opacity 160ms ease;
+    }
+    .capsule-headline:hover .capsule-headline-ext {
+        opacity: 0.7;
+    }
+    .capsule-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        margin-top: 0.1rem;
+    }
+    .capsule-links a {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.2rem 0.55rem;
+        border-radius: 999px;
+        color: var(--capsule-muted);
+        background: color-mix(in oklch, var(--primary) 6%, var(--card-bg));
+        border: 1px solid color-mix(in oklch, var(--primary) 12%, transparent);
+        font-size: 0.76rem;
+        font-weight: 640;
+        text-decoration: none;
+        transition: color 160ms ease, background-color 160ms ease;
+    }
+    .capsule-links a:hover {
+        color: var(--primary);
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+        .capsule-source:hover,
+        .capsule-filters button:hover {
+            transform: translateY(-2px);
+            color: var(--primary);
+        }
+    }
+    @media (max-width: 640px) {
+        .capsule-console {
+            padding: 0.95rem;
+        }
+        .capsule-top {
+            flex-direction: column;
+        }
+        .capsule-top-actions {
+            justify-items: start;
+        }
+    }
+</style>
+
+<script>
+function initCapsule() {
+    document.querySelectorAll<HTMLElement>("[data-capsule]").forEach((root) => {
+        if (root.dataset.capsuleBound) return;
+        root.dataset.capsuleBound = "true";
+
+        // 分类筛选：纯 DOM，无需网络
+        const buttons = Array.from(root.querySelectorAll<HTMLButtonElement>("[data-capsule-filters] button"));
+        const items = Array.from(root.querySelectorAll<HTMLElement>(".capsule-item"));
+        for (const button of buttons) {
+            button.addEventListener("click", () => {
+                const key = button.dataset.filter || "all";
+                for (const other of buttons) other.classList.toggle("is-active", other === button);
+                for (const item of items) {
+                    item.hidden = key !== "all" && item.dataset.category !== key;
+                }
+            });
+        }
+
+        // 把构建期烘焙的 pubDate 换成相对时间（运行时算，免得显得“旧”）
+        const fmt = (iso: string) => {
+            const time = new Date(iso).getTime();
+            if (!Number.isFinite(time)) return "";
+            const diff = Date.now() - time;
+            if (diff < 60_000) return "刚刚";
+            const minutes = Math.floor(diff / 60_000);
+            if (minutes < 60) return `${minutes} 分钟前`;
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) return `${hours} 小时前`;
+            const days = Math.floor(hours / 24);
+            if (days < 30) return `${days} 天前`;
+            return new Intl.DateTimeFormat("zh-CN", { day: "2-digit", month: "2-digit", timeZone: "Asia/Shanghai" }).format(time);
+        };
+        for (const node of root.querySelectorAll<HTMLElement>("[data-capsule-time]")) {
+            const iso = node.dataset.iso || "";
+            const label = fmt(iso);
+            if (label) node.textContent = label;
+        }
+    });
+}
+
+document.addEventListener("astro:page-load", initCapsule);
+</script>

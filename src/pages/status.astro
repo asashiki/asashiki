@@ -5,19 +5,14 @@ import { Icon } from "astro-icon/components";
 
 <MainGridLayout title="状态" description="Asashiki 的实时状态">
     <div class="flex w-full max-w-[100vw] rounded-[var(--radius-large)] overflow-hidden relative mb-4">
-        <article class="card-base status-console relative w-full max-w-[100vw]" data-status-page>
-            <header class="status-top onload-animation">
-                <div class="status-title-block">
-                    <div class="status-kicker">
-                        <span class="status-dot" data-api-pulse></span>
-                        <span data-api-state>连接 Core API</span>
-                    </div>
+        <article class="card-base status-board relative w-full max-w-[100vw]" data-status-page>
+            <header class="status-head onload-animation">
+                <div class="status-head-copy">
                     <h1>状态</h1>
                     <p data-now-sentence>正在读取 Asashiki 的当前状态。</p>
                 </div>
-
-                <div class="status-top-actions">
-                    <button class="status-refresh" type="button" data-status-refresh>
+                <div class="status-head-actions">
+                    <button class="status-refresh" type="button" data-status-refresh aria-label="刷新">
                         <Icon name="material-symbols:refresh-rounded" class="text-lg"></Icon>
                         <span>刷新</span>
                     </button>
@@ -25,1040 +20,624 @@ import { Icon } from "astro-icon/components";
                 </div>
             </header>
 
-            <section class="status-live onload-animation" style="animation-delay: calc(var(--content-delay) + 60ms);">
-                <div class="status-live-main">
-                    <div class="status-live-copy">
-                        <span data-selected-device-label>Now</span>
-                        <strong data-live-desc>等设备上报中。</strong>
-                        <div class="status-live-chips" data-live-detail>
-                            <span>等待设备</span>
-                        </div>
-                    </div>
-                    <dl class="status-live-facts">
-                        <div>
-                            <dt>在线</dt>
-                            <dd data-online-count>读取中</dd>
-                        </div>
-                        <div>
-                            <dt>应用</dt>
-                            <dd data-current-app>读取中</dd>
-                        </div>
-                        <div>
-                            <dt>天气</dt>
-                            <dd data-weather-inline>读取中</dd>
-                        </div>
-                        <div>
-                            <dt>心率</dt>
-                            <dd data-health-heart-live>读取中</dd>
-                        </div>
-                    </dl>
-                </div>
-
-                <nav class="status-device-strip" aria-label="设备筛选" data-device-tabs>
+            <!-- 设备 / 日期 切换 -->
+            <div class="status-controls onload-animation" style="animation-delay: calc(var(--content-delay) + 40ms);">
+                <nav class="status-chips" aria-label="设备筛选" data-device-tabs>
                     <button class="is-active" type="button">总览</button>
                 </nav>
-            </section>
-
-            <section class="status-period-bar onload-animation" style="animation-delay: calc(var(--content-delay) + 100ms);">
-                <div class="status-period-copy">
-                    <span>Daily Lens</span>
-                    <strong data-selected-date-label>今天</strong>
-                    <small data-selected-date-meta>上海日界</small>
+                <div class="status-date">
+                    <span class="status-date-label" data-selected-date-label>今天</span>
+                    <span class="status-date-meta" data-selected-date-meta>上海日界</span>
+                    <div class="status-date-tabs" data-status-days></div>
                 </div>
-                <div class="status-day-tabs" data-status-days></div>
-            </section>
+            </div>
 
-            <section class="status-workbench onload-animation" style="animation-delay: calc(var(--content-delay) + 120ms);">
-                <section class="status-timeline-panel" data-panel="timeline">
-                    <div class="status-section-head">
-                        <div>
-                            <span>Trace</span>
-                            <h2>时间线</h2>
-                        </div>
-                        <span class="status-count-pill" data-timeline-count>--</span>
+            <div class="status-grid onload-animation" style="animation-delay: calc(var(--content-delay) + 80ms);">
+                <!-- 心率 -->
+                <article class="wg wg-metric wg-heart">
+                    <div class="wg-top"><Icon name="material-symbols:favorite-outline-rounded" class="wg-icon"></Icon><span>心率</span></div>
+                    <div class="wg-value"><strong data-health-heart-live><span class="status-sk status-sk-num"></span></strong><em>bpm</em></div>
+                </article>
+                <!-- 步数 -->
+                <article class="wg wg-metric wg-steps">
+                    <div class="wg-top"><Icon name="material-symbols:directions-walk-rounded" class="wg-icon"></Icon><span>步数</span></div>
+                    <div class="wg-value"><strong data-health-steps-live><span class="status-sk status-sk-num"></span></strong><em>步</em></div>
+                </article>
+                <!-- 睡眠 -->
+                <article class="wg wg-metric wg-sleep">
+                    <div class="wg-top"><Icon name="material-symbols:bedtime-outline-rounded" class="wg-icon"></Icon><span>睡眠</span></div>
+                    <div class="wg-value"><strong data-health-sleep><span class="status-sk status-sk-num"></span></strong></div>
+                </article>
+                <!-- 在线设备 -->
+                <article class="wg wg-metric wg-online">
+                    <div class="wg-top"><Icon name="material-symbols:devices-other-outline-rounded" class="wg-icon"></Icon><span>在线设备</span></div>
+                    <div class="wg-value"><strong data-online-count><span class="status-sk status-sk-num"></span></strong><em>在线 / 全部</em></div>
+                </article>
+
+                <!-- 此刻 -->
+                <article class="wg wg-now">
+                    <div class="wg-top"><Icon name="material-symbols:bolt-rounded" class="wg-icon"></Icon><span>此刻</span><span class="wg-now-device" data-selected-device-label>总览</span></div>
+                    <strong class="wg-now-desc" data-live-desc><span class="status-sk status-sk-line"></span></strong>
+                    <div class="wg-chips" data-live-detail>
+                        <span class="status-sk status-sk-chip"></span>
+                        <span class="status-sk status-sk-chip"></span>
                     </div>
+                    <!-- 当前应用（隐藏承载，供 renderNow 写入，也可展示） -->
+                    <span class="wg-now-app" data-current-app hidden></span>
+                </article>
+
+                <!-- 今日应用 -->
+                <article class="wg wg-apps" data-panel="activity">
+                    <div class="wg-top"><Icon name="material-symbols:bar-chart-rounded" class="wg-icon"></Icon><span>今日应用</span><span class="wg-sub" data-activity-total></span></div>
+                    <div class="status-app-scroll" data-app-scroll>
+                        <div class="status-app-list" data-app-list></div>
+                        <div class="status-skeleton-rows" aria-hidden="true">
+                            <span class="status-sk status-sk-row"></span>
+                            <span class="status-sk status-sk-row"></span>
+                            <span class="status-sk status-sk-row"></span>
+                        </div>
+                        <p class="status-panel-message" data-panel-message></p>
+                    </div>
+                </article>
+
+                <!-- 今日足迹（时间线） -->
+                <article class="wg wg-timeline" data-panel="timeline">
+                    <div class="wg-top"><Icon name="material-symbols:timeline" class="wg-icon"></Icon><span>今日足迹</span><span class="wg-sub" data-timeline-count></span></div>
                     <div class="status-timeline-scroll" data-timeline-scroll>
                         <ol class="status-timeline-list" data-timeline-list></ol>
-                        <p class="status-panel-message" data-panel-message>读取中。</p>
+                        <div class="status-skeleton-rows" aria-hidden="true">
+                            <span class="status-sk status-sk-row"></span>
+                            <span class="status-sk status-sk-row"></span>
+                            <span class="status-sk status-sk-row"></span>
+                            <span class="status-sk status-sk-row"></span>
+                        </div>
+                        <p class="status-panel-message" data-panel-message></p>
                     </div>
-                </section>
+                </article>
+            </div>
 
-                <aside class="status-side">
-                    <section class="status-ai" data-panel="ai-summary">
-                        <div class="status-section-head">
-                            <div>
-                                <span>AI Summary</span>
-                                <h2>状态小结</h2>
-                            </div>
-                            <Icon name="material-symbols:bolt-rounded" class="text-[var(--primary)] text-xl"></Icon>
-                        </div>
-                        <div class="status-ai-thinking" data-ai-thinking>
-                            <span></span>
-                            <span data-ai-state>等待状态数据</span>
-                        </div>
-                        <p class="status-ai-summary" data-ai-summary>状态数据到齐后，会把页面打开那一刻的 app 快照交给 AI 写一小段。</p>
-                    </section>
-
-                    <section class="status-drawer" data-panel="body">
-                        <div class="status-drawer-header">
-                            <span>身体</span>
-                            <strong data-body-heading>读取中</strong>
-                        </div>
-                        <div class="status-mini-grid">
-                            <div><span>步数</span><strong data-health-steps>--</strong></div>
-                            <div><span>睡眠</span><strong data-health-sleep>--</strong></div>
-                        </div>
-                        <p class="status-panel-message" data-panel-message>读取中。</p>
-                    </section>
-
-                    <section class="status-drawer" data-panel="service">
-                        <div class="status-drawer-header">
-                            <span>服务与档案</span>
-                            <strong data-service-heading>读取中</strong>
-                        </div>
-                        <div class="status-service-list">
-                            <div><span>Core API</span><strong data-core-state>--</strong></div>
-                            <div><span>Archive</span><strong data-archive-state>--</strong></div>
-                            <div><span>数据源</span><strong data-connectors-state>--</strong></div>
-                        </div>
-                        <p class="status-panel-message" data-panel-message>读取中。</p>
-                    </section>
-
-                    <section class="status-drawer" data-panel="steam">
-                        <div class="status-drawer-header">
-                            <span>Steam</span>
-                            <strong data-steam-heading>读取中</strong>
-                        </div>
-                        <div class="status-steam">
-                            <img data-steam-avatar alt="" />
-                            <div>
-                                <strong data-steam-name>Steam</strong>
-                                <p data-steam-state>等待 Steam 状态。</p>
-                            </div>
-                        </div>
-                        <p class="status-panel-message" data-panel-message>读取中。</p>
-                    </section>
-
-                    <section class="status-drawer status-activity-drawer" data-panel="activity">
-                        <div class="status-drawer-header">
-                            <span>应用统计</span>
-                            <strong data-activity-total>读取中</strong>
-                        </div>
-                        <div class="status-app-scroll" data-app-scroll>
-                            <div class="status-app-list" data-app-list></div>
-                            <p class="status-panel-message" data-panel-message>读取中。</p>
-                        </div>
-                    </section>
-                </aside>
-            </section>
+            <!-- 数据来源：低调页脚，承载 service 面板写入 -->
+            <footer class="status-foot" data-panel="service">
+                <span class="status-foot-dot" data-body-heading hidden></span>
+                <span>数据来自 <a href="https://link.asashiki.com" target="_blank" rel="noopener">Hibi 日々</a> 设备时间线</span>
+                <span class="status-foot-sep">·</span>
+                <span data-api-state>连接中</span>
+                <span class="status-foot-sep" data-service-heading hidden></span>
+                <span class="status-foot-hidden" data-schema-state hidden></span>
+                <span class="status-foot-hidden" data-core-state hidden></span>
+                <span class="status-foot-hidden" data-connectors-state hidden></span>
+            </footer>
         </article>
     </div>
 </MainGridLayout>
 
 <style is:global>
-    .status-console {
+    /* ── 状态页 · 桌面小组件风 ─────────────────────────────────
+       设计语言与时间胶囊/探索同源：站点原生卡片 + 樱粉主色点缀。
+       去掉了旧版的 dashboard 细线条 / 绿色脉冲点 / 控制台英文 kicker。
+       字体：本页全部走默认字体（衬线在这个页面上不合适，已退回普通字）。 */
+    .status-board {
         --status-text: rgb(24 24 27);
-        --status-muted: rgb(82 82 91);
-        --status-faint: rgb(113 113 122);
+        --status-muted: rgb(84 84 92);
+        --status-faint: rgb(122 116 125);
+        /* 状态页不用衬线，全走默认字体（衬线在这个页面上不合适） */
+        --wg-serif: inherit;
+        --wg-bg: color-mix(in oklch, var(--primary) 4%, var(--card-bg));
+        --wg-line: color-mix(in oklch, var(--line-divider) 55%, transparent);
+        position: relative;
         overflow: hidden;
-        font-size: 14px;
-        line-height: 1.5;
-        padding: 1.1rem;
+        padding: 1.4rem 1.4rem 1.5rem;
         color: var(--status-text);
         background: var(--card-bg);
+        font-size: 14px;
+        line-height: 1.5;
     }
-
-    .status-console::before {
-        display: none;
+    /* 单一同源浅樱柔光，作 hero 光晕（与时间胶囊页一致） */
+    .status-board::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(120% 78% at 90% -12%,
+            color-mix(in oklch, var(--primary) 11%, transparent) 0%, transparent 60%);
+        pointer-events: none;
+        z-index: 0;
     }
-
-    :root.dark .status-console {
-        --status-text: rgb(245 245 245);
-        --status-muted: rgb(214 214 220);
-        --status-faint: rgb(170 170 178);
-    }
-
-    .status-top,
-    .status-live,
-    .status-period-bar,
-    .status-workbench {
+    .status-board > * {
         position: relative;
         z-index: 1;
     }
+    :root.dark .status-board {
+        --status-text: rgb(240 240 242);
+        --status-muted: rgb(202 202 210);
+        --status-faint: rgb(162 158 170);
+        --wg-bg: color-mix(in oklch, var(--primary) 7%, var(--card-bg));
+        --wg-line: color-mix(in oklch, var(--line-divider) 65%, transparent);
+    }
 
-    .status-top {
+    /* ── 头部 ── */
+    .status-head {
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
         gap: 1rem;
-        padding: 0.35rem 0.2rem 0.95rem;
+        margin-bottom: 1.15rem;
     }
-
-    .status-kicker {
+    .status-head-copy h1 {
+        margin: 0;
+        font-family: var(--wg-serif);
+        font-size: clamp(1.55rem, 3vw, 2.15rem);
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        line-height: 1.1;
+        color: var(--status-text);
+    }
+    .status-head-copy p {
+        margin: 0.45rem 0 0;
+        max-width: 40rem;
+        color: var(--status-muted);
+        font-size: 0.92rem;
+        line-height: 1.65;
+    }
+    .status-head-actions {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0.45rem;
+        flex: 0 0 auto;
+    }
+    .status-refresh {
         display: inline-flex;
         align-items: center;
-        gap: 0.5rem;
-        color: var(--primary);
-        font-size: 0.78rem;
-        font-weight: 750;
-    }
-
-    .status-dot {
-        width: 0.52rem;
-        height: 0.52rem;
+        gap: 0.4rem;
+        padding: 0.42rem 0.9rem;
         border-radius: 999px;
-        background: oklch(0.72 0.14 150);
-        box-shadow: 0 0 0 0.3rem color-mix(in oklch, oklch(0.72 0.14 150) 18%, transparent);
+        color: var(--primary);
+        background: var(--btn-regular-bg);
+        font-weight: 650;
+        font-size: 0.85rem;
+        transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .status-refresh.is-loading svg {
+        animation: status-spin 0.9s linear infinite;
+    }
+    @keyframes status-spin {
+        to { transform: rotate(360deg); }
+    }
+    .status-head-actions time {
+        color: var(--status-faint);
+        font-size: 0.74rem;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+        font-family: var(--wg-serif);
+        letter-spacing: 0.02em;
     }
 
-    .status-dot.is-error {
-        background: oklch(0.62 0.16 28);
-        box-shadow: 0 0 0 0.3rem color-mix(in oklch, oklch(0.62 0.16 28) 16%, transparent);
+    /* ── 控制条：设备 / 日期 ── */
+    .status-controls {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        margin-bottom: 1.05rem;
     }
-
-    .status-title-block h1 {
-        margin: 0.25rem 0 0;
-        color: var(--status-text);
-        font-size: clamp(1.1rem, 1.55vw, 1.42rem);
-        font-weight: 760;
-        letter-spacing: 0;
-        line-height: 1.15;
+    .status-chips,
+    .status-date-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.42rem;
     }
-
-    .status-title-block p {
-        max-width: 42rem;
-        margin: 0.45rem 0 0;
-        color: var(--status-muted);
-        font-size: 0.95rem;
-        line-height: 1.7rem;
-    }
-
-    .status-top-actions {
-        display: grid;
-        gap: 0.45rem;
-        justify-items: end;
-    }
-
-    .status-refresh,
-    .status-small-action,
-    .status-device-strip button,
-    .status-day-tabs button,
-    .status-ai-tabs button {
+    .status-chips button {
+        min-height: 2rem;
+        padding: 0.32rem 0.8rem;
         border-radius: 999px;
         border: 1px solid transparent;
         background: var(--btn-regular-bg);
         color: var(--status-muted);
-        font-weight: 750;
-        transition:
-            transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
-            background-color 180ms ease,
-            border-color 180ms ease,
-            color 180ms ease;
-    }
-
-    .status-refresh {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.45rem;
-        min-height: 2.35rem;
-        padding: 0 0.9rem;
-        color: var(--primary);
-    }
-
-    .status-refresh.is-loading svg {
-        animation: status-spin 900ms linear infinite;
-    }
-
-    .status-top-actions time {
-        color: var(--status-faint);
-        font-size: 0.78rem;
-        font-weight: 750;
-    }
-
-    .status-live {
-        display: grid;
-        gap: 0.9rem;
-        border-radius: 1.25rem;
-        padding: 1rem;
-        background: color-mix(in oklch, var(--primary) 8%, var(--card-bg));
-        border: 1px solid color-mix(in oklch, var(--primary) 22%, var(--line-divider));
-        box-shadow: none;
-    }
-
-    :root.dark .status-live {
-        background: color-mix(in oklch, var(--primary) 10%, var(--card-bg));
-        box-shadow: none;
-    }
-
-    .status-device-strip {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        border-top: 1px dashed color-mix(in oklch, var(--primary) 22%, var(--line-divider));
-        padding-top: 0.85rem;
-    }
-
-    .status-device-strip button,
-    .status-day-tabs button,
-    .status-ai-tabs button {
-        min-height: 2.15rem;
-        padding: 0.35rem 0.7rem;
-        text-align: left;
         font-size: 0.82rem;
+        font-weight: 650;
+        transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), color 160ms ease, background-color 160ms ease, border-color 160ms ease;
     }
-
-    .status-device-strip button {
-        display: grid;
-        grid-template-columns: auto minmax(0, 1fr);
-        gap: 0.48rem;
-        align-items: center;
-        min-width: min(13rem, 100%);
-        background: color-mix(in oklch, var(--primary) 5%, var(--card-bg));
-        border-color: color-mix(in oklch, var(--primary) 10%, var(--line-divider));
-    }
-
-    .status-device-dot {
-        width: 0.52rem;
-        height: 0.52rem;
-        border-radius: 999px;
-        background: var(--status-faint);
-    }
-
-    .status-device-strip button.is-online .status-device-dot {
-        background: var(--primary);
-        box-shadow: 0 0 0 0.24rem color-mix(in oklch, var(--primary) 16%, var(--card-bg));
-    }
-
-    .status-device-text {
-        display: grid;
-        min-width: 0;
-        gap: 0.05rem;
-    }
-
-    .status-device-label,
-    .status-device-meta {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .status-device-label {
-        color: var(--status-text);
-        font-weight: 750;
-    }
-
-    .status-device-meta {
-        color: var(--status-faint);
-        font-size: 0.72rem;
-        font-weight: 500;
-    }
-
-    .status-device-strip button.is-offline {
-        color: var(--status-faint);
-    }
-
-    .status-device-strip button.is-offline .status-device-label {
-        color: var(--status-muted);
-    }
-
-    .status-device-strip button.is-offline .status-device-dot {
-        background: var(--status-faint);
-        box-shadow: none;
-    }
-
-    .status-device-strip button.is-active,
-    .status-day-tabs button.is-active,
-    .status-ai-tabs button.is-active {
+    .status-chips button.is-active {
         color: var(--primary);
         background: color-mix(in oklch, var(--primary) 12%, var(--card-bg));
         border-color: color-mix(in oklch, var(--primary) 28%, transparent);
     }
-
-    .status-period-bar {
+    .status-date {
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        gap: 0.8rem;
-        margin-top: 0.9rem;
-        border-radius: 1.1rem;
-        padding: 0.78rem 0.88rem;
-        background: color-mix(in oklch, var(--primary) 5%, var(--card-bg));
-        border: 1px solid color-mix(in oklch, var(--primary) 12%, var(--line-divider));
+        gap: 0.5rem;
+        flex-wrap: wrap;
     }
-
-    .status-period-copy {
-        display: grid;
-        flex: 0 0 auto;
-        gap: 0.05rem;
-    }
-
-    .status-period-copy span {
-        color: var(--primary);
-        font-size: 0.7rem;
-        font-weight: 750;
-        letter-spacing: 0;
-        text-transform: uppercase;
-    }
-
-    .status-period-copy strong {
+    .status-date-label {
+        font-family: var(--wg-serif);
+        font-size: 1rem;
+        font-weight: 600;
         color: var(--status-text);
-        font-size: 0.92rem;
-        font-weight: 760;
+    }
+    .status-date-meta {
+        font-size: 0.72rem;
+        color: var(--status-faint);
+    }
+    .status-date-tabs button {
+        padding: 0.26rem 0.62rem;
+        border-radius: 999px;
+        background: transparent;
+        color: var(--status-muted);
+        font-size: 0.76rem;
+        font-weight: 620;
+        font-variant-numeric: tabular-nums;
+        transition: color 160ms ease, background-color 160ms ease;
+    }
+    .status-date-tabs button.is-active {
+        color: var(--primary);
+        background: color-mix(in oklch, var(--primary) 12%, var(--card-bg));
     }
 
-    .status-period-copy small {
+    /* ── 小组件网格 ── */
+    .status-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.85rem;
+    }
+    .wg-now { grid-column: span 2; }
+    .wg-apps { grid-column: span 2; }
+    .wg-timeline { grid-column: 1 / -1; }
+    @media (max-width: 900px) {
+        .status-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .wg-now, .wg-apps, .wg-timeline { grid-column: 1 / -1; }
+    }
+    @media (max-width: 520px) {
+        .status-grid { grid-template-columns: 1fr; }
+        .wg-now, .wg-apps, .wg-timeline { grid-column: auto; }
+    }
+
+    .wg {
+        min-width: 0;
+        padding: 1.05rem 1.1rem;
+        border-radius: 1rem;
+        background: var(--wg-bg);
+        border: 1px solid var(--wg-line);
+    }
+    .wg-top {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        color: var(--status-muted);
+        font-size: 0.82rem;
+        font-weight: 650;
+    }
+    .wg-top .wg-icon {
+        font-size: 1.1rem;
+        color: var(--primary);
+        flex: 0 0 auto;
+    }
+    .wg-sub {
+        margin-left: auto;
         color: var(--status-faint);
         font-size: 0.72rem;
-        font-weight: 560;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
     }
 
-    .status-live-main {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(12rem, 18rem);
-        gap: 1rem;
-        align-items: stretch;
+    /* 指标大数字卡 */
+    .wg-metric {
+        display: flex;
+        flex-direction: column;
+        gap: 0.65rem;
+        min-height: 6.4rem;
     }
-
-    .status-live-copy {
-        display: grid;
-        align-content: center;
-        min-width: 0;
-        padding: 0.45rem;
+    .wg-value {
+        display: flex;
+        align-items: baseline;
+        gap: 0.35rem;
+        flex-wrap: wrap;
     }
-
-    .status-live-copy > span,
-    .status-section-head span {
-        color: var(--primary);
-        font-size: 0.74rem;
-        font-weight: 750;
-        letter-spacing: 0;
-        text-transform: uppercase;
-    }
-
-    .status-live-copy strong {
-        display: block;
-        margin-top: 0.45rem;
+    .wg-value strong {
+        font-family: var(--wg-serif);
+        font-size: clamp(1.7rem, 3.4vw, 2.3rem);
+        font-weight: 600;
+        line-height: 1;
         color: var(--status-text);
-        font-size: clamp(1.05rem, 1.72vw, 1.34rem);
-        font-weight: 680;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: -0.01em;
+    }
+    .wg-value em {
+        font-style: normal;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--status-faint);
+    }
+    /* 「暂无 / --」占位值：缩小、淡化，不要占大数字的位置 */
+    .wg-value strong.is-na {
+        font-size: 1.05rem;
+        font-weight: 600;
+        color: var(--status-faint);
         letter-spacing: 0;
-        line-height: 1.28;
+    }
+    /* 占位时把单位藏掉，避免出现「暂无 bpm」 */
+    .wg-value:has(strong.is-na) em {
+        display: none;
+    }
+    /* 在线设备：数字前一颗状态点（替代旧绿点，跟随语义 tone） */
+    .wg-online .wg-value strong[data-tone] {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+    }
+    .wg-online .wg-value strong[data-tone]::before {
+        content: "";
+        width: 0.5rem;
+        height: 0.5rem;
+        border-radius: 999px;
+        background: var(--status-faint);
+    }
+    .wg-online .wg-value strong[data-tone="online"]::before {
+        background: var(--success, #59b98a);
+        box-shadow: 0 0 0 0.2rem color-mix(in oklch, var(--success, #59b98a) 20%, transparent);
     }
 
-    .status-live-chips {
+    /* 此刻 */
+    .wg-now {
+        display: flex;
+        flex-direction: column;
+        gap: 0.55rem;
+    }
+    .wg-now-device {
+        margin-left: auto;
+        padding: 0.1rem 0.5rem;
+        border-radius: 999px;
+        background: var(--btn-regular-bg);
+        color: var(--status-faint);
+        font-size: 0.7rem;
+        font-weight: 650;
+    }
+    .wg-now-desc {
+        font-size: 1.02rem;
+        font-weight: 640;
+        line-height: 1.5;
+        color: var(--status-text);
+    }
+    .wg-chips {
         display: flex;
         flex-wrap: wrap;
         gap: 0.42rem;
-        margin-top: 0.82rem;
     }
-
-    .status-live-chips span {
+    .wg-chips span {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.38rem;
+        padding: 0.26rem 0.6rem;
         border-radius: 999px;
-        padding: 0.28rem 0.62rem;
         color: var(--status-muted);
         background: color-mix(in oklch, var(--primary) 6%, var(--card-bg));
         border: 1px solid color-mix(in oklch, var(--primary) 12%, transparent);
-        font-size: 0.8rem;
-        font-weight: 620;
-        line-height: 1.25;
-    }
-
-    .status-live-facts {
-        display: grid;
-        align-content: center;
-        gap: 0.55rem;
-        margin: 0;
-        border-left: 1px dashed color-mix(in oklch, var(--line-divider) 72%, transparent);
-        padding-left: 1rem;
-    }
-
-    .status-live-facts div {
-        display: grid;
-        gap: 0.1rem;
-    }
-
-    .status-live-facts dt {
-        color: var(--status-faint);
-        font-size: 0.74rem;
-        font-weight: 650;
-    }
-
-    .status-live-facts dd {
-        margin: 0;
-        color: var(--status-text);
-        font-size: 0.96rem;
-        font-weight: 650;
-        line-height: 1.42rem;
-    }
-
-    .status-workbench {
-        display: grid;
-        grid-template-columns: minmax(0, 1.22fr) minmax(18rem, 0.78fr);
-        gap: 0.95rem;
-        align-items: start;
-        margin-top: 0.95rem;
-    }
-
-    .status-timeline-panel,
-    .status-ai,
-    .status-drawer {
-        overflow: hidden;
-        border-radius: 1.2rem;
-        background: var(--card-bg);
-        border: 1px solid color-mix(in oklch, var(--line-divider) 84%, transparent);
-    }
-
-    .status-timeline-panel {
-        display: grid;
-        grid-template-rows: auto minmax(0, 1fr);
-        height: var(--status-timeline-height, clamp(42rem, 70vh, 66rem));
-        min-height: 0;
-        padding: 1rem;
-    }
-
-    .status-section-head {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 1rem;
-        margin-bottom: 0.85rem;
-    }
-
-    .status-section-head h2 {
-        margin: 0.08rem 0 0;
-        color: var(--status-text);
-        font-size: 1.2rem;
-        font-weight: 760;
-        line-height: 1.45rem;
-    }
-
-    .status-count-pill {
-        border-radius: 999px;
-        padding: 0.3rem 0.62rem;
-        color: var(--primary);
-        background: var(--btn-regular-bg);
-        font-size: 0.76rem;
-        font-weight: 750;
-    }
-
-    .status-small-action {
-        min-height: 2.05rem;
-        padding: 0 0.75rem;
-        color: var(--primary);
         font-size: 0.78rem;
+        font-weight: 620;
+    }
+    .wg-chips span[data-tone]::before {
+        content: "";
+        width: 0.44rem;
+        height: 0.44rem;
+        border-radius: 999px;
+        background: var(--status-faint);
+    }
+    .wg-chips span[data-tone="online"] {
+        color: var(--success, #59b98a);
+        border-color: color-mix(in oklch, var(--success, #59b98a) 28%, transparent);
+        background: color-mix(in oklch, var(--success, #59b98a) 8%, var(--card-bg));
+    }
+    .wg-chips span[data-tone="online"]::before {
+        background: var(--success, #59b98a);
+        box-shadow: 0 0 0 0.15rem color-mix(in oklch, var(--success, #59b98a) 22%, transparent);
     }
 
-    .status-day-tabs,
-    .status-ai-tabs {
+    /* 今日应用 */
+    .status-app-scroll {
+        max-height: 15.5rem;
+        overflow-y: auto;
+        margin-top: 0.85rem;
+        scrollbar-width: thin;
+    }
+    .status-app-list {
         display: flex;
-        flex-wrap: wrap;
-        gap: 0.45rem;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    .status-app-row {
+        display: flex;
+        flex-direction: column;
+        gap: 0.28rem;
+    }
+    .status-app-top {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 0.6rem;
+    }
+    .status-app-name {
+        font-weight: 640;
+        font-size: 0.9rem;
+        color: var(--status-text);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .status-app-time {
+        flex: 0 0 auto;
+        color: var(--status-muted);
+        font-size: 0.82rem;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+        font-family: var(--wg-serif);
+    }
+    .status-app-detail {
+        font-size: 0.72rem;
+        color: var(--status-faint);
+    }
+    .status-app-track {
+        height: 0.5rem;
+        margin-top: 0.15rem;
+        border-radius: 999px;
+        background: color-mix(in oklch, var(--primary) 10%, var(--card-bg));
+        overflow: hidden;
+    }
+    .status-app-track span {
+        display: block;
+        height: 100%;
+        width: var(--ratio, 0%);
+        border-radius: 999px;
+        background: linear-gradient(90deg,
+            color-mix(in oklch, var(--primary) 78%, var(--card-bg)),
+            var(--primary));
     }
 
-    .status-day-tabs {
-        justify-content: flex-end;
+    /* 今日足迹（时间线） */
+    .status-timeline-scroll {
+        max-height: 24rem;
+        overflow-y: auto;
+        margin-top: 0.85rem;
+        scrollbar-width: thin;
     }
-
     .status-timeline-list {
-        display: grid;
+        display: flex;
+        flex-direction: column;
         gap: 0;
         margin: 0;
         padding: 0;
+        list-style: none;
     }
-
-    .status-timeline-scroll {
-        min-height: 0;
-        overflow-y: auto;
-        overscroll-behavior: contain;
-        padding-right: 0.35rem;
-        scrollbar-color: color-mix(in oklch, var(--primary) 45%, transparent) transparent;
-        scrollbar-width: thin;
-        mask-image: linear-gradient(to bottom, transparent 0, black 1rem, black calc(100% - 1.6rem), transparent 100%);
-    }
-
-    .status-timeline-scroll::-webkit-scrollbar {
-        width: 0.45rem;
-    }
-
-    .status-timeline-scroll::-webkit-scrollbar-track {
-        background: transparent;
-    }
-
-    .status-timeline-scroll::-webkit-scrollbar-thumb {
-        border-radius: 999px;
-        background: color-mix(in oklch, var(--primary) 32%, transparent);
-    }
-
-    .status-timeline-scroll:hover::-webkit-scrollbar-thumb {
-        background: color-mix(in oklch, var(--primary) 55%, transparent);
-    }
-
     .status-timeline-item {
         display: grid;
-        grid-template-columns: 4.1rem minmax(0, 1fr) auto;
-        gap: 0.85rem;
-        align-items: start;
-        min-height: 3.15rem;
-        border-top: 1px solid color-mix(in oklch, var(--line-divider) 72%, transparent);
-        padding: 0.72rem 0;
-        transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), background-color 180ms ease;
+        grid-template-columns: 3.1rem minmax(0, 1fr) auto;
+        gap: 0.7rem;
+        align-items: baseline;
+        padding: 0.6rem 0;
     }
-
-    .status-timeline-item:first-child {
-        border-top: 0;
+    .status-timeline-item + .status-timeline-item {
+        border-top: 1px solid color-mix(in oklch, var(--line-divider) 45%, transparent);
     }
-
     .status-timeline-time {
         color: var(--primary);
-        font-size: 0.78rem;
-        font-weight: 760;
-        line-height: 1.35rem;
+        font-size: 0.82rem;
+        font-weight: 650;
+        font-variant-numeric: tabular-nums;
+        font-family: var(--wg-serif);
     }
-
     .status-timeline-main {
         min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
     }
-
     .status-timeline-main strong {
-        display: block;
-        overflow: hidden;
+        font-weight: 620;
+        font-size: 0.9rem;
         color: var(--status-text);
-        font-size: 0.94rem;
-        font-weight: 680;
-        line-height: 1.45rem;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+        line-height: 1.4;
     }
-
     .status-timeline-main span {
-        display: block;
-        overflow: hidden;
+        font-size: 0.74rem;
         color: var(--status-faint);
-        font-size: 0.78rem;
-        line-height: 1.25rem;
-        text-overflow: ellipsis;
-        white-space: nowrap;
     }
-
     .status-timeline-app {
-        justify-self: end;
-        border-radius: 999px;
-        padding: 0.22rem 0.55rem;
-        color: var(--primary);
-        background: var(--btn-regular-bg);
-        font-size: 0.72rem;
-        font-weight: 760;
-    }
-
-    .status-side {
-        display: grid;
-        align-content: start;
-        gap: 0.75rem;
-        min-height: 0;
-    }
-
-    .status-ai {
-        padding: 1rem;
-        background: var(--card-bg);
-    }
-
-    .status-ai p {
-        margin: 0;
-        color: var(--status-muted);
-        font-size: 0.93rem;
-        line-height: 1.7rem;
-    }
-
-    .status-ai-summary {
-        min-height: 5.1rem;
-        white-space: pre-wrap;
-    }
-
-    .status-ai-summary.is-typing::after {
-        content: "";
-        display: inline-block;
-        width: 0.48rem;
-        height: 1rem;
-        margin-left: 0.14rem;
-        border-radius: 999px;
-        background: color-mix(in oklch, var(--primary) 72%, transparent);
-        transform: translateY(0.18rem);
-        animation: status-caret 900ms ease-in-out infinite;
-    }
-
-    .status-ai-thinking {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.42rem;
-        margin-bottom: 0.72rem;
-        border-radius: 999px;
-        padding: 0.28rem 0.58rem;
-        color: var(--primary);
-        background: color-mix(in oklch, var(--primary) 9%, var(--card-bg));
-        border: 1px solid color-mix(in oklch, var(--primary) 18%, transparent);
-        font-size: 0.74rem;
-        font-weight: 760;
-    }
-
-    .status-ai-thinking > span:first-child {
-        width: 0.48rem;
-        height: 0.48rem;
-        border-radius: 999px;
-        background: var(--primary);
-        box-shadow: 0 0 0 0.24rem color-mix(in oklch, var(--primary) 14%, transparent);
-        animation: status-thinking-pulse 1.2s ease-in-out infinite;
-    }
-
-    .status-ai-thinking.is-ready > span:first-child {
-        animation: none;
-    }
-
-    .status-ai-thinking.is-error {
-        color: oklch(0.62 0.16 28);
-        background: color-mix(in oklch, oklch(0.62 0.16 28) 8%, var(--card-bg));
-        border-color: color-mix(in oklch, oklch(0.62 0.16 28) 20%, transparent);
-    }
-
-    .status-ai-thinking.is-error > span:first-child {
-        background: oklch(0.62 0.16 28);
-        box-shadow: 0 0 0 0.24rem color-mix(in oklch, oklch(0.62 0.16 28) 12%, transparent);
-    }
-
-    .status-drawer-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1rem;
-        padding: 0.9rem 1rem;
-        border-bottom: 1px dashed color-mix(in oklch, var(--line-divider) 76%, transparent);
-    }
-
-    .status-drawer-header span {
-        color: var(--status-text);
-        font-weight: 720;
-    }
-
-    .status-drawer-header strong {
-        color: var(--primary);
-        font-size: 0.86rem;
-        font-weight: 760;
-        text-align: right;
-    }
-
-    .status-app-scroll,
-    .status-mini-grid,
-    .status-service-list,
-    .status-steam {
-        padding: 0.9rem 1rem 1rem;
-    }
-
-    .status-app-scroll {
-        max-height: 23rem;
-        overflow-y: auto;
-        overscroll-behavior: contain;
-        scrollbar-color: color-mix(in oklch, var(--primary) 45%, transparent) transparent;
-        scrollbar-width: thin;
-        mask-image: linear-gradient(to bottom, transparent 0, black 0.8rem, black calc(100% - 1.2rem), transparent 100%);
-    }
-
-    .status-app-scroll::-webkit-scrollbar {
-        width: 0.42rem;
-    }
-
-    .status-app-scroll::-webkit-scrollbar-track {
-        background: transparent;
-    }
-
-    .status-app-scroll::-webkit-scrollbar-thumb {
-        border-radius: 999px;
-        background: color-mix(in oklch, var(--primary) 32%, transparent);
-    }
-
-    .status-app-scroll:hover::-webkit-scrollbar-thumb {
-        background: color-mix(in oklch, var(--primary) 55%, transparent);
-    }
-
-    .status-app-list {
-        display: grid;
-        gap: 0.7rem;
-    }
-
-    .status-app-row {
-        display: grid;
-        gap: 0.32rem;
-    }
-
-    .status-app-top {
-        display: flex;
-        justify-content: space-between;
-        gap: 0.75rem;
-    }
-
-    .status-app-name {
-        overflow: hidden;
-        color: var(--status-text);
-        font-size: 0.88rem;
-        font-weight: 680;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .status-app-top > div {
-        min-width: 0;
-    }
-
-    .status-app-time {
         flex: 0 0 auto;
-        color: var(--primary);
-        font-size: 0.78rem;
-        font-weight: 760;
-    }
-
-    .status-app-detail {
-        color: var(--status-faint);
-        font-size: 0.74rem;
-    }
-
-    .status-app-track {
-        overflow: hidden;
-        height: 0.42rem;
+        align-self: center;
+        padding: 0.16rem 0.5rem;
         border-radius: 999px;
-        background: var(--btn-regular-bg);
-    }
-
-    .status-app-track span {
-        display: block;
-        width: var(--ratio);
-        height: 100%;
-        border-radius: inherit;
-        background: linear-gradient(90deg, var(--primary), color-mix(in oklch, var(--primary) 45%, white));
-    }
-
-    .status-mini-grid,
-    .status-service-list {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 0.5rem;
-    }
-
-    .status-mini-grid div,
-    .status-service-list div {
-        border-radius: 0.85rem;
-        padding: 0.65rem;
-        background: var(--btn-regular-bg);
-    }
-
-    .status-mini-grid span,
-    .status-service-list span {
-        display: block;
-        color: var(--status-faint);
-        font-size: 0.73rem;
-        font-weight: 800;
-    }
-
-    .status-mini-grid strong,
-    .status-service-list strong {
-        display: block;
-        overflow: hidden;
-        margin-top: 0.2rem;
-        color: var(--status-text);
-        font-size: 0.92rem;
-        font-weight: 730;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .status-steam {
-        display: grid;
-        grid-template-columns: 3.2rem minmax(0, 1fr);
-        gap: 0.75rem;
-        align-items: center;
-    }
-
-    .status-steam img {
-        width: 3.2rem;
-        height: 3.2rem;
-        border-radius: 0.95rem;
-        object-fit: cover;
-        background: var(--btn-regular-bg);
-    }
-
-    .status-steam strong {
-        display: block;
-        overflow: hidden;
-        color: var(--status-text);
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .status-steam p {
-        margin: 0.18rem 0 0;
+        background: color-mix(in oklch, var(--primary) 8%, var(--card-bg));
         color: var(--status-muted);
-        font-size: 0.82rem;
-        line-height: 1.45rem;
+        font-size: 0.7rem;
+        font-weight: 620;
+        white-space: nowrap;
+    }
+    .status-empty-note {
+        padding: 0.4rem 0;
+        color: var(--status-muted);
+        font-size: 0.86rem;
+        line-height: 1.6;
+        list-style: none;
     }
 
+    /* ── 面板状态 + 骨架屏 + 消息 ── */
     .status-panel-message {
         display: none;
-        margin: 0;
-        padding: 0 1rem 1rem;
+        margin: 0.6rem 0 0;
         color: var(--status-muted);
         font-size: 0.84rem;
-        line-height: 1.55rem;
+        line-height: 1.55;
     }
-
-    .status-timeline-panel > .status-panel-message {
-        padding: 0.6rem 0 0;
-    }
-
-    .is-empty .status-panel-message,
-    .is-error .status-panel-message,
-    .is-loading .status-panel-message {
+    [data-panel].is-empty .status-panel-message,
+    [data-panel].is-error .status-panel-message {
         display: block;
     }
 
-    .status-empty-note {
-        border-top: 1px solid color-mix(in oklch, var(--line-divider) 72%, transparent);
-        padding: 0.8rem 0;
-        color: var(--status-muted);
-        font-size: 0.9rem;
-        line-height: 1.65rem;
+    @keyframes status-sk-shimmer {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
     }
+    .status-sk {
+        display: inline-block;
+        height: 0.92em;
+        width: 4.5rem;
+        border-radius: 0.4rem;
+        vertical-align: -0.12em;
+        background: linear-gradient(90deg,
+            color-mix(in oklch, var(--line-divider) 26%, var(--card-bg)) 25%,
+            color-mix(in oklch, var(--primary) 16%, var(--card-bg)) 45%,
+            color-mix(in oklch, var(--line-divider) 26%, var(--card-bg)) 65%);
+        background-size: 200% 100%;
+        animation: status-sk-shimmer 1.4s ease-in-out infinite;
+    }
+    .status-sk-sm { width: 2.6rem; }
+    .status-sk-num { width: 3.6rem; height: 1.7rem; border-radius: 0.5rem; }
+    .status-sk-line { width: min(80%, 20rem); height: 1.05em; }
+    .status-sk-chip { width: 4rem; height: 1.5rem; border-radius: 999px; }
+    .status-sk-row { width: 100%; height: 2.4rem; border-radius: 0.6rem; }
+    .status-skeleton-rows {
+        display: flex;
+        flex-direction: column;
+        gap: 0.55rem;
+        padding: 0.15rem 0 0.3rem;
+    }
+    [data-panel].is-ready .status-skeleton-rows,
+    [data-panel].is-empty .status-skeleton-rows,
+    [data-panel].is-error .status-skeleton-rows {
+        display: none;
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .status-sk { animation: none; }
+        .status-refresh.is-loading svg { animation-duration: 2.4s; }
+    }
+
+    /* ── 页脚数据来源 ── */
+    .status-foot {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.4rem;
+        margin-top: 1.15rem;
+        padding-top: 0.95rem;
+        border-top: 1px solid var(--wg-line);
+        color: var(--status-faint);
+        font-size: 0.78rem;
+    }
+    .status-foot a {
+        color: var(--primary);
+        font-weight: 650;
+    }
+    .status-foot-sep { opacity: 0.5; }
+    .status-foot-hidden,
+    [hidden] { display: none !important; }
 
     @media (hover: hover) and (pointer: fine) {
-        .status-refresh:hover,
-        .status-small-action:hover,
-        .status-device-strip button:hover,
-        .status-day-tabs button:hover,
-        .status-ai-tabs button:hover {
-            transform: translateY(-2px);
-            color: var(--primary);
-            background: var(--btn-regular-bg-hover);
-        }
-
-        .status-timeline-item:hover {
-            transform: translateX(3px);
-            background: var(--btn-plain-bg-hover);
-        }
+        .status-refresh:hover { transform: translateY(-2px); }
+        .status-chips button:hover { color: var(--primary); }
     }
-
-    @media (max-width: 1024px) {
-        .status-workbench,
-        .status-live,
-        .status-live-main {
-            grid-template-columns: 1fr;
-        }
-
-        .status-period-bar {
-            align-items: flex-start;
-            flex-direction: column;
-        }
-
-        .status-day-tabs {
-            justify-content: flex-start;
-        }
-
-        .status-workbench {
-            height: auto;
-            min-height: 0;
-        }
-
-        .status-timeline-panel {
-            height: min(36rem, calc(100vh - 6rem));
-            min-height: 0;
-        }
-
-        .status-device-strip {
-            display: flex;
-            flex-wrap: wrap;
-        }
-
-        .status-live-facts {
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            border-left: 0;
-            border-top: 1px dashed color-mix(in oklch, var(--line-divider) 72%, transparent);
-            padding: 0.85rem 0 0;
-        }
-    }
-
-    @media (max-width: 768px) {
-        .status-console {
-            padding: 0.85rem;
-        }
-
-        .status-top {
-            display: grid;
-        }
-
-        .status-top-actions {
-            justify-items: start;
-        }
-
-        .status-live-facts,
-        .status-mini-grid,
-        .status-service-list {
-            grid-template-columns: 1fr;
-        }
-
-        .status-timeline-item {
-            grid-template-columns: 3.5rem minmax(0, 1fr);
-        }
-
-        .status-timeline-panel {
-            height: min(34rem, calc(100vh - 5rem));
-            min-height: 0;
-        }
-
-        .status-timeline-app {
-            grid-column: 2;
-            justify-self: start;
-        }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-        .status-refresh,
-        .status-small-action,
-        .status-device-strip button,
-        .status-day-tabs button,
-        .status-ai-tabs button,
-        .status-timeline-item {
-            transition: none;
-        }
-
-        .status-refresh.is-loading svg {
-            animation: none;
-        }
-    }
-
-    @keyframes status-spin {
-        from {
-            transform: rotate(0deg);
-        }
-        to {
-            transform: rotate(360deg);
-        }
-    }
-
-    @keyframes status-caret {
-        0%,
-        100% {
-            opacity: 0.24;
-        }
-        50% {
-            opacity: 1;
-        }
-    }
-
-    @keyframes status-thinking-pulse {
-        0%,
-        100% {
-            transform: scale(0.92);
-            opacity: 0.72;
-        }
-        50% {
-            transform: scale(1.08);
-            opacity: 1;
-        }
+    @media (max-width: 560px) {
+        .status-board { padding: 1rem; }
+        .status-head { flex-direction: column; }
+        .status-head-actions { flex-direction: row; align-items: center; align-self: flex-start; }
     }
 </style>
 
@@ -1073,7 +652,10 @@ type ApiResult<T> = {
 };
 
 type HealthResponse = {
+	schemaVersion?: number;
+	service?: string;
 	status?: string;
+	time?: string;
 	uptimeSeconds?: number;
 };
 
@@ -1124,40 +706,6 @@ type TimelineResponse = {
 	date?: string;
 };
 
-type WeatherResponse = {
-	current?: {
-		description?: string;
-		feelsLikeC?: number;
-		humidity?: number;
-		temperatureC?: number;
-		windSpeedKmh?: number;
-	};
-	latitude?: number;
-	location?: string;
-	longitude?: number;
-};
-
-type ConnectorsSummary = {
-	degraded?: number;
-	offline?: number;
-	online?: number;
-	total?: number;
-};
-
-type ArchiveStatus = {
-	fileCount?: number;
-	latestDiaryDate?: string;
-	status?: string;
-};
-
-type SteamProfile = {
-	avatarUrl?: string;
-	currentGame?: string | null;
-	displayName?: string;
-	lastLogoffAt?: string;
-	status?: string;
-};
-
 type HealthRecord = {
 	recordedAt?: string;
 	type?: string;
@@ -1170,11 +718,21 @@ type HealthRecordsResponse = {
 	records?: HealthRecord[];
 };
 
-type AiProxyResponse = {
-	detail?: string;
-	error?: string;
-	raw?: unknown;
-	text?: string;
+type HealthMetric = {
+	avg?: number;
+	count?: number;
+	latest?: { recordedAt?: string; value?: number };
+	max?: number;
+	min?: number;
+	sum?: number;
+	type?: string;
+	unit?: string;
+};
+
+type HealthSummaryResponse = {
+	fetchedAt?: string;
+	metrics?: HealthMetric[];
+	sinceIso?: string;
 };
 
 type RecentApiResult<T> = {
@@ -1184,11 +742,9 @@ type RecentApiResult<T> = {
 };
 
 type StatusStore = {
-	aiCacheKey: null | string;
-	aiRequested: boolean;
-	aiTypingTimer: null | number;
 	activity: RecentApiResult<ActivityResponse> | null;
 	devices: DeviceItem[];
+	healthSummary: HealthSummaryResponse | null;
 	heartRecords: ApiResult<HealthRecordsResponse> | null;
 	lastLoadedAt: number;
 	loadSeq: number;
@@ -1200,14 +756,13 @@ type StatusStore = {
 	timeline: RecentApiResult<TimelineResponse> | null;
 	timelineDate: string;
 	timelineVisible: number;
-	weather: WeatherResponse | null;
 };
 
-const API_BASE = "https://api.asashiki.com";
+// Asashiki MCP Switch 生态：旧 Core API (api.asashiki.com) 已退役。
+// 设备/时间线/健康数据由 device-timeline collector 公网只读 API 提供（link.asashiki.com，
+// 即接入 MCP Switch 的同一上游）。switch.asashiki.com 是 OAuth 保护的 /mcp 网关，不适合页面直接 fetch。
+const API_BASE = "https://link.asashiki.com";
 const API_TIMEOUT = 10_000;
-const AI_PROXY_URL = import.meta.env.DEV ? "/__llm-proxy" : "https://llm-proxy.leqazwsxedc.workers.dev";
-const AI_TIMEOUT = 75_000;
-const AI_SESSION_PREFIX = "asashiki.status.ai.";
 const LOOKBACK_DAYS = 4;
 const REFRESH_INTERVAL = 60_000;
 const TIMELINE_PAGE_SIZE_DESKTOP = 120;
@@ -1221,11 +776,9 @@ function getStore(root: HTMLElement) {
 	let store = statusStore.get(root);
 	if (!store) {
 		store = {
-			aiCacheKey: null,
-			aiRequested: false,
-			aiTypingTimer: null,
 			activity: null,
 			devices: [],
+			healthSummary: null,
 			heartRecords: null,
 			lastLoadedAt: 0,
 			loadSeq: 0,
@@ -1237,7 +790,6 @@ function getStore(root: HTMLElement) {
 			timeline: null,
 			timelineDate: todayShanghai(),
 			timelineVisible: timelinePageSize(),
-			weather: null,
 		};
 		statusStore.set(root, store);
 	}
@@ -1343,16 +895,35 @@ function clear(element: Element | null) {
 	if (element) element.replaceChildren();
 }
 
-function renderChips(root: ParentNode, selector: string, labels: string[]) {
+type Chip = string | { label: string; tone?: string };
+
+function renderChips(root: ParentNode, selector: string, labels: Chip[]) {
 	const container = root.querySelector(selector);
 	if (!container) return;
 	container.replaceChildren(
-		...labels.map((label) => {
+		...labels.map((entry) => {
+			const { label, tone } =
+				typeof entry === "string" ? { label: entry, tone: "" } : entry;
 			const chip = document.createElement("span");
+			if (tone) chip.dataset.tone = tone;
 			chip.textContent = label;
 			return chip;
 		}),
 	);
+}
+
+// 在线状态用一颗 CSS 圆点表达，避免在数据里塞 emoji
+function setOnlineTone(root: ParentNode, online: boolean) {
+	const dd = root.querySelector<HTMLElement>("[data-online-count]");
+	if (dd) dd.dataset.tone = online ? "online" : "offline";
+}
+
+// 「暂无 / --」这类占位值别用大数字字号，缩小成普通文字
+function markEmptyMetrics(root: ParentNode) {
+	for (const el of root.querySelectorAll<HTMLElement>(".wg-value strong")) {
+		const text = (el.textContent || "").trim();
+		el.classList.toggle("is-na", text === "暂无" || text === "--" || text === "");
+	}
 }
 
 function timestamp(value?: string) {
@@ -1422,48 +993,6 @@ function primaryDevice(devices: DeviceItem[], selectedDevice: string) {
 	return [...devices].sort((a, b) => timestamp(b.lastSeenAt) - timestamp(a.lastSeenAt))[0] || null;
 }
 
-function isUsefulLocationName(value?: string) {
-	if (!value) return false;
-	return !["当前位置", "当前地点", "未知位置", "unknown"].includes(value.trim().toLowerCase());
-}
-
-function formatCoordinate(value?: number) {
-	if (typeof value !== "number" || !Number.isFinite(value)) return "";
-	return value.toFixed(3);
-}
-
-function locationLabel(weather: WeatherResponse | null) {
-	if (!weather) return "暂无";
-	const lat = formatCoordinate(weather.latitude);
-	const lon = formatCoordinate(weather.longitude);
-	const coord = lat && lon ? `${lat}, ${lon}` : "";
-	if (isUsefulLocationName(weather.location)) return coord ? `${weather.location} · ${coord}` : weather.location || "暂无";
-	if (coord) return `嘉兴附近 · ${coord}`;
-	return "位置未上报";
-}
-
-function shortLocationLabel(weather: WeatherResponse | null) {
-	if (!weather) return "暂无";
-	if (isUsefulLocationName(weather.location)) return weather.location || "暂无";
-	if (formatCoordinate(weather.latitude) && formatCoordinate(weather.longitude)) return "嘉兴附近";
-	return "位置未上报";
-}
-
-function weatherIcon(description?: string) {
-	const text = description || "";
-	if (/雨|阵雨|雷/.test(text)) return "🌧️";
-	if (/雪/.test(text)) return "❄️";
-	if (/晴/.test(text)) return "☀️";
-	if (/云|阴/.test(text)) return "☁️";
-	if (/雾|霾/.test(text)) return "🌫️";
-	return "🌤️";
-}
-
-function weatherInline(weather: WeatherResponse | null) {
-	if (!weather?.current) return "暂无";
-	return `${weatherIcon(weather.current.description)} ${weather.current.description || "天气"} · ${shortLocationLabel(weather)}`;
-}
-
 function deviceStatusMeta(device: DeviceItem) {
 	const app = appName(device.appId);
 	const lastSeen = timeAgo(device.lastSeenAt);
@@ -1485,36 +1014,20 @@ function renderDeviceTabs(root: HTMLElement) {
 	const online = store.devices.filter((device) => device.isOnline).length;
 	const devicesByRecent = [...store.devices].sort((a, b) => timestamp(b.lastSeenAt) - timestamp(a.lastSeenAt));
 	const entries = [
-		{ id: "all", label: "总览", meta: `${online}/${store.devices.length} 在线`, online: online > 0 },
+		{ id: "all", label: "总览", meta: `${online}/${store.devices.length} 在线` },
 		...devicesByRecent.map((device) => ({
 			id: device.deviceId || "unknown",
-			label: device.deviceName || device.deviceId || "未知设备",
+			// 只显示设备名，去掉「我的」前缀，详情放到 title 悬浮里
+			label: (device.deviceName || device.deviceId || "未知设备").replace(/^我的/, ""),
 			meta: deviceStatusMeta(device),
-			online: Boolean(device.isOnline),
 		})),
 	];
 	for (const entry of entries) {
 		const button = document.createElement("button");
 		button.type = "button";
-		button.className = [
-			entry.id === store.selectedDevice ? "is-active" : "",
-			entry.online ? "is-online" : "is-offline",
-		]
-			.filter(Boolean)
-			.join(" ");
+		button.className = entry.id === store.selectedDevice ? "is-active" : "";
 		button.title = entry.meta;
-		const dot = document.createElement("span");
-		dot.className = "status-device-dot";
-		const text = document.createElement("span");
-		text.className = "status-device-text";
-		const label = document.createElement("span");
-		label.className = "status-device-label";
-		label.textContent = entry.label;
-		const meta = document.createElement("span");
-		meta.className = "status-device-meta";
-		meta.textContent = entry.meta;
-		text.append(label, meta);
-		button.append(dot, text);
+		button.textContent = entry.label;
 		button.addEventListener("click", () => {
 			store.selectedDevice = entry.id;
 			store.timelineVisible = timelinePageSize();
@@ -1526,11 +1039,21 @@ function renderDeviceTabs(root: HTMLElement) {
 	}
 }
 
+function healthMetric(store: StatusStore, type: string) {
+	return store.healthSummary?.metrics?.find((item) => item.type === type) || null;
+}
+
+function stepsLiveLabel(store: StatusStore) {
+	const steps = healthMetric(store, "steps");
+	if (steps && typeof steps.sum === "number" && steps.sum > 0) return Math.round(steps.sum).toLocaleString("en-US");
+	return "暂无";
+}
+
 function latestHeartLabel(store: StatusStore) {
 	const latest = (store.heartRecords?.ok ? store.heartRecords.data?.records || [] : [])
 		.filter((item) => item.type === "heart_rate" && typeof item.value === "number")
 		.sort((a, b) => timestamp(b.recordedAt) - timestamp(a.recordedAt))[0];
-	return latest ? `💗 ${Math.round(latest.value || 0)} bpm` : "暂无";
+	return latest ? String(Math.round(latest.value || 0)) : "暂无";
 }
 
 function renderNow(root: HTMLElement) {
@@ -1539,14 +1062,16 @@ function renderNow(root: HTMLElement) {
 	renderDeviceTabs(root);
 
 	if (!devices.length) {
-		setText(root, "[data-now-sentence]", "Core API 在线时，这里会显示当前设备正在做什么。");
+		setText(root, "[data-now-sentence]", "设备时间线在线时，这里会显示当前设备正在做什么。");
 		setText(root, "[data-live-desc]", "还没有设备上报。");
 		renderChips(root, "[data-live-detail]", ["设备未上报", "时间线继续读取", "模块独立回退"]);
-		setText(root, "[data-selected-device-label]", "Now");
-		setText(root, "[data-online-count]", "⚪ 0/0");
-		setText(root, "[data-current-app]", "📱 暂无");
-		setText(root, "[data-weather-inline]", weatherInline(store.weather));
+		setText(root, "[data-selected-device-label]", "总览");
+		setText(root, "[data-online-count]", "0 / 0");
+		setOnlineTone(root, false);
+		setText(root, "[data-current-app]", "暂无");
+		setText(root, "[data-health-steps-live]", stepsLiveLabel(store));
 		setText(root, "[data-health-heart-live]", latestHeartLabel(store));
+		markEmptyMetrics(root);
 		return;
 	}
 
@@ -1559,37 +1084,34 @@ function renderNow(root: HTMLElement) {
 			: offlineDescription(selected)
 		: "Asashiki 暂时离线。";
 	const app = selected ? appName(selected.appId) : "暂无";
-	const chips = selected
+	const chips: Chip[] = selected
 		? [
-				selected.isOnline ? "🟢 在线" : "⚪ 离线",
+				{
+					label: selected.isOnline ? "在线" : "离线",
+					tone: selected.isOnline ? "online" : "offline",
+				},
 				timeAgo(selected.lastSeenAt),
-				`📱 ${app}`,
+				app,
 				typeof selected.extra?.battery_percent === "number"
-					? `${selected.extra.battery_charging ? "⚡" : "🔋"} ${selected.extra.battery_percent}%`
+					? `${selected.extra.battery_charging ? "充电 " : ""}${selected.extra.battery_percent}%`
 					: "",
-				selected.extra?.network_type ? `📶 ${selected.extra.network_type}` : "",
-			].filter((label): label is string => Boolean(label))
-		: [`🟢 ${online.length} 台设备在线`];
+				selected.extra?.network_type ? `${selected.extra.network_type}` : "",
+			].filter(
+				(label): label is Chip =>
+					typeof label === "string" ? Boolean(label) : true,
+			)
+		: [{ label: `${online.length} 台设备在线`, tone: "online" }];
 
 	setText(root, "[data-now-sentence]", live);
 	setText(root, "[data-live-desc]", live);
 	renderChips(root, "[data-live-detail]", chips);
 	setText(root, "[data-selected-device-label]", activeDeviceLabel);
-	setText(root, "[data-online-count]", `${online.length ? "🟢" : "⚪"} ${online.length}/${devices.length}`);
-	setText(root, "[data-current-app]", `📱 ${app}`);
-	setText(root, "[data-weather-inline]", weatherInline(store.weather));
+	setText(root, "[data-online-count]", `${online.length} / ${devices.length}`);
+	setOnlineTone(root, online.length > 0);
+	setText(root, "[data-current-app]", app);
+	setText(root, "[data-health-steps-live]", stepsLiveLabel(store));
 	setText(root, "[data-health-heart-live]", latestHeartLabel(store));
-}
-
-function renderWeather(root: HTMLElement, result: ApiResult<WeatherResponse>) {
-	const store = getStore(root);
-	if (!result.ok || !result.data?.current) {
-		store.weather = null;
-		renderNow(root);
-		return;
-	}
-	store.weather = result.data;
-	renderNow(root);
+	markEmptyMetrics(root);
 }
 
 function healthMetricsForDate(store: StatusStore, date: string) {
@@ -1621,6 +1143,7 @@ function renderHealth(root: HTMLElement) {
 		setText(root, "[data-health-steps]", "暂无");
 		setText(root, "[data-health-sleep]", "暂无");
 		setText(root, "[data-body-heading]", "不可用");
+		markEmptyMetrics(root);
 		setPanelState(root, "body", "error", "健康记录暂时没有回应。");
 		return;
 	}
@@ -1629,6 +1152,7 @@ function renderHealth(root: HTMLElement) {
 	setText(root, "[data-health-steps]", metrics.steps ? String(Math.round(metrics.steps)) : "暂无");
 	setText(root, "[data-health-sleep]", metrics.sleep ? formatMinutes(metrics.sleep.value || 0) : "暂无");
 	setText(root, "[data-body-heading]", hasRecord ? `${dayLabel}记录` : `${dayLabel}暂无`);
+	markEmptyMetrics(root);
 	setPanelState(root, "body", hasRecord ? "ready" : "empty", hasRecord ? "" : `${dayLabel}暂时没有健康记录。`);
 }
 
@@ -1804,7 +1328,7 @@ function renderTimeline(root: HTMLElement) {
 		setPanelState(root, "timeline", "empty", "当前日期和设备筛选下没有记录。");
 		const note = document.createElement("li");
 		note.className = "status-empty-note";
-		note.textContent = "可以切换上方日期或左侧设备；如果 Core API 当天没有记录，这里会保持安静而不是堆占位符。";
+		note.textContent = "可以切换上方日期或左侧设备；如果当天没有上报记录，这里会保持安静而不是堆占位符。";
 		list?.append(note);
 		return;
 	}
@@ -1834,236 +1358,15 @@ function renderTimeline(root: HTMLElement) {
 	ensureTimelineScrollable(root);
 }
 
-function renderService(root: HTMLElement, health: ApiResult<HealthResponse>, connectors: ApiResult<ConnectorsSummary>, archive: ApiResult<ArchiveStatus>) {
-	const coreOnline = health.ok && health.data?.status === "ok";
-	setText(root, "[data-core-state]", coreOnline ? "online" : "不可用");
-	setText(root, "[data-archive-state]", archive.ok && archive.data ? `${archive.data.status || "unknown"} · ${archive.data.fileCount ?? "--"}篇` : "不可用");
-	setText(
-		root,
-		"[data-connectors-state]",
-		connectors.ok && connectors.data ? `${connectors.data.online ?? 0}/${connectors.data.total ?? 0} online` : "不可用",
-	);
-	setText(root, "[data-service-heading]", coreOnline ? "online" : "异常");
-	setPanelState(root, "service", coreOnline ? "ready" : "error", coreOnline ? "" : "Core API 健康检查没有返回 ok。");
-}
-
-function renderSteam(root: HTMLElement, result: ApiResult<SteamProfile>) {
-	if (!result.ok || !result.data) {
-		setText(root, "[data-steam-heading]", "不可用");
-		setPanelState(root, "steam", "error", "Steam 状态暂时不可用。");
-		return;
-	}
-	const avatar = root.querySelector<HTMLImageElement>("[data-steam-avatar]");
-	if (avatar && result.data.avatarUrl) avatar.src = result.data.avatarUrl;
-	setText(root, "[data-steam-name]", result.data.displayName || "Steam");
-	const state = result.data.currentGame
-		? `正在玩 ${result.data.currentGame}`
-		: result.data.status === "online"
-			? "Steam 在线"
-			: `离线 · ${timeAgo(result.data.lastLogoffAt)}`;
-	setText(root, "[data-steam-heading]", result.data.status || "Steam");
-	setText(root, "[data-steam-state]", state);
-	setPanelState(root, "steam", "ready");
-}
-
-function setAiState(root: HTMLElement, state: "error" | "loading" | "ready", label: string) {
-	const badge = root.querySelector<HTMLElement>("[data-ai-thinking]");
-	if (!badge) return;
-	badge.classList.toggle("is-error", state === "error");
-	badge.classList.toggle("is-ready", state === "ready");
-	setText(badge, "[data-ai-state]", label);
-}
-
-function setAiSummary(root: HTMLElement, text: string, typing = false) {
-	const summary = root.querySelector<HTMLElement>("[data-ai-summary]");
-	if (!summary) return;
-	summary.textContent = text;
-	summary.classList.toggle("is-typing", typing);
-}
-
-function cleanAiText(raw: string) {
-	return raw
-		.replace(/<think>[\s\S]*?<\/think>/gi, "")
-		.replace(/```[\s\S]*?```/g, (block) => block.replace(/```/g, ""))
-		.replace(/^\s*(final answer|最终答案)\s*[:：]/i, "")
-		.trim();
-}
-
-function aiCacheKey() {
-	return `${AI_SESSION_PREFIX}${todayShanghai()}`;
-}
-
-function readAiCache(key: string) {
-	try {
-		return window.sessionStorage.getItem(key);
-	} catch {
-		return null;
-	}
-}
-
-function writeAiCache(key: string, value: string) {
-	try {
-		window.sessionStorage.setItem(key, value);
-	} catch {
-		// Session storage can be unavailable in strict privacy modes.
-	}
-}
-
-function stopAiTyping(store: StatusStore) {
-	if (store.aiTypingTimer) {
-		window.clearInterval(store.aiTypingTimer);
-		store.aiTypingTimer = null;
-	}
-}
-
-function typeAiSummary(root: HTMLElement, text: string) {
+function renderService(root: HTMLElement, health: ApiResult<HealthResponse>) {
 	const store = getStore(root);
-	stopAiTyping(store);
-	const summary = root.querySelector<HTMLElement>("[data-ai-summary]");
-	if (!summary) return;
-	summary.textContent = "";
-	summary.classList.add("is-typing");
-	let index = 0;
-	store.aiTypingTimer = window.setInterval(() => {
-		const step = text.charCodeAt(index) > 255 ? 2 : 3;
-		index = Math.min(text.length, index + step);
-		summary.textContent = text.slice(0, index);
-		if (index >= text.length) {
-			stopAiTyping(store);
-			summary.classList.remove("is-typing");
-			setAiState(root, "ready", "已生成");
-		}
-	}, 34);
-}
-
-function appSummarySnapshot(root: HTMLElement) {
-	const store = getStore(root);
-	const dayLabel = relativeDateLabel(store.timelineDate);
-	const rows = timelineRowsForStore(store);
-	const active = activityForSelectedDate(store);
-	const apps = (active?.result.data?.perApp || [])
-		.filter((item) => !QUIET_TIMELINE_APP_IDS.has(item.appId || ""))
-		.filter((item) => (item.totalSeconds || 0) > 0)
-		.sort((a, b) => (b.totalSeconds || 0) - (a.totalSeconds || 0));
-	const selected = primaryDevice(store.devices, store.selectedDevice);
-	const onlineDevices = store.devices.filter((item) => item.isOnline);
-	const currentApps = store.devices
-		.filter((item) => item.appId)
-		.sort((a, b) => timestamp(b.lastSeenAt) - timestamp(a.lastSeenAt))
-		.slice(0, 6)
-		.map((item) => ({
-			app: appName(item.appId),
-			device: item.deviceName || item.deviceId || "设备",
-			isOnline: Boolean(item.isOnline),
-			lastSeen: timeAgo(item.lastSeenAt),
-			title: item.windowTitle ? truncate(item.windowTitle, 54) : "",
-		}));
-	const recentTimeline = rows.slice(0, 8).map((item) => ({
-		app: appName(item.appId),
-		device: store.devices.find((device) => device.deviceId === item.deviceId)?.deviceName || item.deviceId || "设备",
-		duration: formatDuration(item.durationSeconds || 0),
-		time: formatClock(item.startedAt),
-		title: item.windowTitle ? truncate(item.windowTitle, 54) : "",
-	}));
-	const topApps = apps.slice(0, 6).map((item) => ({
-		app: appName(item.appId),
-		count: item.count || 0,
-		time: formatDuration(item.totalSeconds || 0),
-	}));
-	return {
-		day: `${dayLabel} ${store.timelineDate}`,
-		generatedAt: nowShanghaiStamp(),
-		online: `${onlineDevices.length}/${store.devices.length}`,
-		selectedDevice: selected?.deviceName || selected?.deviceId || "总览",
-		currentApps,
-		recentTimeline,
-		timelineCount: rows.length,
-		topApps,
-	};
-}
-
-function buildAiPrompt(root: HTMLElement) {
-	const snapshot = appSummarySnapshot(root);
-	return [
-		"你在为 asashiki.com 的“状态”页面生成状态小结。",
-		"只根据下面的 app/设备使用快照写，不要编造天气、位置、健康、资产、日记原文等信息。",
-		"输出要求：中文，50-90 个汉字，1-2 句；语气轻松、可爱一点，但不要营销腔；可以在结尾自然加“喵~”。",
-		"不要输出标题、项目符号、JSON、Markdown，也不要输出 thinking 或推理过程。",
-		`页面打开时的快照：${JSON.stringify(snapshot)}`,
-	].join("\n");
-}
-
-async function postAiPrompt(prompt: string): Promise<ApiResult<AiProxyResponse>> {
-	let timer = 0;
-	try {
-		const controller = new AbortController();
-		timer = window.setTimeout(() => controller.abort(), AI_TIMEOUT);
-		const response = await fetch(AI_PROXY_URL, {
-			body: JSON.stringify({ prompt }),
-			headers: { "Content-Type": "application/json" },
-			method: "POST",
-			signal: controller.signal,
-		});
-		const data = (await response.json().catch(() => null)) as AiProxyResponse | null;
-		if (!response.ok) {
-			return {
-				data,
-				error: data?.error || data?.detail || `AI 代理返回 ${response.status}`,
-				ok: false,
-				status: response.status,
-			};
-		}
-		return { data, ok: true, status: response.status };
-	} catch (error) {
-		return { data: null, error: error instanceof Error ? error.message : String(error), ok: false };
-	} finally {
-		if (timer) window.clearTimeout(timer);
-	}
-}
-
-async function startAiSummary(root: HTMLElement) {
-	const store = getStore(root);
-	const key = aiCacheKey();
-	if (store.aiCacheKey && store.aiCacheKey !== key) {
-		store.aiRequested = false;
-	}
-	const cached = readAiCache(key);
-	store.aiCacheKey = key;
-
-	if (cached) {
-		store.aiRequested = true;
-		stopAiTyping(store);
-		setAiState(root, "ready", "会话缓存");
-		setAiSummary(root, cached);
-		return;
-	}
-
-	if (store.aiRequested) return;
-	store.aiRequested = true;
-	setAiState(root, "loading", "总结中");
-	setAiSummary(root, "正在把刚刚读到的 app 状态揉成一句轻轻的小结。", true);
-
-	let result: ApiResult<AiProxyResponse>;
-	try {
-		result = await postAiPrompt(buildAiPrompt(root));
-	} catch (error) {
-		result = { data: null, error: error instanceof Error ? error.message : String(error), ok: false };
-	}
-	if (store.aiCacheKey !== key || !document.body.contains(root)) return;
-
-	if (!result.ok || !result.data?.text) {
-		const message = result.error || result.data?.error || result.data?.detail || "AI 小结暂时没有回来。";
-		stopAiTyping(store);
-		setAiState(root, "error", "生成失败");
-		setAiSummary(root, `小结暂时生成失败：${message}`);
-		store.aiRequested = false;
-		return;
-	}
-
-	const text = cleanAiText(result.data.text);
-	const finalText = text || "今天的 app 状态有点安静，先让页面保持轻轻在线喵~";
-	writeAiCache(key, finalText);
-	typeAiSummary(root, finalText);
+	const online = health.ok && health.data?.status === "ok";
+	const onlineDevices = store.devices.filter((item) => item.isOnline).length;
+	setText(root, "[data-core-state]", online ? "online" : "不可用");
+	setText(root, "[data-schema-state]", online && health.data?.schemaVersion ? `schema v${health.data.schemaVersion}` : online ? health.data?.service || "online" : "--");
+	setText(root, "[data-connectors-state]", `${onlineDevices}/${store.devices.length} 在线`);
+	setText(root, "[data-service-heading]", online ? "online" : "异常");
+	setPanelState(root, "service", online ? "ready" : "error", online ? "" : "设备时间线服务健康检查没有返回 ok。");
 }
 
 async function loadStatus(root: HTMLElement) {
@@ -2073,75 +1376,90 @@ async function loadStatus(root: HTMLElement) {
 	const refresh = root.querySelector<HTMLButtonElement>("[data-status-refresh]");
 	refresh?.classList.add("is-loading");
 	refresh?.setAttribute("aria-busy", "true");
-	for (const name of ["timeline", "activity", "body", "service", "steam"]) {
-		setPanelState(root, name, "loading", "读取中。");
+	root.classList.add("is-booting");
+	for (const name of ["timeline", "activity", "body", "service"]) {
+		setPanelState(root, name, "loading", "");
 	}
 
-	try {
-		const dates = recentDates();
-		const [health, devices, timeline, activity, weather, connectors, archive, steam, stepsRecords, heartRecords, sleepRecords] = await Promise.all([
-			getJson<HealthResponse>("/health"),
-			getJson<DevicesResponse>("/api/devices/current"),
-			getRecentBundle<TimelineResponse>(dates, (date) => `/api/devices/timeline-query?date=${date}&limit=120`, (data) => Boolean(data?.activities?.length)),
-			getRecentBundle<ActivityResponse>(dates, (date) => `/api/devices/activity-summary?date=${date}`, (data) => Boolean(data?.perApp?.some((item) => (item.totalSeconds || 0) > 0))),
-			getJson<WeatherResponse>("/api/weather"),
-			getJson<ConnectorsSummary>("/api/connectors/summary"),
-			getJson<ArchiveStatus>("/api/archive/status"),
-			getJson<SteamProfile>("/api/steam/profile"),
-			getJson<HealthRecordsResponse>("/api/devices/health-records?type=steps&limit=160"),
-			getJson<HealthRecordsResponse>("/api/devices/health-records?type=heart_rate&limit=40"),
-			getJson<HealthRecordsResponse>("/api/devices/health-records?type=sleep&limit=30"),
-		]);
+	// 仍然有效（没被更新的加载覆盖、节点还在文档里）才落数据
+	const fresh = () => seq === store.loadSeq && document.body.contains(root);
 
-		if (seq !== store.loadSeq || !document.body.contains(root)) return;
+	// 所有请求一次性并行发出；谁先回来就先渲染谁的板块，
+	// 不再让整页卡在最慢的那一个请求上（这正是「读取中」久不消失的根因）。
+	const dates = recentDates();
+	const pHealth = getJson<HealthResponse>("/health");
+	const pDevices = getJson<DevicesResponse>("/api/devices/current");
+	const pSummary = getJson<HealthSummaryResponse>("/api/devices/health/summary");
+	const pSteps = getJson<HealthRecordsResponse>("/api/devices/health/records?type=steps&limit=200");
+	const pHeart = getJson<HealthRecordsResponse>("/api/devices/health/records?type=heart_rate&limit=60");
+	const pSleep = getJson<HealthRecordsResponse>("/api/devices/health/records?type=sleep&limit=30");
+	const pTimeline = getRecentBundle<TimelineResponse>(dates, (date) => `/api/devices/timeline-query?date=${date}&limit=120`, (data) => Boolean(data?.activities?.length));
+	const pActivity = getRecentBundle<ActivityResponse>(dates, (date) => `/api/devices/activity-summary?date=${date}`, (data) => Boolean(data?.perApp?.some((item) => (item.totalSeconds || 0) > 0)));
 
-		const apiOnline = health.ok && health.data?.status === "ok";
-		setText(root, "[data-api-state]", apiOnline ? "Core API 在线" : "Core API 未响应");
-		root.querySelector("[data-api-pulse]")?.classList.toggle("is-error", !apiOnline);
+	const stamp = () =>
 		setText(
 			root,
 			"[data-updated-at]",
-			new Intl.DateTimeFormat("zh-CN", {
-				hour: "2-digit",
-				minute: "2-digit",
-				second: "2-digit",
-				timeZone: "Asia/Shanghai",
-			}).format(new Date()),
+			new Intl.DateTimeFormat("zh-CN", { hour: "2-digit", minute: "2-digit", second: "2-digit", timeZone: "Asia/Shanghai" }).format(new Date()),
 		);
 
+	// 顶部「实时」组：设备 + 健康摘要 + 步数/心率 —— 到齐就先把 hero 点亮
+	const live = Promise.all([pDevices, pSummary, pSteps, pHeart]).then(([devices, summary, steps, heart]) => {
+		if (!fresh()) return;
 		store.devices = devices.ok ? devices.data?.devices || [] : [];
 		if (store.selectedDevice !== "all" && !store.devices.some((item) => item.deviceId === store.selectedDevice)) {
 			store.selectedDevice = "all";
 			store.timelineVisible = timelinePageSize();
 		}
-		const previousTimelineDate = store.timelineDate;
-		store.timeline = timeline;
-		store.timelineDate = timeline.results.some((item) => item.date === previousTimelineDate) ? previousTimelineDate : timeline.activeDate;
-		if (store.timelineDate !== previousTimelineDate) store.timelineVisible = timelinePageSize();
-		store.stepsRecords = stepsRecords;
-		store.heartRecords = heartRecords;
-		store.sleepRecords = sleepRecords;
+		store.healthSummary = summary.ok ? summary.data : null;
+		store.stepsRecords = steps;
+		store.heartRecords = heart;
 		store.lastLoadedAt = Date.now();
-
-		renderWeather(root, weather);
-		renderHealth(root);
+		root.classList.remove("is-booting");
 		renderNow(root);
-		renderActivity(root, activity);
+		stamp();
+	});
+
+	// 身体抽屉：摘要 + 步数 + 睡眠
+	const body = Promise.all([pSummary, pSteps, pSleep]).then(([summary, steps, sleep]) => {
+		if (!fresh()) return;
+		store.healthSummary = summary.ok ? summary.data : store.healthSummary;
+		store.stepsRecords = steps;
+		store.sleepRecords = sleep;
+		renderHealth(root);
+	});
+
+	// 时间线（多日 bundle，可能较慢，独立渲染，绝不拖累 hero）
+	const timeline = pTimeline.then((bundle) => {
+		if (!fresh()) return;
+		const prev = store.timelineDate;
+		store.timeline = bundle;
+		store.timelineDate = bundle.results.some((item) => item.date === prev) ? prev : bundle.activeDate;
+		if (store.timelineDate !== prev) store.timelineVisible = timelinePageSize();
 		renderTimeline(root);
-		renderService(root, health, connectors, archive);
-		renderSteam(root, steam);
 		syncTimelineHeight(root);
-		startAiSummary(root);
-	} catch (error) {
-		if (seq !== store.loadSeq) return;
-		const message = error instanceof Error ? error.message : String(error);
-		setText(root, "[data-api-state]", "状态读取异常");
-		root.querySelector("[data-api-pulse]")?.classList.add("is-error");
-		for (const name of ["timeline", "activity", "body", "service", "steam"]) {
-			setPanelState(root, name, "error", `读取失败：${message}`);
-		}
+	});
+
+	// 应用统计
+	const activity = pActivity.then((bundle) => {
+		if (fresh()) renderActivity(root, bundle);
+	});
+
+	// 数据服务 + 顶部 API 指示灯
+	const service = pHealth.then((health) => {
+		if (!fresh()) return;
+		const apiOnline = health.ok && health.data?.status === "ok";
+		setText(root, "[data-api-state]", apiOnline ? "设备时间线 在线" : "设备时间线 未响应");
+		root.querySelector("[data-api-pulse]")?.classList.toggle("is-error", !apiOnline);
+		renderService(root, health);
+	});
+
+	// 全部尘埃落定后收尾（停转刷新按钮）。各板块出错由各自 render 兜底，互不牵连。
+	try {
+		await Promise.allSettled([live, body, timeline, activity, service]);
 	} finally {
 		if (seq === store.loadSeq) {
+			root.classList.remove("is-booting");
 			refresh?.classList.remove("is-loading");
 			refresh?.removeAttribute("aria-busy");
 		}
@@ -2172,7 +1490,6 @@ function initStatusPage() {
 			if (!document.body.contains(root)) {
 				const latest = getStore(root);
 				delete root.dataset.statusBound;
-				stopAiTyping(latest);
 				window.removeEventListener("resize", resizeHandler);
 				if (latest.refreshTimer) window.clearInterval(latest.refreshTimer);
 				latest.refreshTimer = null;
@@ -2183,23 +1500,21 @@ function initStatusPage() {
 	});
 }
 
-if (document.readyState === "loading") {
-	document.addEventListener("DOMContentLoaded", initStatusPage, { once: true });
-} else {
-	initStatusPage();
-}
+// 数据一直不出来 / 要刷新才出来的真正原因：本站用的是 @swup/astro（swup），
+// 并不会触发 Astro ClientRouter 的 astro:page-load 事件，所以之前挂在它上面的
+// initStatusPage 根本没跑。改用本代码库统一的 swup 惯例（见 Layout / GlobalAudioPlayer /
+// AiVisualInteractions）：首屏立即调用一次，之后交给 swup 的 page:view / content:replace 钩子。
+// initStatusPage 用 dataset.statusBound 幂等，重复触发安全。
+initStatusPage();
 
-window.addEventListener("pageshow", initStatusPage);
-document.addEventListener("astro:page-load", initStatusPage);
-
-const setupStatusSwup = () => {
+const setupStatusRouting = () => {
 	window.swup?.hooks?.on("page:view", initStatusPage);
 	window.swup?.hooks?.on("content:replace", initStatusPage);
 };
 
 if (window.swup?.hooks) {
-	setupStatusSwup();
+	setupStatusRouting();
 } else {
-	document.addEventListener("swup:enable", setupStatusSwup);
+	document.addEventListener("swup:enable", setupStatusRouting);
 }
 </script>

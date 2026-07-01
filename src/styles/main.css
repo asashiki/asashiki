@@ -150,3 +150,14 @@
     }
   }
 }
+/* ── Asashiki Design v2「墨と桜」: Newsreader 衬线 display ──
+   克制使用：只给「大标题/封面」级别的 display 文本（文章主标题、页面 H1、
+   胶囊/探索标题），文章正文里的 h2/h3 仍走 Fuwari 原本的无衬线栈，
+   避免和原主题的清爽观感打架，也对中日文更友好。状态页的衬线点缀由其页内 CSS 处理。 */
+.font-display,
+#post-container h1.onload-animation,
+.capsule-title-block h1,
+.explore-title {
+    @apply font-serif;
+    letter-spacing: -0.01em;
+}

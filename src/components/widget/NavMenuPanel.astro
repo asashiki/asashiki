@@ -8,25 +8,87 @@ interface Props {
 }
 
 const links = Astro.props.links;
+
+// 叶子项（无 children）的统一样式：一行可点链接
+const leafClass =
+	"group flex justify-between items-center py-2 pl-3 pr-1 rounded-lg gap-8 hover:bg-[var(--btn-plain-bg-hover)] active:bg-[var(--btn-plain-bg-active)] transition";
 ---
-<div id="nav-menu-panel" class:list={["float-panel float-panel-closed absolute transition-all fixed right-4 px-2 py-2"]}>
+<!--
+  手机版导航：只默认展示顶级项，避免一次性把所有二级项摊开导致杂乱。
+  有 children 的项用原生 <details> 折叠（同一 name → 手风琴，一次只开一个），
+  点标题展开子项；父项本身若有总览页，则在子项最上方给一个「进入」入口。
+-->
+<div id="nav-menu-panel" class:list={["nav-menu-panel float-panel float-panel-closed absolute transition-all fixed right-4 px-2 py-2"]}>
     {links.map((link) => (
-        <a href={link.external ? link.url : url(link.url)} class="group flex justify-between items-center py-2 pl-3 pr-1 rounded-lg gap-8
-            hover:bg-[var(--btn-plain-bg-hover)] active:bg-[var(--btn-plain-bg-active)] transition
-        "
-           target={link.external ? "_blank" : null}
-        >
-            <div class="transition text-black/75 dark:text-white/75 font-bold group-hover:text-[var(--primary)] group-active:text-[var(--primary)]">
-                {link.name}
-            </div>
-            {!link.external && <Icon name="material-symbols:chevron-right-rounded"
-                  class="transition text-[1.25rem] text-[var(--primary)]"
+        link.children && link.children.length > 0 ? (
+            <details name="nav-acc" class="nav-acc">
+                <summary class="group flex justify-between items-center py-2 pl-3 pr-2 rounded-lg gap-8 cursor-pointer
+                    hover:bg-[var(--btn-plain-bg-hover)] active:bg-[var(--btn-plain-bg-active)] transition select-none"
+                >
+                    <div class="transition text-black/75 dark:text-white/75 font-bold group-hover:text-[var(--primary)]">
+                        {link.name}
+                    </div>
+                    <Icon name="material-symbols:keyboard-arrow-down-rounded"
+                          class="nav-acc-chevron transition-transform text-[1.25rem] text-[var(--primary)]"></Icon>
+                </summary>
+                <div class="pl-2 pb-1">
+                    {link.url && link.url !== "#" && (
+                        <a href={url(link.url)} class={`${leafClass} nav-acc-child`}>
+                            <div class="transition text-black/60 dark:text-white/60 font-bold group-hover:text-[var(--primary)] group-active:text-[var(--primary)] pl-3">
+                                进入「{link.name}」
+                            </div>
+                            <Icon name="material-symbols:chevron-right-rounded" class="transition text-[1.25rem] text-[var(--primary)]"></Icon>
+                        </a>
+                    )}
+                    {link.children.map((child) => (
+                        <a href={child.external ? child.url : url(child.url)} class={`${leafClass} nav-acc-child`}
+                           target={child.external ? "_blank" : null}
+                        >
+                            <div class="transition text-black/75 dark:text-white/75 font-bold group-hover:text-[var(--primary)] group-active:text-[var(--primary)] pl-3">
+                                {child.name}
+                            </div>
+                            {!child.external && <Icon name="material-symbols:chevron-right-rounded"
+                                  class="transition text-[1.25rem] text-[var(--primary)]"></Icon>}
+                            {child.external && <Icon name="fa6-solid:arrow-up-right-from-square"
+                                  class="transition text-[0.75rem] text-black/25 dark:text-white/25 -translate-x-1"></Icon>}
+                        </a>
+                    ))}
+                </div>
+            </details>
+        ) : (
+            <a href={link.external ? link.url : url(link.url)} class={leafClass}
+               target={link.external ? "_blank" : null}
             >
-            </Icon>}
-            {link.external && <Icon name="fa6-solid:arrow-up-right-from-square"
-                  class="transition text-[0.75rem] text-black/25 dark:text-white/25 -translate-x-1"
-            >
-            </Icon>}
-        </a>
+                <div class="transition text-black/75 dark:text-white/75 font-bold group-hover:text-[var(--primary)] group-active:text-[var(--primary)]">
+                    {link.name}
+                </div>
+                {!link.external && <Icon name="material-symbols:chevron-right-rounded"
+                      class="transition text-[1.25rem] text-[var(--primary)]"></Icon>}
+                {link.external && <Icon name="fa6-solid:arrow-up-right-from-square"
+                      class="transition text-[0.75rem] text-black/25 dark:text-white/25 -translate-x-1"></Icon>}
+            </a>
+        )
     ))}
 </div>
+
+<style is:global>
+    /* 展开时箭头翻转，给一点点视觉反馈 */
+    #nav-menu-panel .nav-acc[open] .nav-acc-chevron {
+        transform: rotate(180deg);
+    }
+    /* 隐藏 Safari/Chrome 默认的 ▶ 三角 */
+    #nav-menu-panel .nav-acc > summary {
+        list-style: none;
+    }
+    #nav-menu-panel .nav-acc > summary::-webkit-details-marker {
+        display: none;
+    }
+    /* 子项淡入展开 */
+    #nav-menu-panel .nav-acc[open] > div {
+        animation: nav-acc-in 200ms ease;
+    }
+    @keyframes nav-acc-in {
+        from { opacity: 0; transform: translateY(-3px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>

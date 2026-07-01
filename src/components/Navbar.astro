@@ -33,14 +33,48 @@ let links: NavBarLink[] = navBarConfig.links.map(
         </a>
         <div class="hidden md:flex">
             {links.map((l) => {
-                return <a aria-label={l.name} href={l.external ? l.url : url(l.url)} target={l.external ? "_blank" : null}
-                          class="btn-plain scale-animation rounded-lg h-11 font-bold px-5 active:scale-95"
-                >
-                    <div class="flex items-center">
-                        {l.name}
-                        {l.external && <Icon name="fa6-solid:arrow-up-right-from-square" class="text-[0.875rem] transition -translate-y-[1px] ml-1 text-black/[0.2] dark:text-white/[0.2]"></Icon>}
+                if (!l.children || l.children.length === 0) {
+                    return <a aria-label={l.name} href={l.external ? l.url : url(l.url)} target={l.external ? "_blank" : null}
+                              class="btn-plain scale-animation rounded-lg h-11 font-bold px-5 active:scale-95"
+                    >
+                        <div class="flex items-center">
+                            {l.name}
+                            {l.external && <Icon name="fa6-solid:arrow-up-right-from-square" class="text-[0.875rem] transition -translate-y-[1px] ml-1 text-black/[0.2] dark:text-white/[0.2]"></Icon>}
+                        </div>
+                    </a>;
+                }
+                // 有子项：父项本身可点击（url 不为 "#" 时跳转到总览页），悬停/聚焦时展开下拉
+                const TriggerTag = l.url && l.url !== "#" ? "a" : "button";
+                const triggerProps = TriggerTag === "a" ? { href: url(l.url) } : { type: "button" as const };
+                return <div class="relative group h-11">
+                    <TriggerTag {...triggerProps} aria-label={l.name} aria-haspopup="true"
+                          class="btn-plain scale-animation rounded-lg h-11 font-bold px-5 active:scale-95 group-hover:bg-[var(--btn-plain-bg-hover)] group-focus-within:bg-[var(--btn-plain-bg-hover)]"
+                    >
+                        <div class="flex items-center gap-1">
+                            {l.name}
+                            <Icon name="material-symbols:keyboard-arrow-down-rounded" class="text-[1.125rem] transition-transform duration-200 text-[var(--primary)] group-hover:rotate-180 group-focus-within:rotate-180"></Icon>
+                        </div>
+                    </TriggerTag>
+                    <div class="absolute top-full right-0 min-w-[13rem] pt-2 z-50
+                        pointer-events-none opacity-0 translate-y-1 transition-all duration-200
+                        group-hover:pointer-events-auto group-hover:opacity-100 group-hover:translate-y-0
+                        group-focus-within:pointer-events-auto group-focus-within:opacity-100 group-focus-within:translate-y-0"
+                    >
+                        <div class="flex flex-col gap-0.5 p-2 rounded-[var(--radius-large)] bg-[var(--float-panel-bg)] shadow-xl dark:shadow-none border border-[var(--line-divider)]">
+                            {l.children.map((c) => (
+                                <a aria-label={c.name} href={c.external ? c.url : url(c.url)} target={c.external ? "_blank" : null}
+                                   class="group/item flex justify-between items-center gap-6 py-2 pl-3 pr-2 rounded-lg whitespace-nowrap
+                                       hover:bg-[var(--btn-plain-bg-hover)] active:bg-[var(--btn-plain-bg-active)] transition"
+                                >
+                                    <span class="transition font-bold text-black/75 dark:text-white/75 group-hover/item:text-[var(--primary)] group-active/item:text-[var(--primary)]">{c.name}</span>
+                                    {c.external
+                                        ? <Icon name="fa6-solid:arrow-up-right-from-square" class="text-[0.75rem] text-black/25 dark:text-white/25"></Icon>
+                                        : <Icon name="material-symbols:chevron-right-rounded" class="text-[1.25rem] text-[var(--primary)]"></Icon>}
+                                </a>
+                            ))}
+                        </div>
                     </div>
-                </a>;
+                </div>;
             })}
         </div>
         <div class="flex">
