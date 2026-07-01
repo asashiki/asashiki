@@ -7,6 +7,8 @@ module.exports = {
     extend: {
       fontFamily: {
         sans: ["Roboto", "sans-serif", ...defaultTheme.fontFamily.sans],
+        // Asashiki Design v2: Newsreader 衬线 display — 用于大标题/大数字等「编辑感」点缀
+        serif: ["'Newsreader'", "ui-serif", "Georgia", "'Songti SC'", "'Noto Serif CJK SC'", ...defaultTheme.fontFamily.serif],
       },
     },
   },

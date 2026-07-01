@@ -1,0 +1,456 @@
+---
+import MainGridLayout from "@layouts/MainGridLayout.astro";
+import { Icon } from "astro-icon/components";
+
+// 探索：站外目的地 + 站内深入内容的总览页。
+// 分区收纳，方便以后扩展；现在没链接的就先留占位（soon），有了再补 url。
+type Dest = {
+	name: string;
+	url?: string; // 没有 url = 占位（敬请期待）
+	desc: string;
+	icon: string;
+	tag?: string;
+	external?: boolean; // 默认 true（站外）；站内文章设 false
+};
+
+type Group = {
+	kicker: string;
+	label: string;
+	note?: string;
+	items: Dest[];
+};
+
+// 重点项目：单列出来做大卡，MCP Switch 占主位
+const featured: Dest[] = [
+	{
+		name: "MCP Switch",
+		url: "https://switch.asashiki.com",
+		desc: "自托管的 MCP 聚合网关 —— 把本地 stdio 与远程 HTTP 的多个 MCP 服务，收束到一个统一入口。目前在打磨开源版本。",
+		icon: "material-symbols:lan-outline-rounded",
+		tag: "Gateway · 主打",
+	},
+	{
+		name: "项目展示",
+		url: "https://show.asashiki.com",
+		desc: "做过的项目在线展示，挑了些值得一看的放在这里。",
+		icon: "material-symbols:gallery-thumbnail-rounded",
+		tag: "Showcase",
+	},
+	{
+		name: "时间胶囊 · 全站",
+		url: "https://timeline.asashiki.com",
+		desc: "完整的 ACG 时间线归档，机器人自动从各平台收集的全量记录。",
+		icon: "material-symbols:hourglass-top-rounded",
+		tag: "Timeline",
+	},
+];
+
+const groups: Group[] = [
+	{
+		kicker: "Read",
+		label: "深入了解",
+		note: "站内文章，正在写 —— 之后这里会链到对应的页内介绍。",
+		items: [
+			{
+				name: "MCP Switch 是怎么设计的",
+				desc: "聚合网关的架构、stdio 托管路线与取舍。",
+				icon: "material-symbols:article-outline-rounded",
+				tag: "敬请期待",
+				external: false,
+			},
+			{
+				name: "设备时间线背后",
+				desc: "从设备采集到公开 REST，再到状态页的链路。",
+				icon: "material-symbols:schedule-outline-rounded",
+				tag: "敬请期待",
+				external: false,
+			},
+			{
+				name: "为什么是一个静态站",
+				desc: "外部数据 + 代码级事实 + 易部署，三者怎么兼得。",
+				icon: "material-symbols:rocket-launch-outline-rounded",
+				tag: "敬请期待",
+				external: false,
+			},
+		],
+	},
+	{
+		kicker: "Play",
+		label: "工具 & 玩法",
+		note: "一些小工具与 vibe 页面，随手做的。",
+		items: [
+			{
+				name: "死了没 · BPM",
+				url: "https://bpm.asashiki.com",
+				desc: "一句话 vibe 小页面，睡前随手让 codex 做出来的。",
+				icon: "material-symbols:favorite-outline-rounded",
+				tag: "vibe",
+			},
+			{
+				name: "Hibi 日々 · 设备时间线",
+				url: "https://link.asashiki.com",
+				desc: "设备活动收集器，实时状态页的数据就来自这里。",
+				icon: "material-symbols:devices-other-outline-rounded",
+				tag: "Devices",
+			},
+			{
+				name: "文档",
+				url: "https://doc.asashiki.com",
+				desc: "项目与服务的说明文档，写给想深入的人。",
+				icon: "material-symbols:menu-book-outline-rounded",
+				tag: "Docs",
+			},
+		],
+	},
+	{
+		kicker: "Follow",
+		label: "找到我",
+		note: "社交平台与代码仓库。",
+		items: [
+			{
+				name: "X / Twitter",
+				url: "https://twitter.com/asashiki_",
+				desc: "@asashiki_ · 日常碎碎念都在这。",
+				icon: "fa6-brands:x-twitter",
+				tag: "Social",
+			},
+			{
+				name: "Telegram",
+				url: "https://t.me/asashiki_timeline",
+				desc: "时间线频道，自动同步各平台动态。",
+				icon: "fa6-brands:telegram",
+				tag: "Channel",
+			},
+			{
+				name: "Bangumi",
+				url: "https://bangumi.tv/user/asashiki",
+				desc: "看过在看的番与游戏，都记在这里。",
+				icon: "material-symbols:list-alt-rounded",
+				tag: "ACG",
+			},
+			{
+				name: "GitHub",
+				url: "https://github.com/asashiki",
+				desc: "开源仓库都在这儿，欢迎围观与 Star。",
+				icon: "fa6-brands:github",
+				tag: "Code",
+			},
+		],
+	},
+];
+
+function host(url?: string) {
+	if (!url) return "";
+	try {
+		return new URL(url).hostname.replace(/^www\./, "");
+	} catch {
+		return "";
+	}
+}
+---
+
+<MainGridLayout title="探索" description="Asashiki 的站外目的地与站内深入内容总览">
+    <div class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative mb-4">
+        <div class="card-base z-10 px-6 md:px-9 py-6 relative w-full">
+            <header class="explore-head onload-animation">
+                <div class="explore-kicker">
+                    <span class="explore-dot"></span>
+                    <span>Explore</span>
+                </div>
+                <h1 class="explore-title">探索</h1>
+                <p class="explore-lead">站外的项目、工具与时间线，加上正在写的站内介绍 —— 挑一个进去看看吧。</p>
+            </header>
+
+            <!-- 重点项目 -->
+            <section class="explore-section onload-animation" style="animation-delay: calc(var(--content-delay) + 60ms);">
+                <div class="explore-section-head">
+                    <span class="explore-section-kicker">Featured</span>
+                    <h2>重点项目</h2>
+                </div>
+                <ul class="explore-featured">
+                    {featured.map((d, i) => (
+                        <li class={i === 0 ? "is-hero" : ""}>
+                            <a href={d.url} target="_blank" rel="noopener" class="explore-card is-feature">
+                                <span class="explore-icon">
+                                    <Icon name={d.icon} class="text-[1.5rem]"></Icon>
+                                </span>
+                                <div class="explore-card-body">
+                                    <div class="explore-card-top">
+                                        <span class="explore-name">{d.name}</span>
+                                        {d.tag && <span class="explore-tag">{d.tag}</span>}
+                                    </div>
+                                    <p class="explore-desc">{d.desc}</p>
+                                    <span class="explore-host">
+                                        {host(d.url)}
+                                        <Icon name="fa6-solid:arrow-up-right-from-square" class="text-[0.65rem]"></Icon>
+                                    </span>
+                                </div>
+                            </a>
+                        </li>
+                    ))}
+                </ul>
+            </section>
+
+            <!-- 其余分区 -->
+            {groups.map((group, gi) => (
+                <section class="explore-section onload-animation" style={`animation-delay: calc(var(--content-delay) + ${100 + gi * 40}ms);`}>
+                    <div class="explore-section-head">
+                        <span class="explore-section-kicker">{group.kicker}</span>
+                        <h2>{group.label}</h2>
+                        {group.note && <small>{group.note}</small>}
+                    </div>
+                    <ul class="explore-grid">
+                        {group.items.map((d) => (
+                            <li>
+                                {d.url ? (
+                                    <a href={d.url} target={d.external === false ? null : "_blank"} rel="noopener" class="explore-card">
+                                        <span class="explore-icon">
+                                            <Icon name={d.icon} class="text-[1.3rem]"></Icon>
+                                        </span>
+                                        <div class="explore-card-body">
+                                            <div class="explore-card-top">
+                                                <span class="explore-name">{d.name}</span>
+                                                {d.tag && <span class="explore-tag">{d.tag}</span>}
+                                            </div>
+                                            <p class="explore-desc">{d.desc}</p>
+                                            {host(d.url) && (
+                                                <span class="explore-host">
+                                                    {host(d.url)}
+                                                    <Icon name="fa6-solid:arrow-up-right-from-square" class="text-[0.65rem]"></Icon>
+                                                </span>
+                                            )}
+                                        </div>
+                                    </a>
+                                ) : (
+                                    <div class="explore-card is-soon" aria-disabled="true">
+                                        <span class="explore-icon">
+                                            <Icon name={d.icon} class="text-[1.3rem]"></Icon>
+                                        </span>
+                                        <div class="explore-card-body">
+                                            <div class="explore-card-top">
+                                                <span class="explore-name">{d.name}</span>
+                                                {d.tag && <span class="explore-tag is-soon-tag">{d.tag}</span>}
+                                            </div>
+                                            <p class="explore-desc">{d.desc}</p>
+                                        </div>
+                                    </div>
+                                )}
+                            </li>
+                        ))}
+                    </ul>
+                </section>
+            ))}
+        </div>
+    </div>
+</MainGridLayout>
+
+<style is:global>
+    .explore-head {
+        padding-bottom: 1.3rem;
+        margin-bottom: 1.4rem;
+        border-bottom: 1px dashed color-mix(in oklch, var(--line-divider) 80%, transparent);
+    }
+    .explore-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--primary);
+        font-size: 0.74rem;
+        font-weight: 750;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+    }
+    .explore-dot {
+        width: 0.5rem;
+        height: 0.5rem;
+        border-radius: 999px;
+        background: var(--primary);
+        box-shadow: 0 0 0 0.28rem color-mix(in oklch, var(--primary) 16%, transparent);
+    }
+    .explore-title {
+        margin: 0.4rem 0 0;
+        font-size: clamp(1.6rem, 3vw, 2.1rem);
+        font-weight: 700;
+        line-height: 1.1;
+    }
+    .explore-lead {
+        margin: 0.6rem 0 0;
+        max-width: 42rem;
+        color: var(--content-meta-text, rgb(120 120 130));
+        font-size: 0.95rem;
+        line-height: 1.7;
+    }
+
+    .explore-section {
+        margin-top: 1.6rem;
+    }
+    .explore-section-head {
+        display: flex;
+        align-items: baseline;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.85rem;
+    }
+    .explore-section-kicker {
+        color: var(--primary);
+        font-size: 0.68rem;
+        font-weight: 750;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+    }
+    .explore-section-head h2 {
+        margin: 0;
+        font-size: 1.12rem;
+        font-weight: 700;
+        line-height: 1.2;
+    }
+    .explore-section-head small {
+        color: var(--content-meta-text, rgb(130 130 140));
+        font-size: 0.78rem;
+    }
+
+    /* 重点项目：第一张大卡横跨整行 */
+    .explore-featured {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.85rem;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+    .explore-featured .is-hero {
+        grid-column: 1 / -1;
+    }
+    .explore-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.85rem;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+    @media (max-width: 640px) {
+        .explore-featured,
+        .explore-grid { grid-template-columns: 1fr; }
+    }
+
+    .explore-card {
+        display: flex;
+        gap: 0.9rem;
+        height: 100%;
+        padding: 1rem 1.05rem;
+        border-radius: var(--radius-large);
+        background: color-mix(in oklch, var(--primary) 4%, var(--card-bg));
+        border: 1px solid color-mix(in oklch, var(--line-divider) 70%, transparent);
+        text-decoration: none;
+        transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1), border-color 200ms ease, background-color 200ms ease;
+    }
+    /* 大卡：更醒目的柔光 + 更大的内边距 */
+    .explore-card.is-feature {
+        padding: 1.15rem 1.2rem;
+    }
+    .is-hero .explore-card.is-feature {
+        position: relative;
+        overflow: hidden;
+        padding: 1.4rem 1.4rem;
+        background:
+            radial-gradient(120% 90% at 92% -10%, color-mix(in oklch, var(--primary) 14%, transparent) 0%, transparent 58%),
+            color-mix(in oklch, var(--primary) 6%, var(--card-bg));
+        border-color: color-mix(in oklch, var(--primary) 26%, transparent);
+    }
+    .is-hero .explore-icon {
+        width: 3rem;
+        height: 3rem;
+    }
+    .is-hero .explore-name {
+        font-size: 1.18rem;
+    }
+    .is-hero .explore-desc {
+        font-size: 0.9rem;
+        max-width: 36rem;
+    }
+
+    .explore-card.is-soon {
+        cursor: default;
+        background: color-mix(in oklch, var(--line-divider) 14%, var(--card-bg));
+        border-style: dashed;
+    }
+    .explore-card.is-soon .explore-name,
+    .explore-card.is-soon .explore-desc {
+        opacity: 0.66;
+    }
+
+    .explore-icon {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.6rem;
+        height: 2.6rem;
+        border-radius: 0.8rem;
+        color: var(--primary);
+        background: color-mix(in oklch, var(--primary) 12%, var(--card-bg));
+        border: 1px solid color-mix(in oklch, var(--primary) 20%, transparent);
+    }
+    .explore-card.is-soon .explore-icon {
+        color: var(--content-meta-text, gray);
+        background: color-mix(in oklch, var(--line-divider) 20%, var(--card-bg));
+        border-color: color-mix(in oklch, var(--line-divider) 50%, transparent);
+    }
+    .explore-card-body {
+        min-width: 0;
+        display: grid;
+        gap: 0.3rem;
+        align-content: start;
+    }
+    .explore-card-top {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    .explore-name {
+        font-weight: 700;
+        font-size: 1rem;
+    }
+    .explore-tag {
+        padding: 0.06rem 0.45rem;
+        border-radius: 999px;
+        font-size: 0.64rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        color: var(--primary);
+        background: var(--btn-regular-bg);
+    }
+    .explore-tag.is-soon-tag {
+        color: var(--content-meta-text, gray);
+        background: color-mix(in oklch, var(--line-divider) 24%, transparent);
+    }
+    .explore-desc {
+        margin: 0;
+        font-size: 0.84rem;
+        line-height: 1.6;
+        color: var(--content-meta-text, rgb(120 120 130));
+    }
+    .explore-host {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        margin-top: 0.15rem;
+        font-size: 0.74rem;
+        font-weight: 650;
+        color: color-mix(in oklch, var(--primary) 80%, var(--content-meta-text, gray));
+    }
+    @media (hover: hover) and (pointer: fine) {
+        a.explore-card:hover {
+            transform: translateY(-3px);
+            border-color: color-mix(in oklch, var(--primary) 36%, transparent);
+            background: color-mix(in oklch, var(--primary) 8%, var(--card-bg));
+        }
+        .is-hero a.explore-card.is-feature:hover {
+            background:
+                radial-gradient(120% 90% at 92% -10%, color-mix(in oklch, var(--primary) 18%, transparent) 0%, transparent 58%),
+                color-mix(in oklch, var(--primary) 9%, var(--card-bg));
+        }
+    }
+</style>
