@@ -13,7 +13,6 @@
 <a href="https://asashiki.com"><img alt="Website" src="https://img.shields.io/badge/Website-asashiki.com-e85d97?style=for-the-badge&labelColor=221f26"></a>
 <a href="https://x.com/asashiki_"><img alt="X" src="https://img.shields.io/badge/X-%40asashiki__-221f26?style=for-the-badge&logo=x&logoColor=white"></a>
 <a href="https://github.com/asashiki"><img alt="GitHub" src="https://img.shields.io/badge/GitHub-asashiki-221f26?style=for-the-badge&logo=github&logoColor=white"></a>
-<a href="https://timeline.asashiki.com"><img alt="Timeline" src="https://img.shields.io/badge/Timeline-device%20log-7b7ce0?style=for-the-badge&labelColor=221f26"></a>
 </p>
 
 </div>
