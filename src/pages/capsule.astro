@@ -170,7 +170,6 @@ const buildStamp = new Intl.DateTimeFormat("zh-CN", {
             <header class="capsule-top onload-animation">
                 <div class="capsule-title-block">
                     <div class="capsule-kicker">
-                        <span class="capsule-dot"></span>
                         <span>Time Capsule</span>
                         {items.length > 0 && <span class="capsule-kicker-count">共 {items.length} 枚</span>}
                     </div>
@@ -298,17 +297,10 @@ const buildStamp = new Intl.DateTimeFormat("zh-CN", {
         align-items: center;
         gap: 0.5rem;
         color: var(--primary);
-        font-size: 0.74rem;
-        font-weight: 750;
-        letter-spacing: 0.02em;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
         text-transform: uppercase;
-    }
-    .capsule-dot {
-        width: 0.5rem;
-        height: 0.5rem;
-        border-radius: 999px;
-        background: var(--primary);
-        box-shadow: 0 0 0 0.28rem color-mix(in oklch, var(--primary) 16%, transparent);
     }
     .capsule-kicker-count {
         padding: 0.08rem 0.45rem;

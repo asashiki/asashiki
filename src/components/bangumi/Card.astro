@@ -9,20 +9,21 @@ const { item } = Astro.props;
 
 const subject_base_url = "https://bgm.tv/subject/";
 
+// 状态色走 oklch，与主题的 admonitions 色一个体系；「在看/在玩」用主题色
 const getStatusColor = (type: number) => {
   switch (type) {
     case 1:
-      return "bg-blue-500";
+      return "bg-[oklch(0.65_0.12_250)]";
     case 2:
-      return "bg-green-500";
+      return "bg-[oklch(0.65_0.12_150)]";
     case 3:
-      return "bg-yellow-500";
+      return "bg-[var(--primary)]";
     case 4:
-      return "bg-orange-500";
+      return "bg-[oklch(0.70_0.12_60)]";
     case 5:
-      return "bg-red-500";
+      return "bg-[oklch(0.60_0.15_25)]";
     default:
-      return "bg-gray-500";
+      return "bg-[oklch(0.60_0.02_var(--hue))]";
   }
 };
 
@@ -67,7 +68,7 @@ const getStatusText = (type: number, subjectType: number) => {
   href={`${subject_base_url}${item.subject.id}`}
   target="_blank"
   rel="noopener noreferrer nofollow"
-  class="group relative overflow-hidden rounded-xl bg-white dark:bg-gray-800 shadow-lg hover:shadow-2xl transition-all duration-200 hover:scale-105 block"
+  class="group relative overflow-hidden rounded-xl bg-black/5 dark:bg-white/10 shadow-lg hover:shadow-2xl transition-all duration-200 hover:scale-105 block"
 >
   <div class="aspect-[2/3] relative overflow-hidden" >
     {item.subject?.images?.medium ? (
@@ -78,8 +79,8 @@ const getStatusText = (type: number, subjectType: number) => {
         loading="lazy"
       />
     ) : (
-      <div class="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-        <div class="text-gray-400 text-4xl">📖</div>
+      <div class="w-full h-full bg-black/10 dark:bg-white/10 flex items-center justify-center">
+        <div class="text-50 text-4xl">📖</div>
       </div>
     )}
 
@@ -106,8 +107,8 @@ const getStatusText = (type: number, subjectType: number) => {
 
         {item.comment && (
           <div class="relative group/comment">
-            <div class="text-sm text-gray-300 cursor-help">💬</div>
-            <div class="absolute bottom-full right-0 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover/comment:opacity-100 transition-opacity duration-150 w-32 sm:w-44 xl:w-52 z-10 pointer-events-none">
+            <div class="text-sm text-white/70 cursor-help">💬</div>
+            <div class="absolute bottom-full right-0 mb-2 px-3 py-2 bg-black/90 text-white text-xs rounded-lg opacity-0 group-hover/comment:opacity-100 transition-opacity duration-150 w-32 sm:w-44 xl:w-52 z-10 pointer-events-none">
               {item.comment}
             </div>
           </div>

@@ -64,7 +64,7 @@ const pageNumbers = generatePageNumbers(currentPage, totalPages);
     <div class="mobile-pagination items-center space-x-2">
       <button
         type="button"
-        class="p-1.5 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors duration-200"
+        class="p-1.5 rounded-md bg-[var(--btn-regular-bg)] text-[var(--btn-content)] dark:text-white/75 hover:bg-[var(--btn-regular-bg-hover)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
         data-page="prev"
         data-section={sectionId}
         disabled={currentPage === 1}
@@ -75,16 +75,16 @@ const pageNumbers = generatePageNumbers(currentPage, totalPages);
 
       <!-- 移动端页码信息 -->
       <div class="flex items-center space-x-1">
-        <span class="text-sm text-gray-600 dark:text-gray-400">第</span>
-        <span class="mobile-current-page px-2 py-1 text-sm font-medium bg-blue-500 text-white rounded">{currentPage}</span>
-        <span class="text-sm text-gray-600 dark:text-gray-400">页，共</span>
-        <span class="mobile-total-pages text-sm font-medium text-gray-700 dark:text-gray-300">{totalPages}</span>
-        <span class="text-sm text-gray-600 dark:text-gray-400">页</span>
+        <span class="text-sm text-50">第</span>
+        <span class="mobile-current-page px-2 py-1 text-sm font-medium bg-[var(--primary)] text-white rounded">{currentPage}</span>
+        <span class="text-sm text-50">页，共</span>
+        <span class="mobile-total-pages text-sm font-medium text-75">{totalPages}</span>
+        <span class="text-sm text-50">页</span>
       </div>
 
       <button
         type="button"
-        class="p-1.5 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors duration-200"
+        class="p-1.5 rounded-md bg-[var(--btn-regular-bg)] text-[var(--btn-content)] dark:text-white/75 hover:bg-[var(--btn-regular-bg-hover)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
         data-page="next"
         data-section={sectionId}
         disabled={currentPage === totalPages}
@@ -98,7 +98,7 @@ const pageNumbers = generatePageNumbers(currentPage, totalPages);
     <div class="desktop-pagination items-center space-x-2">
       <button
         type="button"
-        class="p-2 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+        class="p-2 rounded-md bg-[var(--btn-regular-bg)] text-[var(--btn-content)] dark:text-white/75 hover:bg-[var(--btn-regular-bg-hover)] disabled:opacity-50 disabled:cursor-not-allowed"
         data-page="prev"
         data-section={sectionId}
         disabled={currentPage === 1}
@@ -110,15 +110,15 @@ const pageNumbers = generatePageNumbers(currentPage, totalPages);
       <div class="desktop-page-numbers flex flex-wrap justify-center space-x-1" data-page-numbers={sectionId}>
         {pageNumbers.map((pageItem) => (
           pageItem === '...' ? (
-            <span class="px-2 py-2 text-sm text-gray-500 dark:text-gray-400">...</span>
+            <span class="px-2 py-2 text-sm text-50">...</span>
           ) : (
             <button
               type="button"
               class:list={[
                 "px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200",
                 {
-                  "bg-blue-500 text-white shadow-md": pageItem === currentPage,
-                  "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600": pageItem !== currentPage
+                  "bg-[var(--primary)] text-white shadow-md": pageItem === currentPage,
+                  "bg-[var(--btn-regular-bg)] text-[var(--btn-content)] dark:text-white/75 hover:bg-[var(--btn-regular-bg-hover)]": pageItem !== currentPage
                 }
               ]}
               data-page={pageItem}
@@ -134,7 +134,7 @@ const pageNumbers = generatePageNumbers(currentPage, totalPages);
 
       <button
         type="button"
-        class="p-2 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+        class="p-2 rounded-md bg-[var(--btn-regular-bg)] text-[var(--btn-content)] dark:text-white/75 hover:bg-[var(--btn-regular-bg-hover)] disabled:opacity-50 disabled:cursor-not-allowed"
         data-page="next"
         data-section={sectionId}
         disabled={currentPage === totalPages}
@@ -274,15 +274,15 @@ const pageNumbers = generatePageNumbers(currentPage, totalPages);
         pageNumbers.forEach(pageItem => {
           if (pageItem === '...') {
             const span = document.createElement('span');
-            span.className = 'px-3 py-2 text-gray-500 dark:text-gray-400';
+            span.className = 'px-3 py-2 text-50';
             span.textContent = '...';
             pageNumbersContainer.appendChild(span);
           } else {
             const button = document.createElement('button');
             button.className = `px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
               pageItem === currentPage
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+                ? 'bg-[var(--primary)] text-white'
+                : 'bg-[var(--btn-regular-bg)] text-[var(--btn-content)] dark:text-white/75 hover:bg-[var(--btn-regular-bg-hover)]'
             }`;
             button.dataset.page = pageItem.toString();
             button.dataset.section = sectionId;
@@ -315,6 +315,33 @@ const pageNumbers = generatePageNumbers(currentPage, totalPages);
     max-width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-bg) var(--btn-regular-bg);
+    padding-bottom: 0.35rem;
+  }
+
+  .responsive-pagination::-webkit-scrollbar {
+    width: 0.42rem;
+    height: 0.42rem;
+  }
+
+  .responsive-pagination::-webkit-scrollbar-track {
+    border-radius: 999px;
+    background: var(--btn-regular-bg);
+  }
+
+  .responsive-pagination::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: var(--scrollbar-bg);
+    border: 1px solid var(--btn-regular-bg);
+  }
+
+  .responsive-pagination::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-bg-hover);
+  }
+
+  .responsive-pagination::-webkit-scrollbar-thumb:active {
+    background: var(--scrollbar-bg-active);
   }
 
   /* 移动端样式 (< 768px) */

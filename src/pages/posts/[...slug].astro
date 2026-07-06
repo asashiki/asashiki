@@ -54,8 +54,8 @@ const jsonLd = {
         <div id="post-container" class:list={["card-base z-10 px-6 md:px-9 pt-6 pb-4 relative w-full ",
             {}
         ]}>
-            <!-- word count and reading time -->
-            <div class="flex flex-row text-black/30 dark:text-white/30 gap-5 mb-3 transition onload-animation">
+            <!-- meta 行：字数 / 阅读时长（左），AI 增强入口（右，紧凑胶囊） -->
+            <div class="flex flex-row items-center flex-wrap text-black/30 dark:text-white/30 gap-5 mb-3 transition onload-animation">
                 <div class="flex flex-row items-center">
                     <div class="transition h-6 w-6 rounded-md bg-black/5 dark:bg-white/10 text-black/50 dark:text-white/50 flex items-center justify-center mr-2">
                         <Icon name="material-symbols:notes-rounded"></Icon>
@@ -70,17 +70,14 @@ const jsonLd = {
                         {remarkPluginFrontmatter.minutes} {" " + i18n(remarkPluginFrontmatter.minutes === 1 ? I18nKey.minuteCount : I18nKey.minutesCount)}
                     </div>
                 </div>
+                {hasAiVisual && <a href={aiVisualUrl}
+                       class="group btn-regular h-6 ml-auto rounded-full px-3 gap-1.5 text-sm font-bold active:scale-95">
+                        <Icon name="material-symbols:auto-awesome-rounded" class="text-sm text-[var(--primary)]"></Icon>
+                        <span>AI 增强阅读</span>
+                        <Icon name="material-symbols:chevron-right-rounded"
+                              class="text-base text-[var(--primary)] transition group-hover:translate-x-0.5"></Icon>
+                    </a>}
             </div>
-
-            {hasAiVisual && <div class="mb-4 onload-animation">
-                <a href={aiVisualUrl}
-                   class="group btn-regular h-10 w-fit max-w-full rounded-xl px-4 gap-2 font-bold active:scale-95">
-                    <Icon name="material-symbols:auto-awesome-rounded" class="text-xl text-[var(--primary)]"></Icon>
-                    <span>AI增强阅读模式</span>
-                    <Icon name="material-symbols:chevron-right-rounded"
-                          class="text-xl text-[var(--primary)] transition group-hover:translate-x-0.5"></Icon>
-                </a>
-            </div>}
 
             <!-- title -->
             <div class="relative onload-animation">

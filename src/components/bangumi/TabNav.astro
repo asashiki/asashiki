@@ -13,7 +13,7 @@ interface Props {
 const { tabs, activeTab } = Astro.props;
 ---
 
-<div class="border-b border-gray-200 dark:border-gray-700 mb-3">
+<div class="border-b border-[var(--line-divider)] mb-3">
   <nav class="flex space-x-8" aria-label="Tabs">
     {tabs.map((tab) => (
       <button
@@ -21,7 +21,7 @@ const { tabs, activeTab } = Astro.props;
           "whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200",
           {
             "border-[var(--primary)] text-[var(--primary)]": tab.id === activeTab,
-            "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300": tab.id !== activeTab
+            "border-transparent text-black/50 dark:text-white/50 hover:text-black/75 dark:hover:text-white/75 hover:border-black/30 dark:hover:border-white/30": tab.id !== activeTab
           }
         ]}
         data-tab={tab.id}
@@ -29,7 +29,7 @@ const { tabs, activeTab } = Astro.props;
       >
         {tab.name}
         {tab.count !== undefined && (
-          <span class="ml-2 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 py-0.5 px-2 rounded-full text-xs">
+          <span class="ml-2 bg-[var(--btn-regular-bg)] text-[var(--btn-content)] dark:text-white/75 py-0.5 px-2 rounded-full text-xs">
             {tab.count}
           </span>
         )}
@@ -49,12 +49,13 @@ const { tabs, activeTab } = Astro.props;
         const targetTab = currentButton.dataset.tab;
 
         // Update active tab
+        const inactiveClasses = ['border-transparent', 'text-black/50', 'dark:text-white/50', 'hover:text-black/75', 'dark:hover:text-white/75', 'hover:border-black/30', 'dark:hover:border-white/30'];
         tabButtons.forEach(btn => {
           btn.classList.remove('border-[var(--primary)]', 'text-[var(--primary)]');
-          btn.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300', 'dark:text-gray-400', 'dark:hover:text-gray-300');
+          btn.classList.add(...inactiveClasses);
         });
 
-        currentButton.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300', 'dark:text-gray-400', 'dark:hover:text-gray-300');
+        currentButton.classList.remove(...inactiveClasses);
         currentButton.classList.add('border-[var(--primary)]', 'text-[var(--primary)]');
 
         // Show/hide sections

@@ -1,139 +1,151 @@
 ---
+import PageHeader from "@components/PageHeader.astro";
 import MainGridLayout from "@layouts/MainGridLayout.astro";
 import { Icon } from "astro-icon/components";
 
-// 探索：站外目的地 + 站内深入内容的总览页。
-// 分区收纳，方便以后扩展；现在没链接的就先留占位（soon），有了再补 url。
-type Dest = {
+type ProjectItem = {
 	name: string;
-	url?: string; // 没有 url = 占位（敬请期待）
 	desc: string;
 	icon: string;
+	liveUrl?: string;
+	repoUrl?: string;
 	tag?: string;
-	external?: boolean; // 默认 true（站外）；站内文章设 false
+	status?: "live" | "repo" | "planned";
 };
 
-type Group = {
-	kicker: string;
+type ProjectLane = {
+	key: string;
 	label: string;
-	note?: string;
-	items: Dest[];
+	kicker: string;
+	icon: string;
+	lead: string;
+	meta: string;
+	items: ProjectItem[];
 };
 
-// 重点项目：单列出来做大卡，MCP Switch 占主位
-const featured: Dest[] = [
-	{
-		name: "MCP Switch",
-		url: "https://switch.asashiki.com",
-		desc: "自托管的 MCP 聚合网关 —— 把本地 stdio 与远程 HTTP 的多个 MCP 服务，收束到一个统一入口。目前在打磨开源版本。",
-		icon: "material-symbols:lan-outline-rounded",
-		tag: "Gateway · 主打",
-	},
-	{
-		name: "项目展示",
-		url: "https://show.asashiki.com",
-		desc: "做过的项目在线展示，挑了些值得一看的放在这里。",
-		icon: "material-symbols:gallery-thumbnail-rounded",
-		tag: "Showcase",
-	},
-	{
-		name: "时间胶囊 · 全站",
-		url: "https://timeline.asashiki.com",
-		desc: "完整的 ACG 时间线归档，机器人自动从各平台收集的全量记录。",
-		icon: "material-symbols:hourglass-top-rounded",
-		tag: "Timeline",
-	},
-];
+const githubUrl = "https://github.com/asashiki";
+const showUrl = "https://show.asashiki.com/";
 
-const groups: Group[] = [
+const lanes: ProjectLane[] = [
 	{
-		kicker: "Read",
-		label: "深入了解",
-		note: "站内文章，正在写 —— 之后这里会链到对应的页内介绍。",
+		key: "aitools",
+		label: "AI Tools",
+		kicker: "aitools",
+		icon: "material-symbols:device-hub-rounded",
+		lead: "MCP 相关项目是主线：把表情、语音、音乐、抽选、设备时间线这些工具放进对话里。",
+		meta: "MCP Apps / Gateway / Personal data",
 		items: [
 			{
-				name: "MCP Switch 是怎么设计的",
-				desc: "聚合网关的架构、stdio 托管路线与取舍。",
-				icon: "material-symbols:article-outline-rounded",
-				tag: "敬请期待",
-				external: false,
+				name: "mcp-switch",
+				desc: "自托管 MCP 聚合网关，把本地 stdio 与远程 HTTP 服务收束到一个 OAuth 入口。",
+				icon: "material-symbols:hub-outline",
+				liveUrl: "https://switch.asashiki.com",
+				repoUrl: "https://github.com/asashiki/mcp-switch",
+				tag: "代表项目",
+				status: "live",
 			},
 			{
-				name: "设备时间线背后",
-				desc: "从设备采集到公开 REST，再到状态页的链路。",
-				icon: "material-symbols:schedule-outline-rounded",
-				tag: "敬请期待",
-				external: false,
+				name: "MCP Apps 展示站",
+				desc: "集中展示 sticker、voice、music、reel-rando、device-timeline 等对话内工具。",
+				icon: "material-symbols:gallery-thumbnail-outline-rounded",
+				liveUrl: showUrl,
+				repoUrl: githubUrl,
+				tag: "项目索引",
+				status: "live",
 			},
 			{
-				name: "为什么是一个静态站",
-				desc: "外部数据 + 代码级事实 + 易部署，三者怎么兼得。",
-				icon: "material-symbols:rocket-launch-outline-rounded",
-				tag: "敬请期待",
-				external: false,
+				name: "device-timeline-mcp",
+				desc: "跨设备时间线上传与 MCP 接入，为状态页、健康记录和 Agent 查询提供数据底座。",
+				icon: "material-symbols:devices-other-outline-rounded",
+				repoUrl: "https://github.com/asashiki/device-timeline-mcp",
+				tag: "data timeline",
+				status: "repo",
 			},
 		],
 	},
 	{
-		kicker: "Play",
-		label: "工具 & 玩法",
-		note: "一些小工具与 vibe 页面，随手做的。",
+		key: "vibeweb",
+		label: "Vibe Web",
+		kicker: "vibeweb",
+		icon: "material-symbols:sports-esports-outline-rounded",
+		lead: "随手 vibe 出来的页面和玩具，轻量、可玩，更多是把一个点子快速做成可打开的网页。",
+		meta: "game pages / tiny tools",
 		items: [
+			{
+				name: "Hana",
+				desc: "一个很轻的网页音游玩具，偏实验和手感测试。",
+				icon: "material-symbols:music-note-rounded",
+				liveUrl: "https://hana.714.fyi/",
+				tag: "音游",
+				status: "live",
+			},
+			{
+				name: "Danmaku Design",
+				desc: "弹幕设计小游戏，用简单规则玩弹幕的节奏、密度和形状。",
+				icon: "material-symbols:movie-edit-outline-rounded",
+				liveUrl: "https://danmaku.asashiki.com/",
+				tag: "弹幕玩具",
+				status: "live",
+			},
 			{
 				name: "死了没 · BPM",
-				url: "https://bpm.asashiki.com",
-				desc: "一句话 vibe 小页面，睡前随手让 codex 做出来的。",
+				desc: "一句话 vibe 小页面，属于工具页那一侧，保留一点随手做的轻松感。",
 				icon: "material-symbols:favorite-outline-rounded",
-				tag: "vibe",
-			},
-			{
-				name: "Hibi 日々 · 设备时间线",
-				url: "https://link.asashiki.com",
-				desc: "设备活动收集器，实时状态页的数据就来自这里。",
-				icon: "material-symbols:devices-other-outline-rounded",
-				tag: "Devices",
-			},
-			{
-				name: "文档",
-				url: "https://doc.asashiki.com",
-				desc: "项目与服务的说明文档，写给想深入的人。",
-				icon: "material-symbols:menu-book-outline-rounded",
-				tag: "Docs",
+				liveUrl: "https://bpm.asashiki.com",
+				tag: "工具页",
+				status: "live",
 			},
 		],
 	},
 	{
-		kicker: "Follow",
-		label: "找到我",
-		note: "社交平台与代码仓库。",
+		key: "agent",
+		label: "Agent",
+		kicker: "agent",
+		icon: "material-symbols:smart-toy-outline-rounded",
+		lead: "面向 Agent 工作流的项目，目前更像预留出来的方向：先把仓库和入口放好。",
+		meta: "agent workflow / media automation",
 		items: [
 			{
-				name: "X / Twitter",
-				url: "https://twitter.com/asashiki_",
-				desc: "@asashiki_ · 日常碎碎念都在这。",
-				icon: "fa6-brands:x-twitter",
-				tag: "Social",
+				name: "X2Video",
+				desc: "面向 X / Twitter 内容到视频的 Agent 项目，仓库已创建，后续再展开。",
+				icon: "material-symbols:auto-awesome-outline-rounded",
+				repoUrl: "https://github.com/asashiki/X2Video",
+				tag: "待展开",
+				status: "planned",
+			},
+		],
+	},
+	{
+		key: "others",
+		label: "Others",
+		kicker: "others",
+		icon: "material-symbols:extension-outline-rounded",
+		lead: "不完全属于 MCP 或 vibeweb 的实用项目、设计系统和归档工具，作为旁支收纳。",
+		meta: "utility / design / archive",
+		items: [
+			{
+				name: "nico-danmaku-api",
+				desc: "自托管 NicoNico 日语弹幕代理，让播放器通过弹弹play API 形态加载 Nico 评论。",
+				icon: "material-symbols:api-rounded",
+				repoUrl: "https://github.com/asashiki/nico-danmaku-api",
+				tag: "弹幕 API",
+				status: "repo",
 			},
 			{
-				name: "Telegram",
-				url: "https://t.me/asashiki_timeline",
-				desc: "时间线频道，自动同步各平台动态。",
-				icon: "fa6-brands:telegram",
-				tag: "Channel",
+				name: "asashiki-design",
+				desc: "浅仪式的设计系统、视觉规范和 tokens，现在这批页面也沿用这套语言。",
+				icon: "material-symbols:design-services-outline-rounded",
+				repoUrl: "https://github.com/asashiki/asashiki-design",
+				tag: "design system",
+				status: "repo",
 			},
 			{
-				name: "Bangumi",
-				url: "https://bangumi.tv/user/asashiki",
-				desc: "看过在看的番与游戏，都记在这里。",
-				icon: "material-symbols:list-alt-rounded",
-				tag: "ACG",
-			},
-			{
-				name: "GitHub",
-				url: "https://github.com/asashiki",
-				desc: "开源仓库都在这儿，欢迎围观与 Star。",
+				name: "全部仓库",
+				desc: "GitHub 账号 asashiki 下的完整项目列表，零散项目和旧实验都从这里进入。",
 				icon: "fa6-brands:github",
-				tag: "Code",
+				repoUrl: githubUrl,
+				tag: "GitHub",
+				status: "repo",
 			},
 		],
 	},
@@ -147,310 +159,443 @@ function host(url?: string) {
 		return "";
 	}
 }
+
+function statusLabel(status?: ProjectItem["status"]) {
+	if (status === "live") return "Live";
+	if (status === "planned") return "Planned";
+	return "Repo";
+}
 ---
 
-<MainGridLayout title="探索" description="Asashiki 的站外目的地与站内深入内容总览">
-    <div class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative mb-4">
-        <div class="card-base z-10 px-6 md:px-9 py-6 relative w-full">
-            <header class="explore-head onload-animation">
-                <div class="explore-kicker">
-                    <span class="explore-dot"></span>
-                    <span>Explore</span>
-                </div>
-                <h1 class="explore-title">探索</h1>
-                <p class="explore-lead">站外的项目、工具与时间线，加上正在写的站内介绍 —— 挑一个进去看看吧。</p>
-            </header>
+<MainGridLayout title="探索" description="Asashiki 的项目方向索引">
+	<div class="xp-shell flex w-full max-w-[100vw] min-w-0 rounded-[var(--radius-large)] overflow-hidden relative mb-4">
+		<div class="card-base z-10 px-6 md:px-9 py-7 relative w-full max-w-full min-w-0 overflow-hidden">
+			<PageHeader
+				kicker="Explore"
+				title="探索"
+				lead="按项目方向整理：AI tools、vibeweb、agent，以及其他实用旁支。"
+			/>
 
-            <!-- 重点项目 -->
-            <section class="explore-section onload-animation" style="animation-delay: calc(var(--content-delay) + 60ms);">
-                <div class="explore-section-head">
-                    <span class="explore-section-kicker">Featured</span>
-                    <h2>重点项目</h2>
-                </div>
-                <ul class="explore-featured">
-                    {featured.map((d, i) => (
-                        <li class={i === 0 ? "is-hero" : ""}>
-                            <a href={d.url} target="_blank" rel="noopener" class="explore-card is-feature">
-                                <span class="explore-icon">
-                                    <Icon name={d.icon} class="text-[1.5rem]"></Icon>
-                                </span>
-                                <div class="explore-card-body">
-                                    <div class="explore-card-top">
-                                        <span class="explore-name">{d.name}</span>
-                                        {d.tag && <span class="explore-tag">{d.tag}</span>}
-                                    </div>
-                                    <p class="explore-desc">{d.desc}</p>
-                                    <span class="explore-host">
-                                        {host(d.url)}
-                                        <Icon name="fa6-solid:arrow-up-right-from-square" class="text-[0.65rem]"></Icon>
-                                    </span>
-                                </div>
-                            </a>
-                        </li>
-                    ))}
-                </ul>
-            </section>
+			<section class="xp-overview onload-animation" style="animation-delay: calc(var(--content-delay) + 40ms);" aria-label="项目方向总览">
+				<div class="xp-overview-copy">
+					<span class="xp-eyebrow">asashiki / github</span>
+					<h2>把项目先按方向放好。</h2>
+					<p>
+						主要重心是 MCP 与对话内工具；vibeweb 放玩具和小页面；Agent 方向先留入口；其他项目归到旁支里。
+					</p>
+				</div>
+				<div class="xp-overview-actions">
+					<a href={showUrl} target="_blank" rel="noopener" class="xp-action">
+						<Icon name="material-symbols:gallery-thumbnail-outline-rounded" />
+						<span>展示站</span>
+					</a>
+					<a href={githubUrl} target="_blank" rel="noopener" class="xp-action">
+						<Icon name="fa6-brands:github" />
+						<span>GitHub</span>
+					</a>
+				</div>
+			</section>
 
-            <!-- 其余分区 -->
-            {groups.map((group, gi) => (
-                <section class="explore-section onload-animation" style={`animation-delay: calc(var(--content-delay) + ${100 + gi * 40}ms);`}>
-                    <div class="explore-section-head">
-                        <span class="explore-section-kicker">{group.kicker}</span>
-                        <h2>{group.label}</h2>
-                        {group.note && <small>{group.note}</small>}
-                    </div>
-                    <ul class="explore-grid">
-                        {group.items.map((d) => (
-                            <li>
-                                {d.url ? (
-                                    <a href={d.url} target={d.external === false ? null : "_blank"} rel="noopener" class="explore-card">
-                                        <span class="explore-icon">
-                                            <Icon name={d.icon} class="text-[1.3rem]"></Icon>
-                                        </span>
-                                        <div class="explore-card-body">
-                                            <div class="explore-card-top">
-                                                <span class="explore-name">{d.name}</span>
-                                                {d.tag && <span class="explore-tag">{d.tag}</span>}
-                                            </div>
-                                            <p class="explore-desc">{d.desc}</p>
-                                            {host(d.url) && (
-                                                <span class="explore-host">
-                                                    {host(d.url)}
-                                                    <Icon name="fa6-solid:arrow-up-right-from-square" class="text-[0.65rem]"></Icon>
-                                                </span>
-                                            )}
-                                        </div>
-                                    </a>
-                                ) : (
-                                    <div class="explore-card is-soon" aria-disabled="true">
-                                        <span class="explore-icon">
-                                            <Icon name={d.icon} class="text-[1.3rem]"></Icon>
-                                        </span>
-                                        <div class="explore-card-body">
-                                            <div class="explore-card-top">
-                                                <span class="explore-name">{d.name}</span>
-                                                {d.tag && <span class="explore-tag is-soon-tag">{d.tag}</span>}
-                                            </div>
-                                            <p class="explore-desc">{d.desc}</p>
-                                        </div>
-                                    </div>
-                                )}
-                            </li>
-                        ))}
-                    </ul>
-                </section>
-            ))}
-        </div>
-    </div>
+			<nav class="xp-index onload-animation" style="animation-delay: calc(var(--content-delay) + 70ms);" aria-label="项目方向">
+				{lanes.map((lane) => (
+					<a href={`#${lane.key}`} class="xp-index-item">
+						<Icon name={lane.icon} />
+						<span>{lane.kicker}</span>
+					</a>
+				))}
+			</nav>
+
+			<div class="xp-lanes">
+				{lanes.map((lane, index) => (
+					<section id={lane.key} class="xp-lane onload-animation" style={`animation-delay: calc(var(--content-delay) + ${110 + index * 35}ms);`}>
+						<header class="xp-lane-head">
+							<div class="xp-lane-title">
+								<span class="xp-lane-icon" aria-hidden="true">
+									<Icon name={lane.icon} />
+								</span>
+								<div>
+									<span class="xp-eyebrow">{lane.kicker}</span>
+									<h2>{lane.label}</h2>
+								</div>
+							</div>
+							<p>{lane.lead}</p>
+							<span class="xp-lane-meta">{lane.meta}</span>
+						</header>
+
+						<ul class="xp-projects">
+							{lane.items.map((item) => {
+								const primaryUrl = item.liveUrl || item.repoUrl;
+								return (
+									<li>
+										<a href={primaryUrl} target="_blank" rel="noopener" class:list={["xp-project", { "is-planned": item.status === "planned" }]}>
+											<span class="xp-project-icon" aria-hidden="true">
+												<Icon name={item.icon} />
+											</span>
+											<span class="xp-project-body">
+												<span class="xp-project-top">
+													<strong>{item.name}</strong>
+													<span class:list={["xp-pill", `is-${item.status || "repo"}`]}>{statusLabel(item.status)}</span>
+												</span>
+												<span class="xp-project-desc">{item.desc}</span>
+												<span class="xp-project-links">
+													{item.tag && <span>{item.tag}</span>}
+													{item.liveUrl && <span>{host(item.liveUrl)}</span>}
+													{item.repoUrl && <span>github.com/asashiki</span>}
+												</span>
+											</span>
+											<Icon name="fa6-solid:arrow-right" class="xp-arrow" />
+										</a>
+									</li>
+								);
+							})}
+						</ul>
+					</section>
+				))}
+			</div>
+		</div>
+	</div>
 </MainGridLayout>
 
-<style is:global>
-    .explore-head {
-        padding-bottom: 1.3rem;
-        margin-bottom: 1.4rem;
-        border-bottom: 1px dashed color-mix(in oklch, var(--line-divider) 80%, transparent);
-    }
-    .explore-kicker {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        color: var(--primary);
-        font-size: 0.74rem;
-        font-weight: 750;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-    }
-    .explore-dot {
-        width: 0.5rem;
-        height: 0.5rem;
-        border-radius: 999px;
-        background: var(--primary);
-        box-shadow: 0 0 0 0.28rem color-mix(in oklch, var(--primary) 16%, transparent);
-    }
-    .explore-title {
-        margin: 0.4rem 0 0;
-        font-size: clamp(1.6rem, 3vw, 2.1rem);
-        font-weight: 700;
-        line-height: 1.1;
-    }
-    .explore-lead {
-        margin: 0.6rem 0 0;
-        max-width: 42rem;
-        color: var(--content-meta-text, rgb(120 120 130));
-        font-size: 0.95rem;
-        line-height: 1.7;
-    }
+<style>
+	.xp-eyebrow {
+		color: var(--primary);
+		font-size: 0.68rem;
+		font-weight: 750;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+	}
+	.xp-shell {
+		box-sizing: border-box;
+	}
+	:global(.page-header-lead) {
+		overflow-wrap: anywhere;
+	}
 
-    .explore-section {
-        margin-top: 1.6rem;
-    }
-    .explore-section-head {
-        display: flex;
-        align-items: baseline;
-        gap: 0.6rem;
-        flex-wrap: wrap;
-        margin-bottom: 0.85rem;
-    }
-    .explore-section-kicker {
-        color: var(--primary);
-        font-size: 0.68rem;
-        font-weight: 750;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-    }
-    .explore-section-head h2 {
-        margin: 0;
-        font-size: 1.12rem;
-        font-weight: 700;
-        line-height: 1.2;
-    }
-    .explore-section-head small {
-        color: var(--content-meta-text, rgb(130 130 140));
-        font-size: 0.78rem;
-    }
+	.xp-overview {
+		min-width: 0;
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		gap: 1rem;
+		align-items: end;
+		padding: 1.15rem 1.2rem;
+		border-radius: calc(var(--radius-large) - 0.25rem);
+		border: 1px solid color-mix(in oklch, var(--primary) 20%, var(--line-divider));
+		background:
+			radial-gradient(105% 90% at 92% -25%, color-mix(in oklch, var(--primary) 11%, transparent) 0%, transparent 58%),
+			color-mix(in oklch, var(--primary) 4%, var(--card-bg));
+	}
+	.xp-overview-copy {
+		min-width: 0;
+	}
+	.xp-overview h2 {
+		margin: 0.25rem 0 0;
+		color: var(--deep-text);
+		font-size: clamp(1.15rem, 2.4vw, 1.55rem);
+		font-weight: 720;
+		line-height: 1.25;
+	}
+	:global(:root.dark) .xp-overview h2 {
+		color: rgba(255, 255, 255, 0.92);
+	}
+	.xp-overview p {
+		margin: 0.5rem 0 0;
+		max-width: 42rem;
+		color: var(--content-meta-text, rgb(120 120 130));
+		font-size: 0.88rem;
+		line-height: 1.65;
+		overflow-wrap: anywhere;
+	}
+	.xp-overview-actions {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: flex-end;
+		gap: 0.5rem;
+	}
+	.xp-action,
+	.xp-index-item {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.42rem;
+		border-radius: 999px;
+		text-decoration: none;
+		white-space: nowrap;
+	}
+	.xp-action {
+		min-height: 2.15rem;
+		padding: 0.42rem 0.78rem;
+		color: var(--btn-content);
+		background: var(--btn-regular-bg);
+		font-size: 0.8rem;
+		font-weight: 680;
+		transition: background-color 180ms ease, color 180ms ease, transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+	}
+	.xp-action svg {
+		width: 1rem;
+		height: 1rem;
+	}
 
-    /* 重点项目：第一张大卡横跨整行 */
-    .explore-featured {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 0.85rem;
-        margin: 0;
-        padding: 0;
-        list-style: none;
-    }
-    .explore-featured .is-hero {
-        grid-column: 1 / -1;
-    }
-    .explore-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 0.85rem;
-        margin: 0;
-        padding: 0;
-        list-style: none;
-    }
-    @media (max-width: 640px) {
-        .explore-featured,
-        .explore-grid { grid-template-columns: 1fr; }
-    }
+	.xp-index {
+		min-width: 0;
+		max-width: 100%;
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: 0.55rem;
+		margin: 0.75rem 0 1.15rem;
+	}
+	.xp-index-item {
+		justify-content: center;
+		min-width: 0;
+		padding: 0.52rem 0.65rem;
+		border: 1px solid color-mix(in oklch, var(--line-divider) 76%, transparent);
+		color: color-mix(in oklch, var(--btn-content) 72%, var(--card-bg));
+		background: var(--card-bg);
+		font-size: 0.74rem;
+		font-weight: 760;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		transition: color 180ms ease, border-color 180ms ease, background-color 180ms ease;
+	}
+	.xp-index-item svg {
+		width: 1rem;
+		height: 1rem;
+		color: var(--primary);
+	}
 
-    .explore-card {
-        display: flex;
-        gap: 0.9rem;
-        height: 100%;
-        padding: 1rem 1.05rem;
-        border-radius: var(--radius-large);
-        background: color-mix(in oklch, var(--primary) 4%, var(--card-bg));
-        border: 1px solid color-mix(in oklch, var(--line-divider) 70%, transparent);
-        text-decoration: none;
-        transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1), border-color 200ms ease, background-color 200ms ease;
-    }
-    /* 大卡：更醒目的柔光 + 更大的内边距 */
-    .explore-card.is-feature {
-        padding: 1.15rem 1.2rem;
-    }
-    .is-hero .explore-card.is-feature {
-        position: relative;
-        overflow: hidden;
-        padding: 1.4rem 1.4rem;
-        background:
-            radial-gradient(120% 90% at 92% -10%, color-mix(in oklch, var(--primary) 14%, transparent) 0%, transparent 58%),
-            color-mix(in oklch, var(--primary) 6%, var(--card-bg));
-        border-color: color-mix(in oklch, var(--primary) 26%, transparent);
-    }
-    .is-hero .explore-icon {
-        width: 3rem;
-        height: 3rem;
-    }
-    .is-hero .explore-name {
-        font-size: 1.18rem;
-    }
-    .is-hero .explore-desc {
-        font-size: 0.9rem;
-        max-width: 36rem;
-    }
+	.xp-lanes {
+		min-width: 0;
+		max-width: 100%;
+		display: flex;
+		flex-direction: column;
+		gap: 0.95rem;
+	}
+	.xp-lane {
+		min-width: 0;
+		display: grid;
+		grid-template-columns: minmax(12rem, 0.85fr) minmax(0, 1.65fr);
+		gap: 1rem;
+		padding-top: 0.95rem;
+		border-top: 1px solid color-mix(in oklch, var(--line-divider) 78%, transparent);
+		scroll-margin-top: 6rem;
+	}
+	.xp-lane-head {
+		min-width: 0;
+	}
+	.xp-lane-title {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.7rem;
+	}
+	.xp-lane-icon {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 2.55rem;
+		height: 2.55rem;
+		border-radius: 0.7rem;
+		color: var(--primary);
+		background: color-mix(in oklch, var(--primary) 7%, var(--card-bg));
+		border: 1px solid color-mix(in oklch, var(--primary) 15%, transparent);
+	}
+	.xp-lane-icon svg {
+		width: 1.22rem;
+		height: 1.22rem;
+	}
+	.xp-lane h2 {
+		margin: 0.18rem 0 0;
+		color: var(--deep-text);
+		font-size: 1.05rem;
+		font-weight: 730;
+		line-height: 1.25;
+	}
+	:global(:root.dark) .xp-lane h2 {
+		color: rgba(255, 255, 255, 0.9);
+	}
+	.xp-lane-head p {
+		margin: 0.7rem 0 0;
+		color: var(--content-meta-text, rgb(120 120 130));
+		font-size: 0.82rem;
+		line-height: 1.7;
+		overflow-wrap: anywhere;
+	}
+	.xp-lane-meta {
+		display: inline-flex;
+		margin-top: 0.62rem;
+		color: color-mix(in oklch, var(--btn-content) 52%, var(--card-bg));
+		font-size: 0.68rem;
+		font-weight: 700;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+	}
 
-    .explore-card.is-soon {
-        cursor: default;
-        background: color-mix(in oklch, var(--line-divider) 14%, var(--card-bg));
-        border-style: dashed;
-    }
-    .explore-card.is-soon .explore-name,
-    .explore-card.is-soon .explore-desc {
-        opacity: 0.66;
-    }
+	.xp-projects {
+		min-width: 0;
+		display: grid;
+		grid-template-columns: 1fr;
+		gap: 0.55rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	.xp-project {
+		min-width: 0;
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr) auto;
+		gap: 0.78rem;
+		align-items: center;
+		min-height: 5.1rem;
+		padding: 0.82rem 0.9rem;
+		border-radius: calc(var(--radius-large) - 0.35rem);
+		border: 1px solid color-mix(in oklch, var(--line-divider) 74%, transparent);
+		background: var(--card-bg);
+		text-decoration: none;
+		transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1), border-color 180ms ease, box-shadow 200ms ease;
+	}
+	.xp-project.is-planned {
+		border-style: dashed;
+		background: color-mix(in oklch, var(--line-divider) 9%, var(--card-bg));
+	}
+	.xp-project-icon {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 2.25rem;
+		height: 2.25rem;
+		border-radius: 0.65rem;
+		color: var(--primary);
+		background: color-mix(in oklch, var(--primary) 6%, var(--card-bg));
+		border: 1px solid color-mix(in oklch, var(--primary) 12%, transparent);
+	}
+	.xp-project-icon svg {
+		width: 1.1rem;
+		height: 1.1rem;
+	}
+	.xp-project-body {
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+	}
+	.xp-project-top {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 0.45rem;
+	}
+	.xp-project-top strong {
+		color: var(--deep-text);
+		font-size: 0.92rem;
+		font-weight: 720;
+		line-height: 1.25;
+	}
+	:global(:root.dark) .xp-project-top strong {
+		color: rgba(255, 255, 255, 0.9);
+	}
+	.xp-project-desc {
+		color: var(--content-meta-text, rgb(120 120 130));
+		font-size: 0.78rem;
+		line-height: 1.58;
+		overflow-wrap: anywhere;
+	}
+	.xp-project-links {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.35rem;
+		color: color-mix(in oklch, var(--btn-content) 48%, var(--card-bg));
+		font-size: 0.68rem;
+		font-weight: 640;
+		overflow-wrap: anywhere;
+	}
+	.xp-project-links span + span::before {
+		content: "/";
+		margin-right: 0.35rem;
+		color: color-mix(in oklch, var(--line-divider) 90%, transparent);
+	}
+	.xp-pill {
+		display: inline-flex;
+		align-items: center;
+		min-height: 1.25rem;
+		padding: 0 0.45rem;
+		border-radius: 999px;
+		font-size: 0.62rem;
+		font-weight: 760;
+		line-height: 1;
+		color: var(--primary);
+		background: color-mix(in oklch, var(--primary) 10%, var(--card-bg));
+		border: 1px solid color-mix(in oklch, var(--primary) 16%, transparent);
+	}
+	.xp-pill.is-planned {
+		color: var(--content-meta-text, gray);
+		background: color-mix(in oklch, var(--line-divider) 14%, var(--card-bg));
+		border-color: color-mix(in oklch, var(--line-divider) 72%, transparent);
+	}
+	.xp-arrow {
+		width: 0.72rem;
+		height: 0.72rem;
+		color: var(--primary);
+		transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+	}
 
-    .explore-icon {
-        flex: 0 0 auto;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 2.6rem;
-        height: 2.6rem;
-        border-radius: 0.8rem;
-        color: var(--primary);
-        background: color-mix(in oklch, var(--primary) 12%, var(--card-bg));
-        border: 1px solid color-mix(in oklch, var(--primary) 20%, transparent);
-    }
-    .explore-card.is-soon .explore-icon {
-        color: var(--content-meta-text, gray);
-        background: color-mix(in oklch, var(--line-divider) 20%, var(--card-bg));
-        border-color: color-mix(in oklch, var(--line-divider) 50%, transparent);
-    }
-    .explore-card-body {
-        min-width: 0;
-        display: grid;
-        gap: 0.3rem;
-        align-content: start;
-    }
-    .explore-card-top {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        flex-wrap: wrap;
-    }
-    .explore-name {
-        font-weight: 700;
-        font-size: 1rem;
-    }
-    .explore-tag {
-        padding: 0.06rem 0.45rem;
-        border-radius: 999px;
-        font-size: 0.64rem;
-        font-weight: 700;
-        letter-spacing: 0.02em;
-        color: var(--primary);
-        background: var(--btn-regular-bg);
-    }
-    .explore-tag.is-soon-tag {
-        color: var(--content-meta-text, gray);
-        background: color-mix(in oklch, var(--line-divider) 24%, transparent);
-    }
-    .explore-desc {
-        margin: 0;
-        font-size: 0.84rem;
-        line-height: 1.6;
-        color: var(--content-meta-text, rgb(120 120 130));
-    }
-    .explore-host {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.3rem;
-        margin-top: 0.15rem;
-        font-size: 0.74rem;
-        font-weight: 650;
-        color: color-mix(in oklch, var(--primary) 80%, var(--content-meta-text, gray));
-    }
-    @media (hover: hover) and (pointer: fine) {
-        a.explore-card:hover {
-            transform: translateY(-3px);
-            border-color: color-mix(in oklch, var(--primary) 36%, transparent);
-            background: color-mix(in oklch, var(--primary) 8%, var(--card-bg));
-        }
-        .is-hero a.explore-card.is-feature:hover {
-            background:
-                radial-gradient(120% 90% at 92% -10%, color-mix(in oklch, var(--primary) 18%, transparent) 0%, transparent 58%),
-                color-mix(in oklch, var(--primary) 9%, var(--card-bg));
-        }
-    }
+	@media (hover: hover) and (pointer: fine) {
+		.xp-action:hover {
+			transform: translateY(-2px);
+			background: var(--btn-regular-bg-hover);
+			color: var(--primary);
+		}
+		.xp-index-item:hover {
+			color: var(--primary);
+			border-color: color-mix(in oklch, var(--primary) 24%, transparent);
+			background: color-mix(in oklch, var(--primary) 5%, var(--card-bg));
+		}
+		.xp-project:hover {
+			transform: translateY(-2px);
+			border-color: color-mix(in oklch, var(--primary) 32%, transparent);
+			box-shadow: 0 10px 22px -17px color-mix(in oklch, var(--primary) 34%, transparent);
+		}
+		.xp-project:hover .xp-arrow {
+			transform: translateX(0.16rem);
+		}
+	}
+
+	@media (max-width: 820px) {
+		.xp-shell {
+			width: min(100%, 100vw);
+		}
+		:global(.page-header),
+		.xp-overview,
+		.xp-index,
+		.xp-lane,
+		.xp-project {
+			max-width: calc(100vw - 2.5rem);
+		}
+		.xp-overview {
+			grid-template-columns: 1fr;
+			align-items: start;
+		}
+		.xp-overview-actions {
+			justify-content: flex-start;
+		}
+		.xp-index {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+		.xp-lane {
+			grid-template-columns: 1fr;
+			gap: 0.7rem;
+		}
+	}
+
+	@media (max-width: 520px) {
+		.xp-overview,
+		.xp-project {
+			padding: 0.85rem;
+		}
+		.xp-index {
+			grid-template-columns: 1fr;
+		}
+		.xp-project {
+			grid-template-columns: auto minmax(0, 1fr);
+		}
+		.xp-project > .xp-arrow {
+			display: none;
+		}
+	}
 </style>

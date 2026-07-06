@@ -20,19 +20,14 @@ import { Icon } from "astro-icon/components";
                 </div>
             </header>
 
-            <!-- 设备 / 日期 切换 -->
+            <!-- 设备切换 -->
             <div class="status-controls onload-animation" style="animation-delay: calc(var(--content-delay) + 40ms);">
                 <nav class="status-chips" aria-label="设备筛选" data-device-tabs>
                     <button class="is-active" type="button">总览</button>
                 </nav>
-                <div class="status-date">
-                    <span class="status-date-label" data-selected-date-label>今天</span>
-                    <span class="status-date-meta" data-selected-date-meta>上海日界</span>
-                    <div class="status-date-tabs" data-status-days></div>
-                </div>
             </div>
 
-            <div class="status-grid onload-animation" style="animation-delay: calc(var(--content-delay) + 80ms);">
+            <div class="status-grid status-realtime-grid onload-animation" style="animation-delay: calc(var(--content-delay) + 80ms);">
                 <!-- 心率 -->
                 <article class="wg wg-metric wg-heart">
                     <div class="wg-top"><Icon name="material-symbols:favorite-outline-rounded" class="wg-icon"></Icon><span>心率</span></div>
@@ -65,10 +60,21 @@ import { Icon } from "astro-icon/components";
                     <!-- 当前应用（隐藏承载，供 renderNow 写入，也可展示） -->
                     <span class="wg-now-app" data-current-app hidden></span>
                 </article>
+            </div>
 
+            <section class="status-history onload-animation" style="animation-delay: calc(var(--content-delay) + 120ms);" aria-labelledby="status-history-title">
+                <div class="status-history-head">
+                    <h2 id="status-history-title">历史足迹</h2>
+                    <div class="status-date">
+                        <span class="status-date-label" data-selected-date-label>今天</span>
+                        <div class="status-date-tabs" data-status-days></div>
+                    </div>
+                </div>
+
+                <div class="status-grid status-history-grid">
                 <!-- 今日应用 -->
                 <article class="wg wg-apps" data-panel="activity">
-                    <div class="wg-top"><Icon name="material-symbols:bar-chart-rounded" class="wg-icon"></Icon><span>今日应用</span><span class="wg-sub" data-activity-total></span></div>
+                    <div class="wg-top"><Icon name="material-symbols:bar-chart-rounded" class="wg-icon"></Icon><span data-activity-title>今日应用</span><span class="wg-sub" data-activity-total></span></div>
                     <div class="status-app-scroll" data-app-scroll>
                         <div class="status-app-list" data-app-list></div>
                         <div class="status-skeleton-rows" aria-hidden="true">
@@ -82,7 +88,7 @@ import { Icon } from "astro-icon/components";
 
                 <!-- 今日足迹（时间线） -->
                 <article class="wg wg-timeline" data-panel="timeline">
-                    <div class="wg-top"><Icon name="material-symbols:timeline" class="wg-icon"></Icon><span>今日足迹</span><span class="wg-sub" data-timeline-count></span></div>
+                    <div class="wg-top"><Icon name="material-symbols:timeline" class="wg-icon"></Icon><span data-timeline-title>今日足迹</span><span class="wg-sub" data-timeline-count></span></div>
                     <div class="status-timeline-scroll" data-timeline-scroll>
                         <ol class="status-timeline-list" data-timeline-list></ol>
                         <div class="status-skeleton-rows" aria-hidden="true">
@@ -94,7 +100,8 @@ import { Icon } from "astro-icon/components";
                         <p class="status-panel-message" data-panel-message></p>
                     </div>
                 </article>
-            </div>
+                </div>
+            </section>
 
             <!-- 数据来源：低调页脚，承载 service 面板写入 -->
             <footer class="status-foot" data-panel="service">
@@ -117,6 +124,7 @@ import { Icon } from "astro-icon/components";
        去掉了旧版的 dashboard 细线条 / 绿色脉冲点 / 控制台英文 kicker。
        字体：本页全部走默认字体（衬线在这个页面上不合适，已退回普通字）。 */
     .status-board {
+        /* 文字必须是中性色：整页文字染上主题色会显得花哨（已踩过坑） */
         --status-text: rgb(24 24 27);
         --status-muted: rgb(84 84 92);
         --status-faint: rgb(122 116 125);
@@ -124,6 +132,8 @@ import { Icon } from "astro-icon/components";
         --wg-serif: inherit;
         --wg-bg: color-mix(in oklch, var(--primary) 4%, var(--card-bg));
         --wg-line: color-mix(in oklch, var(--line-divider) 55%, transparent);
+        /* 在线=绿，语义色不跟随主题 hue */
+        --status-online: oklch(0.68 0.12 155);
         position: relative;
         overflow: hidden;
         padding: 1.4rem 1.4rem 1.5rem;
@@ -150,6 +160,7 @@ import { Icon } from "astro-icon/components";
         --status-text: rgb(240 240 242);
         --status-muted: rgb(202 202 210);
         --status-faint: rgb(162 158 170);
+        --status-online: oklch(0.75 0.12 155);
         --wg-bg: color-mix(in oklch, var(--primary) 7%, var(--card-bg));
         --wg-line: color-mix(in oklch, var(--line-divider) 65%, transparent);
     }
@@ -280,15 +291,42 @@ import { Icon } from "astro-icon/components";
         grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 0.85rem;
     }
-    .wg-now { grid-column: span 2; }
-    .wg-apps { grid-column: span 2; }
-    .wg-timeline { grid-column: 1 / -1; }
+    .status-history {
+        margin-top: 1.05rem;
+    }
+    .status-history-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-bottom: 0.85rem;
+        padding-top: 0.95rem;
+        border-top: 1px solid var(--wg-line);
+    }
+    .status-history-head h2 {
+        margin: 0;
+        color: var(--status-text);
+        font-size: 1rem;
+        font-weight: 650;
+        line-height: 1.2;
+    }
+    /* 实时区：四张指标卡一排，「此刻」独占整行 —— 不留空洞 */
+    .wg-now { grid-column: 1 / -1; }
+    /* 历史区：应用 2 格 + 时间线 3 格并排铺满，等高 */
+    .status-history-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .wg-apps { grid-column: span 2; display: flex; flex-direction: column; }
+    .wg-timeline { grid-column: span 3; display: flex; flex-direction: column; }
+    .wg-apps .status-app-scroll,
+    .wg-timeline .status-timeline-scroll { flex: 1 1 auto; }
     @media (max-width: 900px) {
-        .status-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .status-grid,
+        .status-history-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .wg-now, .wg-apps, .wg-timeline { grid-column: 1 / -1; }
     }
     @media (max-width: 520px) {
-        .status-grid { grid-template-columns: 1fr; }
+        .status-grid,
+        .status-history-grid { grid-template-columns: 1fr; }
         .wg-now, .wg-apps, .wg-timeline { grid-column: auto; }
     }
 
@@ -373,8 +411,8 @@ import { Icon } from "astro-icon/components";
         background: var(--status-faint);
     }
     .wg-online .wg-value strong[data-tone="online"]::before {
-        background: var(--success, #59b98a);
-        box-shadow: 0 0 0 0.2rem color-mix(in oklch, var(--success, #59b98a) 20%, transparent);
+        background: var(--status-online);
+        box-shadow: 0 0 0 0.2rem color-mix(in oklch, var(--status-online) 20%, transparent);
     }
 
     /* 此刻 */
@@ -423,13 +461,13 @@ import { Icon } from "astro-icon/components";
         background: var(--status-faint);
     }
     .wg-chips span[data-tone="online"] {
-        color: var(--success, #59b98a);
-        border-color: color-mix(in oklch, var(--success, #59b98a) 28%, transparent);
-        background: color-mix(in oklch, var(--success, #59b98a) 8%, var(--card-bg));
+        color: var(--status-online);
+        border-color: color-mix(in oklch, var(--status-online) 28%, transparent);
+        background: color-mix(in oklch, var(--status-online) 8%, var(--card-bg));
     }
     .wg-chips span[data-tone="online"]::before {
-        background: var(--success, #59b98a);
-        box-shadow: 0 0 0 0.15rem color-mix(in oklch, var(--success, #59b98a) 22%, transparent);
+        background: var(--status-online);
+        box-shadow: 0 0 0 0.15rem color-mix(in oklch, var(--status-online) 22%, transparent);
     }
 
     /* 今日应用 */
@@ -438,6 +476,35 @@ import { Icon } from "astro-icon/components";
         overflow-y: auto;
         margin-top: 0.85rem;
         scrollbar-width: thin;
+        scrollbar-color: color-mix(in oklch, var(--primary) 36%, transparent) transparent;
+    }
+    .status-app-scroll,
+    .status-timeline-scroll {
+        --status-scroll-thumb: color-mix(in oklch, var(--primary) 34%, transparent);
+        --status-scroll-thumb-hover: color-mix(in oklch, var(--primary) 48%, transparent);
+        --status-scroll-thumb-active: color-mix(in oklch, var(--primary) 62%, transparent);
+    }
+    .status-app-scroll::-webkit-scrollbar,
+    .status-timeline-scroll::-webkit-scrollbar {
+        width: 0.34rem;
+        height: 0.34rem;
+    }
+    .status-app-scroll::-webkit-scrollbar-track,
+    .status-timeline-scroll::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .status-app-scroll::-webkit-scrollbar-thumb,
+    .status-timeline-scroll::-webkit-scrollbar-thumb {
+        border-radius: 999px;
+        background: var(--status-scroll-thumb);
+    }
+    .status-app-scroll::-webkit-scrollbar-thumb:hover,
+    .status-timeline-scroll::-webkit-scrollbar-thumb:hover {
+        background: var(--status-scroll-thumb-hover);
+    }
+    .status-app-scroll::-webkit-scrollbar-thumb:active,
+    .status-timeline-scroll::-webkit-scrollbar-thumb:active {
+        background: var(--status-scroll-thumb-active);
     }
     .status-app-list {
         display: flex;
@@ -498,6 +565,7 @@ import { Icon } from "astro-icon/components";
         overflow-y: auto;
         margin-top: 0.85rem;
         scrollbar-width: thin;
+        scrollbar-color: color-mix(in oklch, var(--primary) 36%, transparent) transparent;
     }
     .status-timeline-list {
         display: flex;
@@ -640,881 +708,3 @@ import { Icon } from "astro-icon/components";
         .status-head-actions { flex-direction: row; align-items: center; align-self: flex-start; }
     }
 </style>
-
-<script>
-import { appName, liveDescription, truncate } from "@utils/asashiki-app-labels";
-
-type ApiResult<T> = {
-	data: T | null;
-	error?: string;
-	ok: boolean;
-	status?: number;
-};
-
-type HealthResponse = {
-	schemaVersion?: number;
-	service?: string;
-	status?: string;
-	time?: string;
-	uptimeSeconds?: number;
-};
-
-type DeviceItem = {
-	appId?: string;
-	deviceId?: string;
-	deviceName?: string;
-	extra?: {
-		battery_charging?: boolean;
-		battery_percent?: number;
-		music?: { title?: string };
-		network_type?: string;
-	};
-	isOnline?: boolean;
-	lastSeenAt?: string;
-	platform?: string;
-	windowTitle?: string;
-};
-
-type DevicesResponse = {
-	devices?: DeviceItem[];
-	fetchedAt?: string;
-};
-
-type ActivityItem = {
-	appId?: string;
-	count?: number;
-	totalSeconds?: number;
-	windowTitle?: string;
-};
-
-type ActivityResponse = {
-	date?: string;
-	perApp?: ActivityItem[];
-	totalSeconds?: number;
-};
-
-type TimelineItem = {
-	appId?: string;
-	deviceId?: string;
-	durationSeconds?: number;
-	startedAt?: string;
-	windowTitle?: string;
-};
-
-type TimelineResponse = {
-	activities?: TimelineItem[];
-	date?: string;
-};
-
-type HealthRecord = {
-	recordedAt?: string;
-	type?: string;
-	unit?: string;
-	value?: number;
-	valueJson?: unknown;
-};
-
-type HealthRecordsResponse = {
-	records?: HealthRecord[];
-};
-
-type HealthMetric = {
-	avg?: number;
-	count?: number;
-	latest?: { recordedAt?: string; value?: number };
-	max?: number;
-	min?: number;
-	sum?: number;
-	type?: string;
-	unit?: string;
-};
-
-type HealthSummaryResponse = {
-	fetchedAt?: string;
-	metrics?: HealthMetric[];
-	sinceIso?: string;
-};
-
-type RecentApiResult<T> = {
-	activeDate: string;
-	result: ApiResult<T>;
-	results: Array<{ date: string; result: ApiResult<T> }>;
-};
-
-type StatusStore = {
-	activity: RecentApiResult<ActivityResponse> | null;
-	devices: DeviceItem[];
-	healthSummary: HealthSummaryResponse | null;
-	heartRecords: ApiResult<HealthRecordsResponse> | null;
-	lastLoadedAt: number;
-	loadSeq: number;
-	refreshTimer: null | number;
-	resizeHandler: null | (() => void);
-	selectedDevice: string;
-	sleepRecords: ApiResult<HealthRecordsResponse> | null;
-	stepsRecords: ApiResult<HealthRecordsResponse> | null;
-	timeline: RecentApiResult<TimelineResponse> | null;
-	timelineDate: string;
-	timelineVisible: number;
-};
-
-// Asashiki MCP Switch 生态：旧 Core API (api.asashiki.com) 已退役。
-// 设备/时间线/健康数据由 device-timeline collector 公网只读 API 提供（link.asashiki.com，
-// 即接入 MCP Switch 的同一上游）。switch.asashiki.com 是 OAuth 保护的 /mcp 网关，不适合页面直接 fetch。
-const API_BASE = "https://link.asashiki.com";
-const API_TIMEOUT = 10_000;
-const LOOKBACK_DAYS = 4;
-const REFRESH_INTERVAL = 60_000;
-const TIMELINE_PAGE_SIZE_DESKTOP = 120;
-const TIMELINE_PAGE_SIZE_MOBILE = 18;
-const TIMELINE_PAGE_STEP_DESKTOP = 80;
-const TIMELINE_PAGE_STEP_MOBILE = 12;
-const QUIET_TIMELINE_APP_IDS = new Set(["windows.afk", "windows.idle"]);
-const statusStore = new WeakMap<HTMLElement, StatusStore>();
-
-function getStore(root: HTMLElement) {
-	let store = statusStore.get(root);
-	if (!store) {
-		store = {
-			activity: null,
-			devices: [],
-			healthSummary: null,
-			heartRecords: null,
-			lastLoadedAt: 0,
-			loadSeq: 0,
-			refreshTimer: null,
-			resizeHandler: null,
-			selectedDevice: "all",
-			sleepRecords: null,
-			stepsRecords: null,
-			timeline: null,
-			timelineDate: todayShanghai(),
-			timelineVisible: timelinePageSize(),
-		};
-		statusStore.set(root, store);
-	}
-	return store;
-}
-
-function isDesktopTimeline() {
-	return window.matchMedia("(min-width: 1025px)").matches;
-}
-
-function timelinePageSize() {
-	return isDesktopTimeline() ? TIMELINE_PAGE_SIZE_DESKTOP : TIMELINE_PAGE_SIZE_MOBILE;
-}
-
-function timelinePageStep() {
-	return isDesktopTimeline() ? TIMELINE_PAGE_STEP_DESKTOP : TIMELINE_PAGE_STEP_MOBILE;
-}
-
-function todayShanghai() {
-	return new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Shanghai" }).format(new Date());
-}
-
-function dateOffsetShanghai(baseDate: string, offsetDays: number) {
-	const date = new Date(`${baseDate}T00:00:00+08:00`);
-	date.setUTCDate(date.getUTCDate() + offsetDays);
-	return new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Shanghai" }).format(date);
-}
-
-function recentDates() {
-	const today = todayShanghai();
-	return Array.from({ length: LOOKBACK_DAYS }, (_, index) => dateOffsetShanghai(today, -index));
-}
-
-function relativeDateLabel(date: string) {
-	const dates = recentDates();
-	if (date === dates[0]) return "今天";
-	if (date === dates[1]) return "昨天";
-	if (date === dates[2]) return "前天";
-	if (date === dates[3]) return "大前天";
-	return new Intl.DateTimeFormat("zh-CN", {
-		day: "2-digit",
-		month: "2-digit",
-		timeZone: "Asia/Shanghai",
-	}).format(new Date(`${date}T00:00:00+08:00`));
-}
-
-function dateMetaLabel(date: string) {
-	return `${date.slice(5)} · 00:00-24:00`;
-}
-
-function formatClock(value?: string) {
-	if (!value) return "--:--";
-	return new Intl.DateTimeFormat("zh-CN", {
-		hour: "2-digit",
-		minute: "2-digit",
-		timeZone: "Asia/Shanghai",
-	}).format(new Date(value));
-}
-
-function formatDuration(seconds = 0) {
-	if (!seconds) return "进行中";
-	if (seconds < 60) return `${Math.max(1, Math.round(seconds))}秒`;
-	const minutes = Math.round(seconds / 60);
-	if (minutes < 60) return `${minutes}分钟`;
-	const hours = Math.floor(minutes / 60);
-	const rest = minutes % 60;
-	return rest ? `${hours}h${rest}m` : `${hours}h`;
-}
-
-function formatMinutes(minutes = 0) {
-	if (!minutes) return "暂无";
-	if (minutes < 60) return `${Math.round(minutes)}分钟`;
-	const hours = Math.floor(minutes / 60);
-	const rest = Math.round(minutes % 60);
-	return rest ? `${hours}h${rest}m` : `${hours}h`;
-}
-
-function dateKeyShanghai(value?: string) {
-	if (!value) return "";
-	const date = new Date(value);
-	if (!Number.isFinite(date.getTime())) return "";
-	return new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Shanghai" }).format(date);
-}
-
-function timeAgo(value?: string) {
-	if (!value) return "未知时间";
-	const diff = Date.now() - new Date(value).getTime();
-	if (!Number.isFinite(diff)) return "未知时间";
-	if (diff < 60_000) return "刚刚";
-	const minutes = Math.floor(diff / 60_000);
-	if (minutes < 60) return `${minutes}分钟前`;
-	const hours = Math.floor(minutes / 60);
-	if (hours < 24) return `${hours}小时前`;
-	return `${Math.floor(hours / 24)}天前`;
-}
-
-function setText(root: ParentNode, selector: string, value: string) {
-	const element = root.querySelector(selector);
-	if (element) element.textContent = value;
-}
-
-function clear(element: Element | null) {
-	if (element) element.replaceChildren();
-}
-
-type Chip = string | { label: string; tone?: string };
-
-function renderChips(root: ParentNode, selector: string, labels: Chip[]) {
-	const container = root.querySelector(selector);
-	if (!container) return;
-	container.replaceChildren(
-		...labels.map((entry) => {
-			const { label, tone } =
-				typeof entry === "string" ? { label: entry, tone: "" } : entry;
-			const chip = document.createElement("span");
-			if (tone) chip.dataset.tone = tone;
-			chip.textContent = label;
-			return chip;
-		}),
-	);
-}
-
-// 在线状态用一颗 CSS 圆点表达，避免在数据里塞 emoji
-function setOnlineTone(root: ParentNode, online: boolean) {
-	const dd = root.querySelector<HTMLElement>("[data-online-count]");
-	if (dd) dd.dataset.tone = online ? "online" : "offline";
-}
-
-// 「暂无 / --」这类占位值别用大数字字号，缩小成普通文字
-function markEmptyMetrics(root: ParentNode) {
-	for (const el of root.querySelectorAll<HTMLElement>(".wg-value strong")) {
-		const text = (el.textContent || "").trim();
-		el.classList.toggle("is-na", text === "暂无" || text === "--" || text === "");
-	}
-}
-
-function timestamp(value?: string) {
-	const time = value ? new Date(value).getTime() : 0;
-	return Number.isFinite(time) ? time : 0;
-}
-
-function nowShanghaiStamp() {
-	return new Intl.DateTimeFormat("zh-CN", {
-		hour: "2-digit",
-		minute: "2-digit",
-		month: "2-digit",
-		second: "2-digit",
-		timeZone: "Asia/Shanghai",
-		year: "numeric",
-		day: "2-digit",
-	}).format(new Date());
-}
-
-async function getJson<T>(path: string): Promise<ApiResult<T>> {
-	let timer = 0;
-	try {
-		const controller = new AbortController();
-		timer = window.setTimeout(() => controller.abort(), API_TIMEOUT);
-		const response = await fetch(`${API_BASE}${path}`, {
-			headers: { accept: "application/json" },
-			signal: controller.signal,
-		});
-		if (!response.ok) return { data: null, ok: false, status: response.status };
-		return { data: (await response.json()) as T, ok: true, status: response.status };
-	} catch (error) {
-		return { data: null, error: error instanceof Error ? error.message : String(error), ok: false };
-	} finally {
-		if (timer) window.clearTimeout(timer);
-	}
-}
-
-async function getRecentBundle<T>(
-	dates: string[],
-	pathForDate: (date: string) => string,
-	hasData: (data: T | null) => boolean,
-): Promise<RecentApiResult<T>> {
-	const results = await Promise.all(
-		dates.map(async (date) => ({
-			date,
-			result: await getJson<T>(pathForDate(date)),
-		})),
-	);
-	const active = results.find((item) => item.result.ok && hasData(item.result.data)) || results.find((item) => item.result.ok) || results[0];
-	return { activeDate: active?.date || dates[0], result: active?.result || { data: null, ok: false }, results };
-}
-
-function setPanelState(root: HTMLElement, name: string, state: "empty" | "error" | "loading" | "ready", message = "") {
-	const panel = root.querySelector<HTMLElement>(`[data-panel="${name}"]`);
-	if (!panel) return;
-	panel.classList.toggle("is-loading", state === "loading");
-	panel.classList.toggle("is-error", state === "error");
-	panel.classList.toggle("is-empty", state === "empty");
-	panel.classList.toggle("is-ready", state === "ready");
-	setText(panel, "[data-panel-message]", message);
-}
-
-function primaryDevice(devices: DeviceItem[], selectedDevice: string) {
-	if (selectedDevice !== "all") return devices.find((item) => item.deviceId === selectedDevice) || null;
-	const online = devices.filter((item) => item.isOnline).sort((a, b) => timestamp(b.lastSeenAt) - timestamp(a.lastSeenAt));
-	if (online.length) return online[0];
-	return [...devices].sort((a, b) => timestamp(b.lastSeenAt) - timestamp(a.lastSeenAt))[0] || null;
-}
-
-function deviceStatusMeta(device: DeviceItem) {
-	const app = appName(device.appId);
-	const lastSeen = timeAgo(device.lastSeenAt);
-	if (device.isOnline) return `${lastSeen} · ${app}`;
-	return `离线 ${lastSeen} · ${app}`;
-}
-
-function offlineDescription(device: DeviceItem | null) {
-	if (!device) return "Asashiki 暂时离线。";
-	const name = device.deviceName || device.deviceId || "设备";
-	const app = appName(device.appId);
-	return `${name} 已离线 ${timeAgo(device.lastSeenAt)}，上次停在 ${app}。`;
-}
-
-function renderDeviceTabs(root: HTMLElement) {
-	const store = getStore(root);
-	const tabs = root.querySelector("[data-device-tabs]");
-	clear(tabs);
-	const online = store.devices.filter((device) => device.isOnline).length;
-	const devicesByRecent = [...store.devices].sort((a, b) => timestamp(b.lastSeenAt) - timestamp(a.lastSeenAt));
-	const entries = [
-		{ id: "all", label: "总览", meta: `${online}/${store.devices.length} 在线` },
-		...devicesByRecent.map((device) => ({
-			id: device.deviceId || "unknown",
-			// 只显示设备名，去掉「我的」前缀，详情放到 title 悬浮里
-			label: (device.deviceName || device.deviceId || "未知设备").replace(/^我的/, ""),
-			meta: deviceStatusMeta(device),
-		})),
-	];
-	for (const entry of entries) {
-		const button = document.createElement("button");
-		button.type = "button";
-		button.className = entry.id === store.selectedDevice ? "is-active" : "";
-		button.title = entry.meta;
-		button.textContent = entry.label;
-		button.addEventListener("click", () => {
-			store.selectedDevice = entry.id;
-			store.timelineVisible = timelinePageSize();
-			renderNow(root);
-			renderTimeline(root);
-			syncTimelineHeight(root);
-		});
-		tabs?.append(button);
-	}
-}
-
-function healthMetric(store: StatusStore, type: string) {
-	return store.healthSummary?.metrics?.find((item) => item.type === type) || null;
-}
-
-function stepsLiveLabel(store: StatusStore) {
-	const steps = healthMetric(store, "steps");
-	if (steps && typeof steps.sum === "number" && steps.sum > 0) return Math.round(steps.sum).toLocaleString("en-US");
-	return "暂无";
-}
-
-function latestHeartLabel(store: StatusStore) {
-	const latest = (store.heartRecords?.ok ? store.heartRecords.data?.records || [] : [])
-		.filter((item) => item.type === "heart_rate" && typeof item.value === "number")
-		.sort((a, b) => timestamp(b.recordedAt) - timestamp(a.recordedAt))[0];
-	return latest ? String(Math.round(latest.value || 0)) : "暂无";
-}
-
-function renderNow(root: HTMLElement) {
-	const store = getStore(root);
-	const devices = store.devices;
-	renderDeviceTabs(root);
-
-	if (!devices.length) {
-		setText(root, "[data-now-sentence]", "设备时间线在线时，这里会显示当前设备正在做什么。");
-		setText(root, "[data-live-desc]", "还没有设备上报。");
-		renderChips(root, "[data-live-detail]", ["设备未上报", "时间线继续读取", "模块独立回退"]);
-		setText(root, "[data-selected-device-label]", "总览");
-		setText(root, "[data-online-count]", "0 / 0");
-		setOnlineTone(root, false);
-		setText(root, "[data-current-app]", "暂无");
-		setText(root, "[data-health-steps-live]", stepsLiveLabel(store));
-		setText(root, "[data-health-heart-live]", latestHeartLabel(store));
-		markEmptyMetrics(root);
-		return;
-	}
-
-	const online = devices.filter((item) => item.isOnline);
-	const selected = primaryDevice(devices, store.selectedDevice);
-	const activeDeviceLabel = store.selectedDevice === "all" ? "总览" : selected?.deviceName || selected?.deviceId || "设备";
-	const live = selected
-		? selected.isOnline
-			? liveDescription({ appId: selected.appId, windowTitle: selected.windowTitle })
-			: offlineDescription(selected)
-		: "Asashiki 暂时离线。";
-	const app = selected ? appName(selected.appId) : "暂无";
-	const chips: Chip[] = selected
-		? [
-				{
-					label: selected.isOnline ? "在线" : "离线",
-					tone: selected.isOnline ? "online" : "offline",
-				},
-				timeAgo(selected.lastSeenAt),
-				app,
-				typeof selected.extra?.battery_percent === "number"
-					? `${selected.extra.battery_charging ? "充电 " : ""}${selected.extra.battery_percent}%`
-					: "",
-				selected.extra?.network_type ? `${selected.extra.network_type}` : "",
-			].filter(
-				(label): label is Chip =>
-					typeof label === "string" ? Boolean(label) : true,
-			)
-		: [{ label: `${online.length} 台设备在线`, tone: "online" }];
-
-	setText(root, "[data-now-sentence]", live);
-	setText(root, "[data-live-desc]", live);
-	renderChips(root, "[data-live-detail]", chips);
-	setText(root, "[data-selected-device-label]", activeDeviceLabel);
-	setText(root, "[data-online-count]", `${online.length} / ${devices.length}`);
-	setOnlineTone(root, online.length > 0);
-	setText(root, "[data-current-app]", app);
-	setText(root, "[data-health-steps-live]", stepsLiveLabel(store));
-	setText(root, "[data-health-heart-live]", latestHeartLabel(store));
-	markEmptyMetrics(root);
-}
-
-function healthMetricsForDate(store: StatusStore, date: string) {
-	const stepsRecords = store.stepsRecords?.ok ? store.stepsRecords.data?.records || [] : [];
-	const sleepRecords = store.sleepRecords?.ok ? store.sleepRecords.data?.records || [] : [];
-	const dayStepsRecords = stepsRecords.filter((item) => dateKeyShanghai(item.recordedAt) === date);
-	const daySleepRecords = sleepRecords.filter((item) => dateKeyShanghai(item.recordedAt) === date);
-	const stepValues = dayStepsRecords
-		.filter((item) => item.type === "steps" && typeof item.value === "number")
-		.map((item) => item.value as number);
-	const steps = stepValues.length ? stepValues.reduce((sum, value) => sum + value, 0) : null;
-	const sleep = daySleepRecords
-		.filter((item) => item.type === "sleep" && typeof item.value === "number")
-		.sort((a, b) => timestamp(b.recordedAt) - timestamp(a.recordedAt))[0];
-	return { sleep, steps };
-}
-
-function activityForSelectedDate(store: StatusStore) {
-	return store.activity?.results.find((item) => item.date === store.timelineDate) || null;
-}
-
-function renderHealth(root: HTMLElement) {
-	const store = getStore(root);
-	const metrics = healthMetricsForDate(store, store.timelineDate);
-	const stepsUnavailable = !store.stepsRecords?.ok;
-	const sleepUnavailable = !store.sleepRecords?.ok;
-
-	if (stepsUnavailable && sleepUnavailable) {
-		setText(root, "[data-health-steps]", "暂无");
-		setText(root, "[data-health-sleep]", "暂无");
-		setText(root, "[data-body-heading]", "不可用");
-		markEmptyMetrics(root);
-		setPanelState(root, "body", "error", "健康记录暂时没有回应。");
-		return;
-	}
-	const hasRecord = Boolean(metrics.steps || metrics.sleep);
-	const dayLabel = relativeDateLabel(store.timelineDate);
-	setText(root, "[data-health-steps]", metrics.steps ? String(Math.round(metrics.steps)) : "暂无");
-	setText(root, "[data-health-sleep]", metrics.sleep ? formatMinutes(metrics.sleep.value || 0) : "暂无");
-	setText(root, "[data-body-heading]", hasRecord ? `${dayLabel}记录` : `${dayLabel}暂无`);
-	markEmptyMetrics(root);
-	setPanelState(root, "body", hasRecord ? "ready" : "empty", hasRecord ? "" : `${dayLabel}暂时没有健康记录。`);
-}
-
-function renderActivity(root: HTMLElement, bundle?: RecentApiResult<ActivityResponse>) {
-	const store = getStore(root);
-	if (bundle) store.activity = bundle;
-	const list = root.querySelector("[data-app-list]");
-	clear(list);
-	const active = activityForSelectedDate(store);
-	const result = active?.result;
-	const apps = (result?.data?.perApp || [])
-		.filter((item) => !QUIET_TIMELINE_APP_IDS.has(item.appId || ""))
-		.filter((item) => (item.totalSeconds || 0) > 0)
-		.sort((a, b) => (b.totalSeconds || 0) - (a.totalSeconds || 0));
-
-	if (!result?.ok) {
-		setText(root, "[data-activity-total]", "不可用");
-		setPanelState(root, "activity", "error", "应用统计暂时没有回应。");
-		return;
-	}
-
-	if (!apps.length) {
-		setText(root, "[data-activity-total]", "暂无");
-		setPanelState(root, "activity", "empty", "最近几天没有可展示的应用统计。");
-		return;
-	}
-
-	const total = apps.reduce((sum, item) => sum + (item.totalSeconds || 0), 0);
-	const max = Math.max(...apps.map((item) => item.totalSeconds || 0), 1);
-	setText(root, "[data-activity-total]", `${relativeDateLabel(store.timelineDate)} · ${formatDuration(total)}`);
-
-	for (const item of apps) {
-		const row = document.createElement("div");
-		row.className = "status-app-row";
-		row.title = item.appId || "";
-		const top = document.createElement("div");
-		top.className = "status-app-top";
-		const name = document.createElement("strong");
-		name.className = "status-app-name";
-		name.textContent = appName(item.appId);
-		const time = document.createElement("span");
-		time.className = "status-app-time";
-		time.textContent = formatDuration(item.totalSeconds || 0);
-		top.append(name, time);
-		const detail = document.createElement("span");
-		detail.className = "status-app-detail";
-		detail.textContent = `${item.count || 0} 次记录`;
-		const track = document.createElement("div");
-		track.className = "status-app-track";
-		const fill = document.createElement("span");
-		fill.style.setProperty("--ratio", `${Math.max(5, ((item.totalSeconds || 0) / max) * 100)}%`);
-		track.append(fill);
-		row.append(top, detail, track);
-		list?.append(row);
-	}
-	setPanelState(root, "activity", "ready");
-}
-
-function timelineRowsForDate(store: StatusStore, date: string) {
-	const dated = store.timeline?.results.find((item) => item.date === store.timelineDate);
-	const target = store.timeline?.results.find((item) => item.date === date) || dated;
-	const activities = target?.result.data?.activities || [];
-	const scoped = store.selectedDevice === "all" ? activities : activities.filter((item) => item.deviceId === store.selectedDevice);
-	const readable = scoped.filter((item) => !QUIET_TIMELINE_APP_IDS.has(item.appId || "") && item.durationSeconds !== 0);
-	return readable.sort((a, b) => new Date(b.startedAt || 0).getTime() - new Date(a.startedAt || 0).getTime());
-}
-
-function timelineRowsForStore(store: StatusStore) {
-	return timelineRowsForDate(store, store.timelineDate);
-}
-
-function appendTimeline(root: HTMLElement, preserveScroll = true) {
-	const store = getStore(root);
-	const rows = timelineRowsForStore(store);
-	if (store.timelineVisible >= rows.length) return;
-	const scroll = root.querySelector<HTMLElement>("[data-timeline-scroll]");
-	const scrollTop = scroll?.scrollTop ?? 0;
-	store.timelineVisible = Math.min(rows.length, store.timelineVisible + timelinePageStep());
-	renderTimeline(root);
-	if (preserveScroll) {
-		window.requestAnimationFrame(() => {
-			const nextScroll = root.querySelector<HTMLElement>("[data-timeline-scroll]");
-			if (nextScroll) nextScroll.scrollTop = scrollTop;
-		});
-	}
-}
-
-function ensureTimelineScrollable(root: HTMLElement) {
-	window.requestAnimationFrame(() => {
-		const store = getStore(root);
-		const rows = timelineRowsForStore(store);
-		const scroll = root.querySelector<HTMLElement>("[data-timeline-scroll]");
-		if (!scroll || store.timelineVisible >= rows.length) return;
-		if (scroll.scrollHeight <= scroll.clientHeight * 1.4) {
-			store.timelineVisible = Math.min(rows.length, store.timelineVisible + timelinePageStep());
-			renderTimeline(root);
-		}
-	});
-}
-
-function syncTimelineHeight(root: HTMLElement) {
-	window.requestAnimationFrame(() => {
-		const panel = root.querySelector<HTMLElement>('[data-panel="timeline"]');
-		const side = root.querySelector<HTMLElement>(".status-side");
-		if (!panel || !side) return;
-
-		if (!isDesktopTimeline()) {
-			panel.style.removeProperty("--status-timeline-height");
-			return;
-		}
-
-		const sideHeight = Math.ceil(side.getBoundingClientRect().height);
-		if (sideHeight > 0) {
-			panel.style.setProperty("--status-timeline-height", `${sideHeight}px`);
-			ensureTimelineScrollable(root);
-		}
-	});
-}
-
-function setSelectedDate(root: HTMLElement, date: string) {
-	const store = getStore(root);
-	store.timelineDate = date;
-	store.timelineVisible = timelinePageSize();
-	const timelineScroll = root.querySelector<HTMLElement>("[data-timeline-scroll]");
-	const appScroll = root.querySelector<HTMLElement>("[data-app-scroll]");
-	if (timelineScroll) timelineScroll.scrollTop = 0;
-	if (appScroll) appScroll.scrollTop = 0;
-	renderTimeline(root);
-	renderActivity(root);
-	renderHealth(root);
-	syncTimelineHeight(root);
-}
-
-function renderDateTabs(root: HTMLElement) {
-	const store = getStore(root);
-	const dayTabs = root.querySelector("[data-status-days]");
-	clear(dayTabs);
-	const entries = store.timeline?.results.length ? store.timeline.results : recentDates().map((date) => ({ date, result: { data: null, ok: false } }));
-	setText(root, "[data-selected-date-label]", relativeDateLabel(store.timelineDate));
-	setText(root, "[data-selected-date-meta]", dateMetaLabel(store.timelineDate));
-
-	for (const entry of entries) {
-		const selectedTotal = timelineRowsForDate(store, entry.date).length;
-		const button = document.createElement("button");
-		button.type = "button";
-		button.className = entry.date === store.timelineDate ? "is-active" : "";
-		button.textContent = `${relativeDateLabel(entry.date)} · ${selectedTotal}`;
-		button.title = `${entry.date} · Asia/Shanghai`;
-		button.addEventListener("click", () => setSelectedDate(root, entry.date));
-		dayTabs?.append(button);
-	}
-}
-
-function renderTimeline(root: HTMLElement) {
-	const store = getStore(root);
-	const list = root.querySelector("[data-timeline-list]");
-	clear(list);
-
-	if (!store.timeline) {
-		renderDateTabs(root);
-		setPanelState(root, "timeline", "loading", "正在读取时间线。");
-		return;
-	}
-
-	renderDateTabs(root);
-
-	const rows = timelineRowsForStore(store);
-	store.timelineVisible = Math.max(store.timelineVisible, Math.min(rows.length, timelinePageSize()));
-	const limit = Math.min(store.timelineVisible, rows.length);
-	setText(root, "[data-timeline-count]", `${relativeDateLabel(store.timelineDate)} · ${rows.length} 条`);
-
-	if (!rows.length) {
-		setPanelState(root, "timeline", "empty", "当前日期和设备筛选下没有记录。");
-		const note = document.createElement("li");
-		note.className = "status-empty-note";
-		note.textContent = "可以切换上方日期或左侧设备；如果当天没有上报记录，这里会保持安静而不是堆占位符。";
-		list?.append(note);
-		return;
-	}
-
-	for (const activity of rows.slice(0, limit)) {
-		const item = document.createElement("li");
-		item.className = "status-timeline-item";
-		const time = document.createElement("time");
-		time.className = "status-timeline-time";
-		time.textContent = formatClock(activity.startedAt);
-		const main = document.createElement("div");
-		main.className = "status-timeline-main";
-		const title = document.createElement("strong");
-		title.textContent = liveDescription({ appId: activity.appId, who: "", windowTitle: activity.windowTitle }).trim();
-		const detail = document.createElement("span");
-		const device = store.devices.find((candidate) => candidate.deviceId === activity.deviceId);
-		detail.textContent = `${device?.deviceName || activity.deviceId || "device"} · ${formatDuration(activity.durationSeconds || 0)}`;
-		main.append(title, detail);
-		const app = document.createElement("span");
-		app.className = "status-timeline-app";
-		app.textContent = truncate(appName(activity.appId), 12);
-		item.append(time, main, app);
-		list?.append(item);
-	}
-
-	setPanelState(root, "timeline", "ready");
-	ensureTimelineScrollable(root);
-}
-
-function renderService(root: HTMLElement, health: ApiResult<HealthResponse>) {
-	const store = getStore(root);
-	const online = health.ok && health.data?.status === "ok";
-	const onlineDevices = store.devices.filter((item) => item.isOnline).length;
-	setText(root, "[data-core-state]", online ? "online" : "不可用");
-	setText(root, "[data-schema-state]", online && health.data?.schemaVersion ? `schema v${health.data.schemaVersion}` : online ? health.data?.service || "online" : "--");
-	setText(root, "[data-connectors-state]", `${onlineDevices}/${store.devices.length} 在线`);
-	setText(root, "[data-service-heading]", online ? "online" : "异常");
-	setPanelState(root, "service", online ? "ready" : "error", online ? "" : "设备时间线服务健康检查没有返回 ok。");
-}
-
-async function loadStatus(root: HTMLElement) {
-	const store = getStore(root);
-	const seq = store.loadSeq + 1;
-	store.loadSeq = seq;
-	const refresh = root.querySelector<HTMLButtonElement>("[data-status-refresh]");
-	refresh?.classList.add("is-loading");
-	refresh?.setAttribute("aria-busy", "true");
-	root.classList.add("is-booting");
-	for (const name of ["timeline", "activity", "body", "service"]) {
-		setPanelState(root, name, "loading", "");
-	}
-
-	// 仍然有效（没被更新的加载覆盖、节点还在文档里）才落数据
-	const fresh = () => seq === store.loadSeq && document.body.contains(root);
-
-	// 所有请求一次性并行发出；谁先回来就先渲染谁的板块，
-	// 不再让整页卡在最慢的那一个请求上（这正是「读取中」久不消失的根因）。
-	const dates = recentDates();
-	const pHealth = getJson<HealthResponse>("/health");
-	const pDevices = getJson<DevicesResponse>("/api/devices/current");
-	const pSummary = getJson<HealthSummaryResponse>("/api/devices/health/summary");
-	const pSteps = getJson<HealthRecordsResponse>("/api/devices/health/records?type=steps&limit=200");
-	const pHeart = getJson<HealthRecordsResponse>("/api/devices/health/records?type=heart_rate&limit=60");
-	const pSleep = getJson<HealthRecordsResponse>("/api/devices/health/records?type=sleep&limit=30");
-	const pTimeline = getRecentBundle<TimelineResponse>(dates, (date) => `/api/devices/timeline-query?date=${date}&limit=120`, (data) => Boolean(data?.activities?.length));
-	const pActivity = getRecentBundle<ActivityResponse>(dates, (date) => `/api/devices/activity-summary?date=${date}`, (data) => Boolean(data?.perApp?.some((item) => (item.totalSeconds || 0) > 0)));
-
-	const stamp = () =>
-		setText(
-			root,
-			"[data-updated-at]",
-			new Intl.DateTimeFormat("zh-CN", { hour: "2-digit", minute: "2-digit", second: "2-digit", timeZone: "Asia/Shanghai" }).format(new Date()),
-		);
-
-	// 顶部「实时」组：设备 + 健康摘要 + 步数/心率 —— 到齐就先把 hero 点亮
-	const live = Promise.all([pDevices, pSummary, pSteps, pHeart]).then(([devices, summary, steps, heart]) => {
-		if (!fresh()) return;
-		store.devices = devices.ok ? devices.data?.devices || [] : [];
-		if (store.selectedDevice !== "all" && !store.devices.some((item) => item.deviceId === store.selectedDevice)) {
-			store.selectedDevice = "all";
-			store.timelineVisible = timelinePageSize();
-		}
-		store.healthSummary = summary.ok ? summary.data : null;
-		store.stepsRecords = steps;
-		store.heartRecords = heart;
-		store.lastLoadedAt = Date.now();
-		root.classList.remove("is-booting");
-		renderNow(root);
-		stamp();
-	});
-
-	// 身体抽屉：摘要 + 步数 + 睡眠
-	const body = Promise.all([pSummary, pSteps, pSleep]).then(([summary, steps, sleep]) => {
-		if (!fresh()) return;
-		store.healthSummary = summary.ok ? summary.data : store.healthSummary;
-		store.stepsRecords = steps;
-		store.sleepRecords = sleep;
-		renderHealth(root);
-	});
-
-	// 时间线（多日 bundle，可能较慢，独立渲染，绝不拖累 hero）
-	const timeline = pTimeline.then((bundle) => {
-		if (!fresh()) return;
-		const prev = store.timelineDate;
-		store.timeline = bundle;
-		store.timelineDate = bundle.results.some((item) => item.date === prev) ? prev : bundle.activeDate;
-		if (store.timelineDate !== prev) store.timelineVisible = timelinePageSize();
-		renderTimeline(root);
-		syncTimelineHeight(root);
-	});
-
-	// 应用统计
-	const activity = pActivity.then((bundle) => {
-		if (fresh()) renderActivity(root, bundle);
-	});
-
-	// 数据服务 + 顶部 API 指示灯
-	const service = pHealth.then((health) => {
-		if (!fresh()) return;
-		const apiOnline = health.ok && health.data?.status === "ok";
-		setText(root, "[data-api-state]", apiOnline ? "设备时间线 在线" : "设备时间线 未响应");
-		root.querySelector("[data-api-pulse]")?.classList.toggle("is-error", !apiOnline);
-		renderService(root, health);
-	});
-
-	// 全部尘埃落定后收尾（停转刷新按钮）。各板块出错由各自 render 兜底，互不牵连。
-	try {
-		await Promise.allSettled([live, body, timeline, activity, service]);
-	} finally {
-		if (seq === store.loadSeq) {
-			root.classList.remove("is-booting");
-			refresh?.classList.remove("is-loading");
-			refresh?.removeAttribute("aria-busy");
-		}
-	}
-}
-
-function initStatusPage() {
-	document.querySelectorAll<HTMLElement>("[data-status-page]").forEach((root) => {
-		const store = getStore(root);
-		if (root.dataset.statusBound) {
-			syncTimelineHeight(root);
-			if (!store.lastLoadedAt || Date.now() - store.lastLoadedAt > 15_000) {
-				loadStatus(root);
-			}
-			return;
-		}
-		root.dataset.statusBound = "true";
-		root.querySelector("[data-status-refresh]")?.addEventListener("click", () => loadStatus(root));
-		root.querySelector("[data-timeline-scroll]")?.addEventListener("scroll", (event) => {
-			const scroll = event.currentTarget as HTMLElement;
-			if (scroll.scrollTop + scroll.clientHeight >= scroll.scrollHeight - 96) appendTimeline(root);
-		});
-		const resizeHandler = () => syncTimelineHeight(root);
-		store.resizeHandler = resizeHandler;
-		window.addEventListener("resize", resizeHandler);
-		loadStatus(root);
-		store.refreshTimer = window.setInterval(() => {
-			if (!document.body.contains(root)) {
-				const latest = getStore(root);
-				delete root.dataset.statusBound;
-				window.removeEventListener("resize", resizeHandler);
-				if (latest.refreshTimer) window.clearInterval(latest.refreshTimer);
-				latest.refreshTimer = null;
-				return;
-			}
-			loadStatus(root);
-		}, REFRESH_INTERVAL);
-	});
-}
-
-// 数据一直不出来 / 要刷新才出来的真正原因：本站用的是 @swup/astro（swup），
-// 并不会触发 Astro ClientRouter 的 astro:page-load 事件，所以之前挂在它上面的
-// initStatusPage 根本没跑。改用本代码库统一的 swup 惯例（见 Layout / GlobalAudioPlayer /
-// AiVisualInteractions）：首屏立即调用一次，之后交给 swup 的 page:view / content:replace 钩子。
-// initStatusPage 用 dataset.statusBound 幂等，重复触发安全。
-initStatusPage();
-
-const setupStatusRouting = () => {
-	window.swup?.hooks?.on("page:view", initStatusPage);
-	window.swup?.hooks?.on("content:replace", initStatusPage);
-};
-
-if (window.swup?.hooks) {
-	setupStatusRouting();
-} else {
-	document.addEventListener("swup:enable", setupStatusRouting);
-}
-</script>

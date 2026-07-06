@@ -1,0 +1,230 @@
+---
+import PageHeader from "@components/PageHeader.astro";
+import MainGridLayout from "@layouts/MainGridLayout.astro";
+import { Icon } from "astro-icon/components";
+
+// 友链：数据在这里维护，一行一个朋友。avatar 可留空（用首字符占位）。
+type Friend = {
+	name: string;
+	url: string;
+	desc: string;
+	avatar?: string; // 头像图片 URL，可选
+	placeholder?: boolean; // 占位示例，换成真友链后删掉这个字段
+};
+
+const friends: Friend[] = [
+	{ name: "某个博客", url: "https://example.com", desc: "认识的第一个邻居，写技术也写生活", placeholder: true },
+	{ name: "谁的小站", url: "https://example.com", desc: "画画的，主页很好看", placeholder: true },
+	{ name: "路过的人", url: "https://example.com", desc: "在评论区认识的，聊得来", placeholder: true },
+];
+
+// 交换友链用的本站信息
+const site = {
+	name: "Asashiki",
+	url: "https://asashiki.com",
+	desc: "浅仪式的博客",
+	avatar: "https://asashiki.com/favicon/圆角-莉赛特.jpg",
+};
+---
+
+<MainGridLayout title="友链" description="Asashiki 的朋友们">
+    <div class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative mb-4">
+        <div class="card-base z-10 px-6 md:px-9 py-7 relative w-full">
+            <PageHeader
+                kicker="Friends"
+                title="友链"
+                lead="网络上的邻居们。"
+            />
+
+            {friends.length > 0 ? (
+                <ul class="friends-list onload-animation" style="animation-delay: calc(var(--content-delay) + 60ms);">
+                    {friends.map((f) => (
+                        <li>
+                            <a href={f.url} target="_blank" rel="noopener" class="friend-row">
+                                <span class="friend-avatar">
+                                    {f.avatar ? (
+                                        <img src={f.avatar} alt={f.name} loading="lazy" />
+                                    ) : (
+                                        <span class="friend-avatar-fallback">{f.name.slice(0, 1)}</span>
+                                    )}
+                                </span>
+                                <span class="friend-main">
+                                    <span class="friend-name">
+                                        {f.name}
+                                        {f.placeholder && <span class="friend-ph">示例</span>}
+                                    </span>
+                                    <span class="friend-desc">{f.desc}</span>
+                                </span>
+                                <Icon name="fa6-solid:arrow-right" class="friend-arrow" />
+                            </a>
+                        </li>
+                    ))}
+                </ul>
+            ) : (
+                <div class="friends-empty onload-animation" style="animation-delay: calc(var(--content-delay) + 60ms);">
+                    <span class="friends-empty-face">( ´･ω･`)</span>
+                    <p>这里还空着 —— 想交换友链的话，随便找个地方联系我就好。</p>
+                </div>
+            )}
+
+            <footer class="friends-exchange onload-animation" style="animation-delay: calc(var(--content-delay) + 100ms);">
+                <span class="friends-exchange-kicker">Exchange</span>
+                <div class="friends-exchange-body">
+                    <span>本站信息：</span>
+                    <code>{site.name}</code>
+                    <span class="friends-exchange-sep">·</span>
+                    <code>{site.url}</code>
+                    <span class="friends-exchange-sep">·</span>
+                    <span>{site.desc}</span>
+                </div>
+            </footer>
+        </div>
+    </div>
+</MainGridLayout>
+
+<style>
+    .friends-list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+    .friends-list li + li .friend-row {
+        border-top: 1px dashed color-mix(in oklch, var(--line-divider) 90%, transparent);
+    }
+    .friend-row {
+        display: flex;
+        align-items: center;
+        gap: 0.9rem;
+        padding: 0.8rem 0.4rem;
+        border-radius: 0.5rem;
+        text-decoration: none;
+        transition: background-color 200ms ease;
+    }
+    .friend-avatar {
+        flex: 0 0 auto;
+        width: 2.6rem;
+        height: 2.6rem;
+        border-radius: 999px;
+        overflow: hidden;
+        border: 1px solid color-mix(in oklch, var(--line-divider) 70%, transparent);
+        background: color-mix(in oklch, var(--primary) 8%, var(--card-bg));
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .friend-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .friend-avatar-fallback {
+        font-weight: 700;
+        color: var(--primary);
+    }
+    .friend-main {
+        min-width: 0;
+        flex: 1 1 auto;
+        display: grid;
+        gap: 0.15rem;
+    }
+    .friend-name {
+        font-weight: 650;
+        font-size: 0.98rem;
+        color: var(--deep-text);
+        transition: color 200ms ease;
+    }
+    :global(:root.dark) .friend-name {
+        color: rgba(255, 255, 255, 0.85);
+    }
+    .friend-ph {
+        display: inline-block;
+        margin-left: 0.35rem;
+        padding: 0 0.35rem;
+        border-radius: 999px;
+        border: 1px dashed color-mix(in oklch, var(--primary) 40%, transparent);
+        color: color-mix(in oklch, var(--primary) 70%, transparent);
+        font-size: 0.62rem;
+        font-weight: 600;
+        vertical-align: 0.1em;
+    }
+    .friend-desc {
+        font-size: 0.82rem;
+        line-height: 1.6;
+        color: var(--content-meta-text, rgb(120 120 130));
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .friend-arrow {
+        flex: 0 0 auto;
+        font-size: 0.7rem;
+        color: var(--primary);
+        opacity: 0;
+        transform: translateX(-0.25rem);
+        transition: opacity 200ms ease, transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    @media (hover: hover) and (pointer: fine) {
+        .friend-row:hover {
+            background: color-mix(in oklch, var(--primary) 5%, transparent);
+        }
+        .friend-row:hover .friend-name {
+            color: var(--primary);
+        }
+        .friend-row:hover .friend-arrow {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    .friends-empty {
+        display: grid;
+        gap: 0.5rem;
+        justify-items: center;
+        padding: 2.4rem 1rem;
+        color: var(--content-meta-text, rgb(120 120 130));
+        font-size: 0.9rem;
+    }
+    .friends-empty-face {
+        font-size: 1.3rem;
+        color: color-mix(in oklch, var(--primary) 65%, var(--content-meta-text, gray));
+    }
+    .friends-empty p {
+        margin: 0;
+    }
+
+    .friends-exchange {
+        margin-top: 1.6rem;
+        padding-top: 1rem;
+        border-top: 1px solid color-mix(in oklch, var(--line-divider) 80%, transparent);
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 0.6rem;
+        font-size: 0.8rem;
+        color: var(--content-meta-text, rgb(120 120 130));
+    }
+    .friends-exchange-kicker {
+        color: var(--primary);
+        font-size: 0.66rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+    }
+    .friends-exchange-body {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 0.4rem;
+        min-width: 0;
+    }
+    .friends-exchange-body code {
+        padding: 0.05rem 0.4rem;
+        border-radius: 0.35rem;
+        background: var(--inline-code-bg);
+        color: var(--inline-code-color);
+        font-size: 0.76rem;
+    }
+    .friends-exchange-sep {
+        opacity: 0.5;
+    }
+</style>

@@ -1,25 +1,487 @@
 ---
-
-import { getEntry, render } from "astro:content";
-import Markdown from "@components/misc/Markdown.astro";
-import I18nKey from "../i18n/i18nKey";
-import { i18n } from "../i18n/translation";
+import PageHeader from "@components/PageHeader.astro";
+import GithubHeatmap from "@components/widget/GithubHeatmap.astro";
 import MainGridLayout from "../layouts/MainGridLayout.astro";
+import { Icon } from "astro-icon/components";
 
-const aboutPost = await getEntry("spec", "about");
+// ── 关于页数据：都在这里改，页面结构不用动 ──────────────────
+// 占位内容用 placeholder: true 标记，会显示淡淡的「待补」角标，替换后删掉即可。
 
-if (!aboutPost) {
-	throw new Error("About page content not found");
-}
+const now = {
+	year: "2026",
+	items: [
+		{ text: "生存战略中~" },
+		{ text: "在打磨 MCP Switch 的开源版本" },
+		{ text: "补番 / 打 galgame / 写博客", placeholder: true },
+	],
+};
 
-const { Content } = await render(aboutPost);
+const projects = [
+	{
+		name: "MCP Switch",
+		url: "https://switch.asashiki.com",
+		desc: "自托管的 MCP 聚合网关，把多个 MCP 服务收束到一个统一入口",
+	},
+	{
+		name: "Hibi 日々",
+		url: "https://link.asashiki.com",
+		desc: "设备时间线收集器，实时状态页的数据来源",
+	},
+	{
+		name: "全站时间胶囊",
+		url: "https://timeline.asashiki.com",
+		desc: "机器人自动归档的 ACG 时间线",
+	},
+	{
+		name: "更多…",
+		url: "https://show.asashiki.com",
+		desc: "其余项目都在展示站里",
+	},
+];
+
+const tools: Array<{ name: string; placeholder?: boolean }> = [
+	{ name: "Claude Code" },
+	{ name: "Codex" },
+	{ name: "MCP" },
+	{ name: "Astro" },
+	{ name: "VS Code", placeholder: true },
+	{ name: "Windows 11", placeholder: true },
+];
+
+const devices: Array<{
+	name: string;
+	desc: string;
+	icon: string;
+	placeholder?: boolean;
+}> = [
+	{ name: "台式机", desc: "主力机，大部分活都在这台上干", icon: "material-symbols:desktop-windows-outline-rounded", placeholder: true },
+	{ name: "手机", desc: "时间线数据的主要上报源", icon: "material-symbols:smartphone-outline", placeholder: true },
+	{ name: "手环", desc: "心率 / 步数 / 睡眠数据来自它", icon: "material-symbols:aod-watch-outline-rounded", placeholder: true },
+];
+
+const contacts = [
+	{ name: "X / Twitter", handle: "@asashiki_", url: "https://twitter.com/asashiki_", icon: "fa6-brands:x-twitter" },
+	{ name: "Telegram", handle: "时间线频道", url: "https://t.me/asashiki_timeline", icon: "fa6-brands:telegram" },
+	{ name: "Bangumi", handle: "asashiki", url: "https://bangumi.tv/user/asashiki", icon: "material-symbols:list-alt-rounded" },
+	{ name: "GitHub", handle: "asashiki", url: "https://github.com/asashiki", icon: "fa6-brands:github" },
+	{ name: "Email", handle: "714@asashiki.com", url: "mailto:714@asashiki.com", icon: "material-symbols:mail-outline-rounded" },
+];
+
+const credits = [
+	{ label: "主题", name: "Fuwari", url: "https://github.com/saicaca/fuwari" },
+	{ label: "头像", name: "莉赛特 by Stella", url: "https://www.pixiv.net/artworks/97956613" },
+	{ label: "横幅", name: "ガード下のメニューー歩く人", url: "https://www.pixiv.net/artworks/121764304" },
+];
 ---
-<MainGridLayout title={i18n(I18nKey.about)} description={i18n(I18nKey.about)}>
-    <div class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative min-h-32">
-        <div class="card-base z-10 px-9 py-6 relative w-full ">
-            <Markdown class="mt-2">
-                <Content />
-            </Markdown>
+
+<MainGridLayout title="关于" description="关于浅仪式 Asashiki">
+    <div class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative mb-4">
+        <div class="card-base z-10 px-6 md:px-9 py-7 relative w-full">
+            <PageHeader kicker="About" title="关于我" />
+
+            <!-- 我是谁 -->
+            <section class="ab-section onload-animation" style="animation-delay: calc(var(--content-delay) + 40ms);">
+                <div class="ab-prose">
+                    <p>
+                        <strong>Asashiki / 浅仪式</strong>，这个名字可能取自「空之境界」里的两仪式（りょうぎしき），或者「近月少女」里的小仓朝日（あさひ），或者我特别喜欢的同人声优浅木式（あさぎしき）。头像是兰斯的女儿莉赛特。
+                    </p>
+                    <p>
+                        04 年，学生，喜欢 anime、game（特别是エロゲー）还有美少女。最近在看什么玩什么，<a href="/capsule/">时间胶囊</a>和 <a href="https://bangumi.tv/user/asashiki" target="_blank" rel="noopener">Bangumi</a> 都记着，或者搜 Twitter 的 <a href="https://x.com/hashtag/%E6%9C%80%E8%BF%91%E7%9C%8B%E7%9A%84%E5%8A%A8%E7%94%BB?src=hashtag_click" target="_blank" rel="noopener">#最近看的动画</a>。
+                    </p>
+                    <p>
+                        一个人生活了 4 年，线下几乎没有朋友——欢迎线上来和我交朋友（日本の友達もオッケーです）。
+                    </p>
+                </div>
+            </section>
+
+            <!-- 现状 -->
+            <section class="ab-section onload-animation" style="animation-delay: calc(var(--content-delay) + 80ms);">
+                <div class="ab-section-head">
+                    <span class="ab-kicker">Now · {now.year}</span>
+                    <h2>现状</h2>
+                </div>
+                <ul class="ab-now">
+                    {now.items.map((item) => (
+                        <li>
+                            {item.text}
+                            {item.placeholder && <span class="ab-ph">待补</span>}
+                        </li>
+                    ))}
+                </ul>
+            </section>
+
+            <!-- 项目 -->
+            <section class="ab-section onload-animation" style="animation-delay: calc(var(--content-delay) + 120ms);">
+                <div class="ab-section-head">
+                    <span class="ab-kicker">Projects</span>
+                    <h2>在做的东西</h2>
+                </div>
+                <ul class="ab-rows">
+                    {projects.map((p) => (
+                        <li>
+                            <a href={p.url} target="_blank" rel="noopener" class="ab-row">
+                                <span class="ab-row-name">{p.name}</span>
+                                <span class="ab-row-desc">{p.desc}</span>
+                                <Icon name="fa6-solid:arrow-right" class="ab-row-arrow" />
+                            </a>
+                        </li>
+                    ))}
+                </ul>
+            </section>
+
+            <!-- 工具 & 设备：并排双栏 -->
+            <div class="ab-cols onload-animation" style="animation-delay: calc(var(--content-delay) + 160ms);">
+                <section class="ab-section">
+                    <div class="ab-section-head">
+                        <span class="ab-kicker">Toolbox</span>
+                        <h2>常用工具</h2>
+                    </div>
+                    <div class="ab-chips">
+                        {tools.map((t) => (
+                            <span class="ab-chip">
+                                {t.name}
+                                {t.placeholder && <span class="ab-ph">待补</span>}
+                            </span>
+                        ))}
+                    </div>
+                </section>
+                <section class="ab-section">
+                    <div class="ab-section-head">
+                        <span class="ab-kicker">Devices</span>
+                        <h2>设备</h2>
+                    </div>
+                    <ul class="ab-devices">
+                        {devices.map((d) => (
+                            <li>
+                                <Icon name={d.icon} class="ab-device-icon" />
+                                <span class="ab-device-name">{d.name}</span>
+                                <span class="ab-device-desc">{d.desc}</span>
+                                {d.placeholder && <span class="ab-ph">待补</span>}
+                            </li>
+                        ))}
+                    </ul>
+                </section>
+            </div>
+
+            <!-- 找到我 -->
+            <section class="ab-section onload-animation" style="animation-delay: calc(var(--content-delay) + 200ms);">
+                <div class="ab-section-head">
+                    <span class="ab-kicker">Contact</span>
+                    <h2>找到我</h2>
+                </div>
+                <div class="ab-contacts">
+                    {contacts.map((c) => (
+                        <a href={c.url} target="_blank" rel="noopener" class="ab-contact">
+                            <Icon name={c.icon} class="ab-contact-icon" />
+                            <span class="ab-contact-name">{c.name}</span>
+                            <span class="ab-contact-handle">{c.handle}</span>
+                        </a>
+                    ))}
+                </div>
+            </section>
+
+            <!-- GitHub 热力图 -->
+            <GithubHeatmap />
+
+            <!-- 致谢：一行小字收尾 -->
+            <footer class="ab-credits onload-animation" style="animation-delay: calc(var(--content-delay) + 240ms);">
+                {credits.map((c, i) => (
+                    <>
+                        {i > 0 && <span class="ab-credits-sep">·</span>}
+                        <span>{c.label} <a href={c.url} target="_blank" rel="noopener">{c.name}</a></span>
+                    </>
+                ))}
+                <span class="ab-credits-sep">·</span>
+                <span>CC BY-NC-SA 4.0</span>
+            </footer>
         </div>
     </div>
 </MainGridLayout>
+
+<style>
+    .ab-section {
+        margin-top: 1.8rem;
+    }
+    .ab-section:first-of-type {
+        margin-top: 0;
+    }
+    .ab-section-head {
+        display: flex;
+        align-items: baseline;
+        gap: 0.6rem;
+        margin-bottom: 0.7rem;
+    }
+    .ab-kicker {
+        color: var(--primary);
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+    }
+    .ab-section-head h2 {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 700;
+        line-height: 1.2;
+        color: var(--deep-text);
+    }
+    :global(:root.dark) .ab-section-head h2 {
+        color: rgba(255, 255, 255, 0.85);
+    }
+
+    /* 占位角标：淡淡的，提醒自己回来填 */
+    .ab-ph {
+        display: inline-block;
+        margin-left: 0.35rem;
+        padding: 0 0.35rem;
+        border-radius: 999px;
+        border: 1px dashed color-mix(in oklch, var(--primary) 40%, transparent);
+        color: color-mix(in oklch, var(--primary) 70%, transparent);
+        font-size: 0.62rem;
+        font-weight: 600;
+        vertical-align: 0.1em;
+    }
+
+    /* 我是谁 */
+    .ab-prose {
+        display: grid;
+        gap: 0.7rem;
+        max-width: 44rem;
+        font-size: 0.94rem;
+        line-height: 1.85;
+        color: var(--deep-text);
+    }
+    :global(:root.dark) .ab-prose {
+        color: rgba(255, 255, 255, 0.8);
+    }
+    .ab-prose p {
+        margin: 0;
+    }
+    .ab-prose a {
+        color: var(--primary);
+        font-weight: 600;
+        text-decoration: none;
+    }
+    .ab-prose a:hover {
+        text-decoration: underline;
+        text-underline-offset: 0.2em;
+    }
+
+    /* 现状 */
+    .ab-now {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        display: grid;
+        gap: 0.35rem;
+        font-size: 0.9rem;
+        color: var(--content-meta-text, rgb(120 120 130));
+    }
+    .ab-now li {
+        display: flex;
+        align-items: baseline;
+        gap: 0.5rem;
+    }
+    .ab-now li::before {
+        content: "";
+        flex: 0 0 auto;
+        width: 0.32rem;
+        height: 0.32rem;
+        border-radius: 999px;
+        background: color-mix(in oklch, var(--primary) 60%, transparent);
+        transform: translateY(-0.12rem);
+    }
+
+    /* 项目行 */
+    .ab-rows {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+    .ab-rows li + li .ab-row {
+        border-top: 1px dashed color-mix(in oklch, var(--line-divider) 90%, transparent);
+    }
+    .ab-row {
+        display: flex;
+        align-items: baseline;
+        gap: 0.8rem;
+        padding: 0.6rem 0.4rem;
+        border-radius: 0.5rem;
+        text-decoration: none;
+        transition: background-color 200ms ease;
+    }
+    .ab-row-name {
+        flex: 0 0 auto;
+        font-weight: 650;
+        font-size: 0.92rem;
+        color: var(--deep-text);
+        transition: color 200ms ease;
+    }
+    :global(:root.dark) .ab-row-name {
+        color: rgba(255, 255, 255, 0.85);
+    }
+    .ab-row-desc {
+        min-width: 0;
+        flex: 1 1 auto;
+        font-size: 0.8rem;
+        color: var(--content-meta-text, rgb(120 120 130));
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .ab-row-arrow {
+        flex: 0 0 auto;
+        font-size: 0.66rem;
+        color: var(--primary);
+        opacity: 0;
+        transform: translateX(-0.25rem);
+        transition: opacity 200ms ease, transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    /* 双栏 */
+    .ab-cols {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+        gap: 0 2rem;
+    }
+    @media (max-width: 640px) {
+        .ab-cols {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* 工具 chips */
+    .ab-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+    }
+    .ab-chip {
+        padding: 0.28rem 0.7rem;
+        border-radius: 999px;
+        background: var(--btn-regular-bg);
+        color: var(--btn-content);
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    :global(:root.dark) .ab-chip {
+        color: rgba(255, 255, 255, 0.75);
+    }
+
+    /* 设备 */
+    .ab-devices {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        display: grid;
+        gap: 0.5rem;
+    }
+    .ab-devices li {
+        display: flex;
+        align-items: baseline;
+        gap: 0.55rem;
+        font-size: 0.88rem;
+    }
+    .ab-device-icon {
+        flex: 0 0 auto;
+        font-size: 1rem;
+        color: var(--primary);
+        transform: translateY(0.15rem);
+    }
+    .ab-device-name {
+        flex: 0 0 auto;
+        font-weight: 650;
+        color: var(--deep-text);
+    }
+    :global(:root.dark) .ab-device-name {
+        color: rgba(255, 255, 255, 0.85);
+    }
+    .ab-device-desc {
+        min-width: 0;
+        font-size: 0.8rem;
+        color: var(--content-meta-text, rgb(120 120 130));
+    }
+
+    /* 找到我 */
+    .ab-contacts {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+        gap: 0.55rem;
+    }
+    .ab-contact {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.6rem 0.8rem;
+        border-radius: 0.7rem;
+        border: 1px solid color-mix(in oklch, var(--line-divider) 70%, transparent);
+        background: color-mix(in oklch, var(--primary) 3%, var(--card-bg));
+        text-decoration: none;
+        transition: border-color 200ms ease, background-color 200ms ease;
+    }
+    .ab-contact-icon {
+        flex: 0 0 auto;
+        font-size: 1.05rem;
+        color: var(--primary);
+    }
+    .ab-contact-name {
+        flex: 0 0 auto;
+        font-weight: 650;
+        font-size: 0.84rem;
+        color: var(--deep-text);
+    }
+    :global(:root.dark) .ab-contact-name {
+        color: rgba(255, 255, 255, 0.85);
+    }
+    .ab-contact-handle {
+        min-width: 0;
+        margin-left: auto;
+        font-size: 0.74rem;
+        color: var(--content-meta-text, rgb(120 120 130));
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* 致谢 */
+    .ab-credits {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 0.45rem;
+        margin-top: 1.6rem;
+        padding-top: 1rem;
+        border-top: 1px solid color-mix(in oklch, var(--line-divider) 80%, transparent);
+        font-size: 0.76rem;
+        color: var(--content-meta-text, rgb(120 120 130));
+    }
+    .ab-credits a {
+        color: color-mix(in oklch, var(--primary) 80%, var(--content-meta-text, gray));
+        font-weight: 600;
+        text-decoration: none;
+    }
+    .ab-credits a:hover {
+        text-decoration: underline;
+        text-underline-offset: 0.2em;
+    }
+    .ab-credits-sep {
+        opacity: 0.5;
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+        .ab-row:hover {
+            background: color-mix(in oklch, var(--primary) 5%, transparent);
+        }
+        .ab-row:hover .ab-row-name {
+            color: var(--primary);
+        }
+        .ab-row:hover .ab-row-arrow {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        .ab-contact:hover {
+            border-color: color-mix(in oklch, var(--primary) 36%, transparent);
+            background: color-mix(in oklch, var(--primary) 7%, var(--card-bg));
+        }
+    }
+</style>

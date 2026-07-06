@@ -1,0 +1,47 @@
+---
+// 全站特殊页面统一头部：英文 kicker + 衬线 display 标题 + 可选引言。
+// 站内一切非文章页（关于/探索/状态/胶囊/追番…）都应使用本组件，保持头部规则一致。
+interface Props {
+	kicker: string; // 英文小标，如 "Explore · Index"
+	title: string;
+	lead?: string;
+	class?: string;
+}
+const { kicker, title, lead, class: className } = Astro.props;
+---
+
+<header class:list={["page-header onload-animation", className]}>
+    <span class="page-header-kicker">{kicker}</span>
+    <h1 class="page-header-title">{title}</h1>
+    {lead && <p class="page-header-lead">{lead}</p>}
+</header>
+
+<style>
+    .page-header {
+        padding-bottom: 1.4rem;
+    }
+    .page-header-kicker {
+        color: var(--primary);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+    }
+    .page-header-title {
+        margin: 0.35rem 0 0;
+        font-size: clamp(1.8rem, 3.2vw, 2.4rem);
+        font-weight: 600;
+        line-height: 1.1;
+        color: var(--deep-text);
+    }
+    :global(:root.dark) .page-header-title {
+        color: rgba(255, 255, 255, 0.9);
+    }
+    .page-header-lead {
+        margin: 0.65rem 0 0;
+        max-width: 40rem;
+        color: var(--content-meta-text, rgb(120 120 130));
+        font-size: 0.92rem;
+        line-height: 1.7;
+    }
+</style>

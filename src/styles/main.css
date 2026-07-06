@@ -150,14 +150,34 @@
     }
   }
 }
-/* ── Asashiki Design v2「墨と桜」: Newsreader 衬线 display ──
-   克制使用：只给「大标题/封面」级别的 display 文本（文章主标题、页面 H1、
-   胶囊/探索标题），文章正文里的 h2/h3 仍走 Fuwari 原本的无衬线栈，
-   避免和原主题的清爽观感打架，也对中日文更友好。状态页的衬线点缀由其页内 CSS 处理。 */
-.font-display,
-#post-container h1.onload-animation,
-.capsule-title-block h1,
-.explore-title {
-    @apply font-serif;
-    letter-spacing: -0.01em;
+/* 全站统一默认字体，不引入任何特殊 display 字体（用户已明确否决衬线与圆体方案） */
+
+/* ── 站内滚动条统一 ──
+   页面主滚动条由 OverlayScrollbars 接管（scrollbar.css），
+   卡片内部容器的原生滚动条在这里统一成同款细圆条。
+   注意：不要在具体容器上写 scrollbar-color，Chrome 会因此忽略 webkit 样式。 */
+main ::-webkit-scrollbar {
+    width: 0.5rem;
+    height: 0.5rem;
+}
+main ::-webkit-scrollbar-track {
+    background: transparent;
+}
+main ::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background-color: var(--scrollbar-bg);
+    background-clip: padding-box;
+    border: 2px solid transparent;
+}
+main ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--scrollbar-bg-hover);
+}
+main ::-webkit-scrollbar-thumb:active {
+    background-color: var(--scrollbar-bg-active);
+}
+@supports not selector(::-webkit-scrollbar) {
+    main * {
+        scrollbar-width: thin;
+        scrollbar-color: var(--scrollbar-bg) transparent;
+    }
 }

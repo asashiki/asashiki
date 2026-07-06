@@ -6,6 +6,7 @@ import "@fontsource/roboto/700.css";
 import AiVisualInteractions from "@components/AiVisualInteractions.astro";
 import ConfigCarrier from "@components/ConfigCarrier.astro";
 import GlobalAudioPlayer from "@components/GlobalAudioPlayer.astro";
+import StatusPageRuntime from "@components/StatusPageRuntime.astro";
 import { profileConfig, siteConfig } from "@/config";
 import {
 	AUTO_MODE,
@@ -83,10 +84,6 @@ const bannerOffset =
 		<title>{pageTitle}</title>
 
 		<meta charset="UTF-8" />
-		<!-- Asashiki Design v2「墨と桜」: Newsreader 衬线 display（仅用于大标题/大数字等点缀，正文仍走默认 sans） -->
-		<link rel="preconnect" href="https://fonts.googleapis.com" />
-		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-		<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&display=swap" />
 		<meta name="description" content={description || pageTitle}>
 		<meta name="author" content={profileConfig.name}>
 
@@ -161,6 +158,7 @@ const bannerOffset =
 		<slot />
 		<GlobalAudioPlayer></GlobalAudioPlayer>
 		<AiVisualInteractions></AiVisualInteractions>
+		<StatusPageRuntime></StatusPageRuntime>
 
 		<!-- increase the page height during page transition to prevent the scrolling animation from jumping -->
 		<div id="page-height-extend" class="hidden h-[300vh]"></div>

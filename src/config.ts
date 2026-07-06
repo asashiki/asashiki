@@ -48,43 +48,23 @@ export const navBarConfig: NavBarConfig = {
 	links: [
 		LinkPreset.Home,
 		LinkPreset.Archive,
-		// 关于：本站内部页面收纳于此。父项「关于」可点击进入站点介绍页，
-		// 之后想加站内页（如时间线、手记）直接往 children 里补即可。
+		// 导航两分法：
+		// 关于 = 站内的一切「我」的页面（介绍、实时数据、友链）
+		// 探索 = 站外目的地，直接进总览页挑选，不放下拉（下拉全是外链会看不懂）
 		{
 			name: "关于",
 			url: "/about/",
 			children: [
-				{ name: "关于本站", url: "/about/" },
+				{ name: "关于我", url: "/about/" },
 				{ name: "实时状态", url: "/status/" },
 				{ name: "时间胶囊", url: "/capsule/" },
-				{ name: "追番", url: "/bangumi/" },
+				{ name: "我的追番", url: "/bangumi/" },
+				{ name: "友链", url: "/friends/" },
 			],
 		},
-		// 探索：站外目的地收纳于此。父项「探索」可点击进入 /explore 总览页，
-		// 子项均为外链。按需增删；以后想再细分小分类时这里好扩展。
 		{
 			name: "探索",
 			url: "/explore/",
-			children: [
-				{
-					name: "时间胶囊 · 全站",
-					url: "https://timeline.asashiki.com",
-					external: true,
-				},
-				{ name: "项目展示", url: "https://show.asashiki.com", external: true },
-				{ name: "文档", url: "https://doc.asashiki.com", external: true },
-				{
-					name: "Hibi 日々 · 设备时间线",
-					url: "https://link.asashiki.com",
-					external: true,
-				},
-				{
-					name: "MCP Switch",
-					url: "https://switch.asashiki.com",
-					external: true,
-				},
-				{ name: "GitHub", url: "https://github.com/asashiki", external: true },
-			],
 		},
 	],
 };

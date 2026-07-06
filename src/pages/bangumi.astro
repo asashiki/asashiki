@@ -1,6 +1,8 @@
 ---
 import BangumiSection from "@/components/bangumi/BangumiSection.astro";
+import BangumiHeatmap from "@/components/bangumi/BangumiHeatmap.astro";
 import TabNav from "@/components/bangumi/TabNav.astro";
+import PageHeader from "@components/PageHeader.astro";
 import MainGridLayout from "@/layouts/MainGridLayout.astro";
 import type {
 	UserSubjectCollection,
@@ -11,6 +13,7 @@ import type {
 const bangumiConfig = {
 	username: "asashiki", // 在这里配置你的Bangumi用户名
 	apiUrl: "https://api.bgm.tv",
+	heatmapUrl: "https://bgm.ry.mk/heatmap",
 	categories: {
 		book: false,
 		anime: true,
@@ -136,24 +139,78 @@ for (const [categoryKey, enabled] of Object.entries(bangumiConfig.categories)) {
 }
 
 const activeTab = tabs[0]?.id || "anime";
+
+type HeatmapEntry = {
+	date: string;
+	count: number;
+};
+
+async function fetchBangumiHeatmapData(username: string) {
+	try {
+		const fetchHeatmap = async (type: "community" | "timeline") => {
+			const response = await fetch(`${bangumiConfig.heatmapUrl}/${type}/${username}`, {
+				headers: {
+					Accept: "application/json",
+					"User-Agent": "YuuOuRou Blog",
+				},
+			});
+			if (!response.ok) return [];
+			const data = (await response.json()) as HeatmapEntry[];
+			return Array.isArray(data) ? data : [];
+		};
+
+		const [timeline, community] = await Promise.all([
+			fetchHeatmap("timeline"),
+			fetchHeatmap("community"),
+		]);
+		const merged = new Map<string, number>();
+		for (const item of [...timeline, ...community]) {
+			if (!item.date || typeof item.count !== "number") continue;
+			merged.set(item.date, (merged.get(item.date) || 0) + item.count);
+		}
+		return merged;
+	} catch (error) {
+		console.warn("[Bangumi] 获取活跃热力图失败:", error);
+		return new Map<string, number>();
+	}
+}
+
+function dateKey(value: Date) {
+	return value.toISOString().slice(0, 10);
+}
+
+function buildBangumiHeatmapDays(counts: Map<string, number>) {
+	const today = new Date();
+	today.setHours(0, 0, 0, 0);
+	const start = new Date(today);
+	start.setFullYear(start.getFullYear() - 1);
+	start.setDate(start.getDate() + 1);
+
+	const days: Array<{ date: string; count: number }> = [];
+	for (const date = new Date(start); date <= today; date.setDate(date.getDate() + 1)) {
+		const key = dateKey(date);
+		days.push({ date: key, count: counts.get(key) || 0 });
+	}
+	return days;
+}
+
+const bangumiHeatmapCounts = await fetchBangumiHeatmapData(bangumiConfig.username);
+const bangumiHeatmapDays = buildBangumiHeatmapDays(bangumiHeatmapCounts);
 ---
 
 <MainGridLayout title={"Bangumi"} description={"Bangumi Collection"}>
   <div class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative min-h-32">
-    <div class="card-base z-10 px-9 py-6 relative w-full">
-      <!-- 页面标题 -->
-      <div class="text-center mb-8">
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-3">
-          Bangumi Collection
-        </h1>
-        <p class="text-gray-600 dark:text-gray-400 mb-2">
-          如果有超过一个季度以上没有更新请帮我打110
-        </p>
-      </div>
+    <div class="card-base z-10 px-6 md:px-9 py-7 relative w-full">
+      <PageHeader
+        kicker="Bangumi · Collection"
+        title="我的追番"
+        lead="如果有超过一个季度以上没有更新请帮我打110"
+      />
 
       <!-- Tab 导航和内容 -->
       {tabs.length > 0 ? (
         <>
+          <BangumiHeatmap days={bangumiHeatmapDays} />
           <TabNav tabs={tabs} activeTab={activeTab} />
 
           <!-- 内容区域 -->
@@ -169,13 +226,13 @@ const activeTab = tabs[0]?.id || "anime";
         </>
       ) : (
         <div class="text-center py-12">
-          <h2 class="text-xl font-medium text-gray-600 dark:text-gray-400 mb-2">
+          <h2 class="text-xl font-medium text-75 mb-2">
             暂无数据
           </h2>
-          <p class="text-gray-500 dark:text-gray-400 mb-4">
+          <p class="text-50 mb-4">
             可能的原因：用户名不存在、网络连接问题或API限制
           </p>
-          <div class="text-sm text-gray-400 dark:text-gray-500 space-y-1">
+          <div class="text-sm text-30 space-y-1">
             <div>用户名: {bangumiConfig.username}</div>
             <div>API: {bangumiConfig.apiUrl}</div>
             <div class="mt-3 text-xs">

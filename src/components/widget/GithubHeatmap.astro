@@ -1,0 +1,202 @@
+<section class="github-heatmap" data-github-heatmap data-username="asashiki" hidden>
+  <div class="github-heatmap-head">
+    <h2>GitHub</h2>
+  </div>
+  <div class="github-heatmap-scroll" data-github-heatmap-scroll>
+    <div class="github-heatmap-grid" data-github-heatmap-grid></div>
+  </div>
+  <div class="github-heatmap-legend" aria-hidden="true">
+    <span>less</span>
+    <i data-level="0"></i>
+    <i data-level="1"></i>
+    <i data-level="2"></i>
+    <i data-level="3"></i>
+    <i data-level="4"></i>
+    <span>more</span>
+  </div>
+</section>
+
+<!-- 格子由 JS 动态创建，拿不到 Astro 作用域属性，必须用全局样式 -->
+<style is:global>
+  .github-heatmap {
+    margin-top: 1.6rem;
+    padding-top: 1.1rem;
+    border-top: 1px solid var(--line-divider);
+  }
+
+  .github-heatmap-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.7rem;
+  }
+
+  .github-heatmap h2 {
+    margin: 0;
+    color: var(--btn-content);
+    font-size: 0.9rem;
+    font-weight: 650;
+    line-height: 1.2;
+  }
+
+  .github-heatmap-scroll {
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 0.5rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-bg) var(--btn-regular-bg);
+  }
+
+  .github-heatmap-scroll::-webkit-scrollbar {
+    width: 0.42rem;
+    height: 0.42rem;
+  }
+
+  .github-heatmap-scroll::-webkit-scrollbar-track {
+    border-radius: 999px;
+    background: var(--btn-regular-bg);
+  }
+
+  .github-heatmap-scroll::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: var(--scrollbar-bg);
+    border: 1px solid var(--btn-regular-bg);
+  }
+
+  .github-heatmap-scroll::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-bg-hover);
+  }
+
+  .github-heatmap-scroll::-webkit-scrollbar-thumb:active {
+    background: var(--scrollbar-bg-active);
+  }
+
+  .github-heatmap-grid {
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-rows: repeat(7, 0.72rem);
+    grid-auto-columns: 0.72rem;
+    gap: 0.22rem;
+    width: max-content;
+    min-height: calc(7 * 0.72rem + 6 * 0.22rem);
+  }
+
+  .github-heatmap-cell,
+  .github-heatmap-legend i {
+    display: block;
+    width: 0.72rem;
+    height: 0.72rem;
+    border-radius: 0.18rem;
+    background: var(--btn-regular-bg);
+    box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--line-divider) 80%, transparent);
+  }
+
+  .github-heatmap-cell[data-level="1"],
+  .github-heatmap-legend i[data-level="1"] {
+    background: color-mix(in oklch, var(--primary) 25%, var(--card-bg));
+  }
+
+  .github-heatmap-cell[data-level="2"],
+  .github-heatmap-legend i[data-level="2"] {
+    background: color-mix(in oklch, var(--primary) 45%, var(--card-bg));
+  }
+
+  .github-heatmap-cell[data-level="3"],
+  .github-heatmap-legend i[data-level="3"] {
+    background: color-mix(in oklch, var(--primary) 70%, var(--card-bg));
+  }
+
+  .github-heatmap-cell[data-level="4"],
+  .github-heatmap-legend i[data-level="4"] {
+    background: color-mix(in oklch, var(--primary) 90%, var(--card-bg));
+  }
+
+  .github-heatmap-legend {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.28rem;
+    margin-top: 0.45rem;
+    color: color-mix(in oklch, var(--btn-content) 62%, var(--card-bg));
+    font-size: 0.68rem;
+    line-height: 1;
+  }
+</style>
+
+<script>
+type GithubContribution = {
+  date?: string;
+  count?: number;
+  level?: number;
+  contributionCount?: number;
+  contributionLevel?: string;
+};
+
+type GithubContributionResponse = {
+  contributions?: GithubContribution[];
+};
+
+function githubLevel(item: GithubContribution) {
+  if (typeof item.level === "number") return Math.max(0, Math.min(4, item.level));
+  const count = item.count ?? item.contributionCount ?? 0;
+  if (count >= 15) return 4;
+  if (count >= 8) return 3;
+  if (count >= 3) return 2;
+  if (count > 0) return 1;
+  return 0;
+}
+
+function initGithubHeatmap() {
+  document.querySelectorAll<HTMLElement>("[data-github-heatmap]").forEach((root) => {
+    if (root.dataset.githubHeatmapBound) return;
+    root.dataset.githubHeatmapBound = "true";
+
+    const username = root.dataset.username || "asashiki";
+    const grid = root.querySelector<HTMLElement>("[data-github-heatmap-grid]");
+    const scroll = root.querySelector<HTMLElement>("[data-github-heatmap-scroll]");
+    if (!grid) return;
+
+    fetch(`https://github-contributions-api.jogruber.de/v4/${username}?y=last`, {
+      headers: { accept: "application/json" },
+    })
+      .then((response) => (response.ok ? response.json() : Promise.reject()))
+      .then((data: GithubContributionResponse) => {
+        const contributions = Array.isArray(data.contributions) ? data.contributions : [];
+        if (!contributions.length) return;
+
+        const fragment = document.createDocumentFragment();
+        for (const item of contributions) {
+          const count = item.count ?? item.contributionCount ?? 0;
+          const cell = document.createElement("span");
+          cell.className = "github-heatmap-cell";
+          cell.dataset.level = String(githubLevel(item));
+          cell.title = `${item.date || ""} · ${count}`;
+          fragment.append(cell);
+        }
+
+        grid.replaceChildren(fragment);
+        root.hidden = false;
+        window.requestAnimationFrame(() => {
+          if (scroll) scroll.scrollLeft = scroll.scrollWidth;
+        });
+      })
+      .catch(() => {
+        root.hidden = true;
+      });
+  });
+}
+
+initGithubHeatmap();
+
+const setupGithubHeatmapRouting = () => {
+  window.swup?.hooks?.on("page:view", initGithubHeatmap);
+  window.swup?.hooks?.on("content:replace", initGithubHeatmap);
+};
+
+if (window.swup?.hooks) {
+  setupGithubHeatmapRouting();
+} else {
+  document.addEventListener("swup:enable", setupGithubHeatmapRouting);
+}
+</script>
