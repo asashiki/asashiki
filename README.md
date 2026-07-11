@@ -6,20 +6,25 @@
 
 *“3G爷爷……不要吃我……呜呜……”*
 
+<br>
+
+你好，我是浅仪式。  
+最近主要在做个人 AI 工具、MCP 服务、网页与小游戏。  
+喜欢把突然冒出来的想法，做成真正能用、能玩的东西。
+
+<br>
+
+<a href="https://asashiki.com"><img alt="Website" src="https://img.shields.io/badge/Website-asashiki.com-e85d97?style=for-the-badge&labelColor=221f26"></a>
+<a href="https://x.com/asashiki_"><img alt="X" src="https://img.shields.io/badge/X-%40asashiki__-221f26?style=for-the-badge&logo=x&logoColor=white"></a>
+<a href="https://github.com/asashiki"><img alt="GitHub" src="https://img.shields.io/badge/GitHub-asashiki-221f26?style=for-the-badge&logo=github&logoColor=white"></a>
+
+<br><br>
+
+<sub>
+<a href="https://github.com/asashiki/mcp-switch">mcp-switch</a> ·
+<a href="https://github.com/asashiki/vibe-game">vibe-game</a> ·
+<a href="https://github.com/asashiki/sticker-mcp">sticker-mcp</a> ·
+<a href="https://github.com/asashiki/device-timeline-mcp">device-timeline-mcp</a>
+</sub>
+
 </div>
-
----
-
-## MCP Switch
-
-**One MCP endpoint for all your tools.**
-
-Aggregate local `stdio` and remote HTTP MCP servers behind one OAuth-enabled endpoint, then connect the whole toolset to ChatGPT, Claude, and other MCP clients.
-
-[Repository](https://github.com/asashiki/mcp-switch) · [Live console](https://show.asashiki.com/console/) · [User manual](https://github.com/asashiki/mcp-switch/blob/main/docs/manual.md)
-
----
-
-[**vibe-game**](https://github.com/asashiki/vibe-game) · [**sticker-mcp**](https://github.com/asashiki/sticker-mcp) · [**device-timeline-mcp**](https://github.com/asashiki/device-timeline-mcp)
-
-<sub>[asashiki.com](https://asashiki.com) · [X / @asashiki_](https://x.com/asashiki_)</sub>
